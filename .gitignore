@@ -1,0 +1,30 @@
+# Dépendances
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# Natif (Continuous Native Generation)
+/apps/*/ios
+/apps/*/android
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Environnement
+.env*
+!.env.example
+
+# Divers
+*.tsbuildinfo
+.DS_Store
+npm-debug.*

@@ -18,10 +18,10 @@ Android à partir d'une même base de code, avec les mêmes écrans.
 - **WHEN** un utilisateur lance l'application sur iOS ou Android
 - **THEN** la page d'accueil s'affiche avec la même mise en page commune
 
-### Requirement: Rendu serveur des pages web
-Sur le web, chaque page DOIT être rendue côté serveur, pour que son contenu
-principal et ses métadonnées soient présents dans la réponse HTML initiale,
-sans exécution de JavaScript.
+### Requirement: HTML complet servi par le serveur
+Sur le web, le serveur DOIT renvoyer pour chaque page un HTML qui contient déjà son
+contenu principal et ses métadonnées, sans exécution de JavaScript côté client.
+Ce HTML peut être pré-rendu au build ou rendu à chaque requête (ADR 0011).
 
 #### Scenario: Contenu présent sans JavaScript
 - **WHEN** un client HTTP sans moteur JavaScript demande la page d'accueil
@@ -45,8 +45,8 @@ mention « Application indépendante, non affiliée à David Lisnard ni à Nouve
 - **THEN** la mention d'indépendance est visible dans le pied de page
 
 #### Scenario: Mention sur mobile
-- **WHEN** l'utilisateur ouvre l'écran « À propos » sur mobile
-- **THEN** la mention d'indépendance y est affichée en clair
+- **WHEN** un écran quelconque est affiché sur iOS ou Android
+- **THEN** la mention d'indépendance y est affichée en clair, dans le contenu de l'écran
 
 ### Requirement: Écran « À propos »
 L'application DOIT proposer un écran « À propos », accessible depuis la

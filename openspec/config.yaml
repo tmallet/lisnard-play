@@ -10,9 +10,9 @@ context: |
   mairie de Cannes. Celles liées à la présidence de l'AMF sont incluses et
   étiquetées (ADR 0006).
 
-  Stack (ADR 0002, 0003) :
+  Stack (ADR 0002, 0011) :
   - Monorepo Bun (gestionnaire de paquets + workspaces ; runtime du worker)
-  - Expo (dernière version) + Expo Router, web d'abord (SSR), iOS et Android
+  - Expo (dernière version) + Expo Router, web d'abord (pré-rendu en SDK 57, SSR en SDK 58+), iOS et Android
   - tRPC pour la communication front/back, monté dans des API routes Expo
   - Uniwind (Tailwind v4 pour React Native) pour le style
   - Worker d'ingestion séparé (tâche planifiée) : collecte, classification, publication
@@ -27,8 +27,9 @@ context: |
   sinon carte de lien vers la source. Jamais de réhébergement de contenu.
 
   Charte visuelle : palette Nouvelle Énergie (bleu #1d257a, bleu sombre #0f1752,
-  chamois #b0ad85, blanc #f9f9f9, émeraude #52c985) et police Montserrat. Pas de
-  logo Nouvelle Énergie ni d'élément identifiant de la campagne.
+  chamois #b0ad85, blanc #f9f9f9, émeraude #52c985) et police Montserrat,
+  conformes aux tokens --ne-* des sites officiels (ADR 0012). Pas de logo, pas
+  de texture hexagonale, aucun fichier du kit militant.
 
   Documentation (ADR 0008) : tout est documenté en français, de façon structurée
   et exploitable par les agents de codage.

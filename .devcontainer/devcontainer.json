@@ -1,0 +1,59 @@
+{
+  // Devcontainer lisnard-play : voir docs/architecture/devcontainer.md et ADR 0010.
+  "name": "lisnard-play",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": { "TZ": "${localEnv:TZ:Europe/Paris}" }
+  },
+  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  "remoteUser": "dev",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
+  "workspaceFolder": "/workspace",
+  "mounts": [
+    // node_modules hors du montage macOS (performance de Metro).
+    "source=lisnard-play-node-modules-${devcontainerId},target=/workspace/node_modules,type=volume",
+    "source=lisnard-play-bun-cache,target=/home/dev/.bun/install/cache,type=volume",
+    // Configuration des agents persistée entre reconstructions.
+    "source=lisnard-play-claude-${devcontainerId},target=/home/dev/.claude,type=volume",
+    "source=lisnard-play-codex-${devcontainerId},target=/home/dev/.codex,type=volume"
+  ],
+  "containerEnv": {
+    // Metro annonce localhost : le simulateur et le navigateur de l'hôte passent par le port redirigé.
+    // Pour un téléphone physique : REACT_NATIVE_PACKAGER_HOSTNAME=<IP LAN de l'hôte> côté hôte.
+    "REACT_NATIVE_PACKAGER_HOSTNAME": "${localEnv:REACT_NATIVE_PACKAGER_HOSTNAME:localhost}",
+    "CLAUDE_CONFIG_DIR": "/home/dev/.claude"
+  },
+  // Secrets : transmis un à un depuis l'hôte, jamais stockés dans l'image.
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "OPENROUTER_API_KEY": "${localEnv:OPENROUTER_API_KEY}",
+    "EXPO_PUBLIC_API_URL": "${localEnv:EXPO_PUBLIC_API_URL}"
+  },
+  "forwardPorts": [8081, 8082],
+  "portsAttributes": {
+    "8081": {
+      "label": "Metro (web, mobile, API routes)",
+      "onAutoForward": "notify",
+      "requireLocalPort": true
+    },
+    "8082": {
+      "label": "Metro (port de repli si 8081 est pris sur l'hôte)",
+      "onAutoForward": "notify",
+      "requireLocalPort": true
+    }
+  },
+  "postCreateCommand": "sudo /usr/local/bin/fix-volumes.sh && bun install",
+  "postStartCommand": "sudo /usr/local/bin/init-firewall.sh",
+  "waitFor": "postStartCommand",
+  "customizations": {
+    "vscode": {
+      "extensions": ["biomejs.biome", "expo.vscode-expo-tools", "anthropic.claude-code"],
+      "settings": {
+        "editor.defaultFormatter": "biomejs.biome",
+        "editor.formatOnSave": true
+      }
+    }
+  }
+}

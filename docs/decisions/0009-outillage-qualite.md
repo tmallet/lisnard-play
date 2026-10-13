@@ -1,7 +1,7 @@
 ---
 id: "0009"
 title: Outillage qualité — Biome, bun test, jest-expo, smoke test web, GitHub Actions
-status: proposed
+status: accepted
 date: 2026-10-13
 tags: [outillage, qualite, ci]
 supersedes: null
@@ -54,6 +54,3 @@ documentation fait partie de ce qui est vérifié (ADR 0008).
 - Si des règles de lint propres à Expo deviennent nécessaires, un ADR
   remplacera celui-ci.
 
-## Points ouverts
-
-- Passer à `accepted` à la validation du change `setup-foundation`.

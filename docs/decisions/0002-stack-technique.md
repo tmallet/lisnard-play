@@ -21,7 +21,7 @@ bout en bout entre le front et le back.
 
 - **Expo** (dernière version du SDK) avec **Expo Router** pour web, iOS et Android.
 - **Bun** comme gestionnaire de paquets et pour les workspaces du monorepo,
-  et comme runtime du worker d'ingestion (ADR 0003).
+  et comme runtime du worker d'ingestion (ADR 0003, remplacé par 0011).
 - **tRPC** pour la communication front/back, avec des entrées validées par zod.
 - **Uniwind** (Tailwind v4 pour React Native, configuration dans le CSS via
   `@theme`) pour le style. Les tokens de l'ADR 0001 y sont déclarés.

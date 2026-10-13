@@ -1,0 +1,28 @@
+{
+  "name": "lisnard-play",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.4.3",
+  "engines": {
+    "bun": "1.4.3",
+    "node": "24.21.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun --filter @lisnard/app dev",
+    "format": "biome format --write .",
+    "lint": "biome check .",
+    "typecheck": "bun --filter '*' typecheck",
+    "test": "bun --filter '*' test",
+    "docs:check": "bun scripts/docs-check.ts",
+    "smoke:web": "bun scripts/smoke-web.ts",
+    "check": "biome check . && bun run typecheck && bun run test && bun run docs:check"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "typescript": "~6.0.3"
+  }
+}

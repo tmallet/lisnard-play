@@ -1,0 +1,4 @@
+# Metro résout mal les installations isolées de Bun en workspaces :
+# on force une arborescence node_modules « hoisted » (design D1).
+[install]
+linker = "hoisted"
