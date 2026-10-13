@@ -122,7 +122,12 @@ export async function listPublished(
 ): Promise<{ items: InterventionSummary[]; nextCursor: string | null }> {
   // À venir : de la plus proche à la plus lointaine ; sinon de la plus récente à la plus ancienne.
   const ascending = status === 'upcoming';
-  const conditions: SQL[] = [sql`${item.status} = 'published'`, statusCondition(status, now)];
+  // Un contenu n'est visible qu'une fois son rendu média calculé (spec intervention-media).
+  const conditions: SQL[] = [
+    sql`${item.status} = 'published'`,
+    sql`${item.media} is not null`,
+    statusCondition(status, now),
+  ];
   if (role) conditions.push(eq(item.role, role));
   const after = cursor ? decodeCursor(cursor) : null;
   if (after) {
@@ -166,14 +171,13 @@ export async function getPublishedById(
     })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
-    .where(and(eq(item.id, id), sql`${item.status} = 'published'`))
+    .where(and(eq(item.id, id), sql`${item.status} = 'published'`, sql`${item.media} is not null`))
     .limit(1);
   if (!row) return null;
   return {
     ...toSummary(row as SummaryRow, now),
     description: row.description,
     url: row.url,
-    // Repli si le rendu n'a pas pu être calculé (spec intervention-media).
-    media: row.media ?? { kind: 'link', og: {} },
+    media: row.media as MediaRender,
   };
 }

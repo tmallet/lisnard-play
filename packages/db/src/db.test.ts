@@ -9,6 +9,7 @@ import {
   type ClassificationRecord,
   listClassificationTargets,
   recordClassification,
+  setMedia,
   upsertItem,
   upsertSources,
 } from './write';
@@ -47,6 +48,18 @@ function decision(itemId: string, over: Partial<ClassificationRecord> = {}): Cla
     kind: 'tv',
     ...over,
   };
+}
+
+/** Publie un contenu comme le ferait le worker : décision, puis rendu média. */
+async function publish(itemId: string, over: Partial<ClassificationRecord> = {}) {
+  const d = decision(itemId, over);
+  await recordClassification(db, d);
+  if (d.outcome === 'published')
+    await setMedia(db, itemId, {
+      kind: 'embed',
+      provider: 'youtube',
+      embedUrl: 'https://www.youtube.com/embed/x',
+    });
 }
 
 async function candidate(platformId: string, over: Record<string, unknown> = {}) {
@@ -116,8 +129,8 @@ describe('lecture publique', () => {
     const pending = await candidate('yt:p');
     const rejected = await candidate('yt:r');
     const published = await candidate('yt:ok');
-    await recordClassification(db, decision(rejected.id, { outcome: 'rejected', role: 'mairie' }));
-    await recordClassification(db, decision(published.id));
+    await publish(rejected.id, { outcome: 'rejected', role: 'mairie' });
+    await publish(published.id);
     const { items } = await listPublished(db, { status: 'past', limit: 50 });
     expect(items.map((i) => i.id)).toEqual([published.id]);
     expect(await getPublishedById(db, pending.id)).toBeNull();
@@ -148,8 +161,7 @@ describe('lecture publique', () => {
     });
     const old = await candidate('yt:old', { publishedAt: new Date('2026-04-01T00:00:00Z') });
     const recent = await candidate('yt:recent', { publishedAt: new Date('2026-06-10T00:00:00Z') });
-    for (const c of [live, soon, later, late, old, recent])
-      await recordClassification(db, decision(c.id));
+    for (const c of [live, soon, later, late, old, recent]) await publish(c.id);
 
     const ids = async (status: 'live' | 'upcoming' | 'past') =>
       (await listPublished(db, { status, limit: 50, now })).items.map((i) => i.id);
@@ -171,11 +183,20 @@ describe('lecture publique', () => {
     expect(page2.nextCursor).toBeNull();
   });
 
+  test('un contenu publié sans rendu média n’est pas encore visible', async () => {
+    const { id } = await candidate('yt:nomedia');
+    await recordClassification(db, decision(id));
+    expect((await listPublished(db, { status: 'past', limit: 50 })).items).toHaveLength(0);
+    expect(await getPublishedById(db, id)).toBeNull();
+    await setMedia(db, id, { kind: 'link', og: {} });
+    expect(await getPublishedById(db, id)).not.toBeNull();
+  });
+
   test('filtre par rôle', async () => {
     const nat = await candidate('yt:nat');
     const amf = await candidate('yt:amf');
-    await recordClassification(db, decision(nat.id));
-    await recordClassification(db, decision(amf.id, { role: 'amf' }));
+    await publish(nat.id);
+    await publish(amf.id, { role: 'amf' });
     const { items } = await listPublished(db, { status: 'past', role: 'amf', limit: 50 });
     expect(items.map((i) => [i.id, i.role])).toEqual([[amf.id, 'amf']]);
   });

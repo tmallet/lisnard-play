@@ -9,6 +9,7 @@ import { createSystemOneClassifier } from './classifier/systemone';
 import { recheckLive, runCollection } from './collect';
 import { CADENCE_MS, HEARTBEAT_FILE, LEADER_LOCK_KEY, requireEnv, TICK_MS } from './config';
 import { log } from './log';
+import { resolvePendingMedia } from './media/task';
 import { classifyPending } from './publish';
 import { Scheduler, type Task, tryAcquireLeaderLock } from './scheduler';
 import type { SourceContext } from './sources/types';
@@ -66,6 +67,11 @@ const tasks: Task[] = [
     name: 'classify',
     everyMs: TICK_MS,
     run: () => classifyPending(db, classifier),
+  },
+  {
+    name: 'media',
+    everyMs: TICK_MS,
+    run: () => resolvePendingMedia(db),
   },
 ];
 

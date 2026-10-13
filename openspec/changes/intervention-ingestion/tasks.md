@@ -41,10 +41,10 @@
 
 ## 6. Médias
 
-- [ ] 6.1 Résolution oEmbed (YouTube, Dailymotion) : extraction de l'`embedUrl` et vérification de son hôte (ADR 0017)
-- [ ] 6.2 Lecture Open Graph sécurisée : `http(s)` uniquement, refus des IP privées après résolution DNS, 5 s, 1 Mo ; repli sur un `link` minimal
-- [ ] 6.3 Calcul du rendu à la publication et enregistrement dans `item.media`
-- [ ] 6.4 Tests : fixtures oEmbed et HTML, hôte d'iframe non conforme refusé, URL vers IP privée refusée, échec réseau qui donne un `link` minimal
+- [x] 6.1 Résolution oEmbed (YouTube, Dailymotion) : extraction de l'`embedUrl` et vérification de son hôte (ADR 0017)
+- [x] 6.2 Lecture Open Graph sécurisée : `http(s)` uniquement, refus des IP privées après résolution DNS, 5 s, 1 Mo ; repli sur un `link` minimal
+- [x] 6.3 Calcul du rendu à la publication et enregistrement dans `item.media`
+- [x] 6.4 Tests : fixtures oEmbed et HTML, hôte d'iframe non conforme refusé, URL vers IP privée refusée, échec réseau qui donne un `link` minimal
 
 ## 7. API
 
