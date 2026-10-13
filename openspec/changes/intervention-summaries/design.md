@@ -71,7 +71,9 @@ rattrapage.
 ### D3 — Client OpenRouter et sortie structurée
 
 - **Requête** : `POST /api/v1/chat/completions` avec :
-  - le modèle épinglé `SUMMARY_MODEL` ;
+  - le modèle épinglé `SUMMARY_MODEL` (« lite »), ou `SUMMARY_MODEL_LONG`
+    (Flash) pour une vidéo de plus de 20 minutes ou de durée inconnue : en v2,
+    le modèle « lite » restait trop général sur un débat d'une heure ;
   - `provider: { only: ['google-ai-studio'] }` (URL YouTube, ADR 0021) ;
   - `response_format: json_schema` pour `{ speaks: boolean, summary: string,
     points: string[] }` ;

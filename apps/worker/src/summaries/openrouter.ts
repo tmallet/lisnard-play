@@ -2,7 +2,13 @@
  * Client des résumés : Gemini via OpenRouter (ADR 0021). La vidéo YouTube est passée
  * par URL (contenu video_url) ; la réponse est une sortie structurée validée ici.
  */
-import { SUMMARY_MODEL, SUMMARY_SCHEMA, type SummaryContext, summaryInstructions } from './prompt';
+import {
+  SUMMARY_MODEL,
+  SUMMARY_SCHEMA,
+  type SummaryContext,
+  summaryInstructions,
+  summaryModelFor,
+} from './prompt';
 
 const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 
@@ -20,6 +26,7 @@ export interface SummaryResult {
 
 export interface SummaryTargetInput extends SummaryContext {
   url: string;
+  durationS: number | null;
 }
 
 /** Seule dépendance du reste du worker envers le modèle de résumé. */
@@ -51,16 +58,20 @@ export function parseSummaryOutput(content: string | undefined): SummaryOutput {
   return { speaks: true, summary, points: points.slice(0, 6).map((p) => p.trim()) };
 }
 
+/**
+ * Le modèle dépend de la durée de la vidéo (summaryModelFor), sauf si un modèle est
+ * imposé (comparaison de modèles).
+ */
 export function createOpenRouterSummarizer(options: {
   apiKey: string;
   model?: string;
   fetch?: typeof fetch;
 }): Summarizer {
-  const model = options.model ?? SUMMARY_MODEL;
   const doFetch = options.fetch ?? fetch;
   return {
-    model,
+    model: options.model ?? SUMMARY_MODEL,
     async summarize(target) {
+      const model = options.model ?? summaryModelFor(target.durationS);
       const res = await doFetch(ENDPOINT, {
         method: 'POST',
         headers: { Authorization: `Bearer ${options.apiKey}`, 'Content-Type': 'application/json' },

@@ -41,9 +41,12 @@ texte d'un article pour en produire un résumé automatique exposerait le projet
 ## Décision
 
 - **Résumés des vidéos uniquement** :
-  - le modèle est `google/gemini-3.5-flash-lite`, épinglé, appelé via
-    OpenRouter et restreint au fournisseur Google AI Studio, le seul qui accepte
-    les URL YouTube ;
+  - les modèles sont épinglés, appelés via OpenRouter et restreints au
+    fournisseur Google AI Studio, le seul qui accepte les URL YouTube :
+    `google/gemini-3.5-flash-lite` pour les vidéos de 20 minutes au plus,
+    `google/gemini-3.8-flash` au-delà ou si la durée est inconnue. Le modèle
+    « lite » restait trop général sur un débat d'une heure (précision du
+    2026-10-13, validée par le porteur du projet) ;
   - la consigne est versionnée et la sortie structurée en JSON : résumé
     proportionné à la durée (trois phrases à trois courts paragraphes), 3 à 6
     points clés, et un indicateur « David Lisnard s'exprime » ;
@@ -74,8 +77,10 @@ texte d'un article pour en produire un résumé automatique exposerait le projet
   propriétaire.
 - **Résumer les articles à partir de leur texte** : droit voisin, et pages
   souvent payantes.
-- **Modèle plus puissant (Pro)** : 5 à 10 fois plus cher, pour un gain inutile
-  sur des résumés de quelques paragraphes.
+- **Modèle Pro** : 5 à 10 fois plus cher. Le modèle Flash suffit pour les
+  vidéos longues.
+- **Modèle Flash pour toutes les vidéos** : environ 2,5 fois plus cher, pour un
+  gain nul sur les clips courts, qui sont la majorité.
 
 ## Conséquences
 

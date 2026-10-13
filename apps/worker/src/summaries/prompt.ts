@@ -4,10 +4,19 @@
  * seront régénérés au fil des cycles (design D2).
  */
 // v2 : résumés plus détaillés, proportionnés à la durée (demande du porteur du projet).
-export const PROMPT_VERSION = 2;
+// v3 : modèle plus puissant pour les vidéos longues (résumé du débat trop vague en v2).
+export const PROMPT_VERSION = 3;
 
-/** Modèle épinglé (ADR 0021), servi par Google AI Studio, seul à lire les URL YouTube. */
+/** Modèles épinglés (ADR 0021), servis par Google AI Studio, seul à lire les URL YouTube. */
 export const SUMMARY_MODEL = 'google/gemini-3.5-flash-lite';
+/** Interviews, débats et meetings : le modèle « lite » y reste trop général. */
+export const SUMMARY_MODEL_LONG = 'google/gemini-3.8-flash';
+/** Au-delà de cette durée, ou si elle est inconnue, le modèle long est utilisé. */
+export const LONG_VIDEO_S = 20 * 60;
+
+export function summaryModelFor(durationS: number | null): string {
+  return durationS === null || durationS > LONG_VIDEO_S ? SUMMARY_MODEL_LONG : SUMMARY_MODEL;
+}
 
 export interface SummaryContext {
   title: string;

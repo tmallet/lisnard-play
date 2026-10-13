@@ -12,7 +12,7 @@ import {
   type Summarizer,
   type SummaryOutput,
 } from './openrouter';
-import { PROMPT_VERSION, SUMMARY_MODEL } from './prompt';
+import { PROMPT_VERSION, SUMMARY_MODEL, SUMMARY_MODEL_LONG, summaryModelFor } from './prompt';
 import { parisMidnight, summarizePending } from './task';
 
 const SPEAKS: SummaryOutput = {
@@ -69,6 +69,7 @@ describe('sortie du modèle', () => {
       url: 'https://www.youtube.com/watch?v=8ZmGskys_Gk',
       title: 'École',
       outlet: 'David Lisnard',
+      durationS: 41,
     });
     expect(result).toEqual({ model: SUMMARY_MODEL, output: SPEAKS, cost: 0.0019 });
     const body = requests[0] as {
@@ -84,6 +85,13 @@ describe('sortie du modèle', () => {
       type: 'video_url',
       video_url: { url: 'https://www.youtube.com/watch?v=8ZmGskys_Gk' },
     });
+  });
+
+  test('modèle selon la durée : lite pour un clip, plus puissant au-delà de 20 min ou si inconnue', () => {
+    expect(summaryModelFor(41)).toBe(SUMMARY_MODEL);
+    expect(summaryModelFor(20 * 60)).toBe(SUMMARY_MODEL);
+    expect(summaryModelFor(3600)).toBe(SUMMARY_MODEL_LONG);
+    expect(summaryModelFor(null)).toBe(SUMMARY_MODEL_LONG);
   });
 
   test('minuit à Paris, en heure d’été comme d’hiver', () => {
