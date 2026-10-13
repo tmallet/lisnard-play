@@ -1,4 +1,4 @@
-import { getPublishedById, listPublished } from '@lisnard/db/read';
+import { getPublishedById, listPublished, THEMES } from '@lisnard/db/read';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
@@ -14,13 +14,13 @@ function requireDb(ctx: Context) {
   return ctx.db;
 }
 
-/** Interventions publiées, en lecture seule (spec intervention-feed, ADR 0017). */
+/** Interventions publiées, en lecture seule (specs intervention-feed et intervention-themes, ADR 0017). */
 export const interventionsRouter = router({
   list: publicProcedure
     .input(
       z.object({
         status: z.enum(['live', 'upcoming', 'past']),
-        role: z.enum(['national', 'amf']).optional(),
+        theme: z.enum(THEMES).optional(),
         cursor: z.string().max(500).optional(),
         limit: z.number().int().min(1).max(50).default(20),
       }),

@@ -1,13 +1,14 @@
 import type { AppliedThresholds } from '@lisnard/db/schema';
 
 /**
- * Seuils de publication par modèle (ADR 0004, ADR 0005). Un modèle absent de cette
- * table ne publie rien. Valeurs issues de la calibration du 2026-10-13 sur le jeu de
- * référence validé (questions v2) : précision 98 %, rappel 82,8 %.
+ * Seuils par modèle (ADR 0004, ADR 0018, ADR 0020). Un modèle absent de cette table ne
+ * publie rien. intervient et role : calibration du 2026-10-13 sur le jeu de référence
+ * validé (précision 98 %, rappel 82,8 %). theme : valeur initiale du design D4 de
+ * campaign-themes, vérifiée sur un échantillon validé.
  * Procédure et résultats : docs/architecture/classifier.md.
  */
 export const THRESHOLDS: Record<string, AppliedThresholds> = {
-  'typesafe/jev-1.13-20260917': { intervient: 0.75, role: 0.6 },
+  'typesafe/jev-1.13-20260917': { intervient: 0.75, role: 0.6, theme: 0.5 },
 };
 
 export function thresholdsFor(model: string): AppliedThresholds | null {

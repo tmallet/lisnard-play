@@ -32,7 +32,7 @@ export const liveStatus = pgEnum('live_status', ['none', 'upcoming', 'live', 'en
 /** Statut de publication, dénormalisé depuis la dernière classification (ADR 0017). */
 export const itemStatus = pgEnum('item_status', ['pending', 'published', 'rejected']);
 
-/** Rôle de l'intervention (ADR 0006). */
+/** Rôle de l'intervention : seul `national` est publiable (ADR 0020). */
 export const interventionRole = pgEnum('intervention_role', [
   'national',
   'amf',
@@ -52,6 +52,21 @@ export const interventionKind = pgEnum('intervention_kind', [
   'reseau_social',
 ]);
 
+/**
+ * Thèmes de campagne (ADR 0020, spec intervention-themes). Liste fermée, versionnée
+ * avec les questions du classifieur ; stockée en `text[]` (design D3).
+ */
+export const THEMES = [
+  'economie',
+  'securite',
+  'immigration',
+  'education',
+  'institutions',
+  'international',
+  'campagne',
+] as const;
+export type Theme = (typeof THEMES)[number];
+
 export const classificationOutcome = pgEnum('classification_outcome', ['published', 'rejected']);
 
 /** Rendu média calculé à l'ingestion (ADR 0007, spec intervention-media). */
@@ -67,11 +82,15 @@ export interface ClassifierAnswers {
   intervient: number;
   role: { choice: string; confidence: number; probabilities: Record<string, number> };
   kind: { choice: string; confidence: number; probabilities: Record<string, number> };
+  /** Probabilité par thème (questions v3) ; absente des décisions antérieures. */
+  themes?: Partial<Record<Theme, number>>;
 }
 
 export interface AppliedThresholds {
   intervient: number;
   role: number;
+  /** Seuil d'attribution d'un thème (ADR 0020) ; absent des décisions antérieures. */
+  theme?: number;
 }
 
 /** Sources déclarées en configuration du worker, recopiées ici pour les clés étrangères. */
@@ -105,6 +124,8 @@ export const item = pgTable(
     status: itemStatus('status').notNull().default('pending'),
     role: interventionRole('role'),
     kind: interventionKind('kind'),
+    /** Thèmes dénormalisés depuis la dernière décision (spec intervention-themes). */
+    themes: text('themes').array().notNull().default(sql`'{}'::text[]`),
     media: jsonb<MediaRender>('media'),
     firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -116,6 +137,7 @@ export const item = pgTable(
       t.role,
       sql`coalesce(${t.startsAt}, ${t.publishedAt})`,
     ),
+    index('item_themes_idx').using('gin', t.themes),
   ],
 );
 

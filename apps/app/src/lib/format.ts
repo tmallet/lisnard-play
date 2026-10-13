@@ -1,4 +1,10 @@
 /** Formats d'affichage en français, heure de Paris. */
+import type { AppRouter } from '@lisnard/api';
+import type { inferRouterOutputs } from '@trpc/server';
+
+/** Thème de campagne, inféré du contrat de l'API (spec intervention-themes). */
+export type Theme =
+  inferRouterOutputs<AppRouter>['interventions']['list']['items'][number]['themes'][number];
 
 const dateFormat = new Intl.DateTimeFormat('fr-FR', {
   day: 'numeric',
@@ -40,7 +46,25 @@ export function kindLabel(kind: string | null): string {
   return (kind && KIND_LABELS[kind]) || 'Intervention';
 }
 
-export const ROLE_LABELS = { national: 'National', amf: 'AMF' } as const;
+/** Libellés des thèmes, dans l'ordre de la spec ; le typage impose une liste complète. */
+export const THEME_LABELS: Record<Theme, string> = {
+  economie: 'Économie',
+  securite: 'Sécurité',
+  immigration: 'Immigration',
+  education: 'Éducation',
+  institutions: 'Institutions',
+  international: 'International',
+  campagne: 'Vie de campagne',
+};
+
+export const THEME_ORDER = Object.keys(THEME_LABELS) as Theme[];
+
+/** Thèmes d'une intervention : « Économie, Sécurité », puis « +N » au-delà de max. */
+export function themesLabel(themes: readonly Theme[], max = Number.POSITIVE_INFINITY): string {
+  const shown = themes.slice(0, max).map((t) => THEME_LABELS[t]);
+  const rest = themes.length - shown.length;
+  return rest > 0 ? `${shown.join(', ')} +${rest}` : shown.join(', ');
+}
 
 /** Texte comparable : minuscules, sans accents, ponctuation ni guillemets. */
 function comparable(text: string): string {

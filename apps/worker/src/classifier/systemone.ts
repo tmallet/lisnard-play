@@ -2,9 +2,9 @@
  * Client REST minimal de l'API System One d'OpenRouter (ADR 0004, spike du 2026-10-13).
  * POST /api/v1/systemone : { model, state, questions } → { model, answers, usage }.
  */
-import type { ClassifierAnswers } from '@lisnard/db/schema';
+import { type ClassifierAnswers, THEMES, type Theme } from '@lisnard/db/schema';
 
-import { KINDS, QUESTIONS, ROLES } from './questions';
+import { KINDS, QUESTIONS, ROLES, themeQuestionKey } from './questions';
 import type { Classifier, ClassifierResult, ClassifierState } from './types';
 
 const ENDPOINT = 'https://openrouter.ai/api/v1/systemone';
@@ -25,7 +25,7 @@ interface ApiResponse {
     intervient?: { type: 'noul'; noul: number };
     role?: ChoiceAnswer;
     kind?: ChoiceAnswer;
-  };
+  } & { [key: `theme_${string}`]: { type: 'noul'; noul: number } | undefined };
   usage?: { cost?: number };
 }
 
@@ -62,7 +62,18 @@ export function parseAnswers(body: ApiResponse): ClassifierAnswers {
       confidence: kind.confidence,
       probabilities: kind.probabilities ?? {},
     },
+    themes: parseThemes(a),
   };
+}
+
+/** Thèmes : une réponse absente ou invalide est ignorée, sans faire échouer la décision. */
+function parseThemes(a: ApiResponse['answers']): Partial<Record<Theme, number>> {
+  const themes: Partial<Record<Theme, number>> = {};
+  for (const theme of THEMES) {
+    const p = a?.[themeQuestionKey(theme)]?.noul;
+    if (isProbability(p)) themes[theme] = p;
+  }
+  return themes;
 }
 
 export function createSystemOneClassifier(options: {

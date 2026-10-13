@@ -12,7 +12,7 @@ const base: InterventionCardData = {
   title: 'L’invité de 7h50',
   outlet: 'France Inter',
   kind: 'radio',
-  role: 'national',
+  themes: [],
   status: 'past',
   date: '2026-10-13T05:50:00.000Z',
   thumbnailUrl: null,
@@ -30,11 +30,18 @@ test('carte passée : média, type et date en français', async () => {
   expect(screen.queryByText('En direct')).toBeNull();
 });
 
-test('carte AMF en direct : étiquette AMF et badge', async () => {
+test('carte en direct : thèmes (deux au plus, puis +N) et badge', async () => {
   await render(
-    <InterventionCard item={{ ...base, role: 'amf', status: 'live', kind: 'discours' }} />,
+    <InterventionCard
+      item={{
+        ...base,
+        status: 'live',
+        kind: 'discours',
+        themes: ['economie', 'securite', 'campagne'],
+      }}
+    />,
   );
-  expect(screen.getByText('France Inter · Discours · AMF')).toBeTruthy();
+  expect(screen.getByText('France Inter · Discours · Économie, Sécurité +1')).toBeTruthy();
   expect(screen.getByText('En direct')).toBeTruthy();
 });
 

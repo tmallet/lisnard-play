@@ -1,4 +1,9 @@
-import type { AppliedThresholds, ClassifierAnswers } from '@lisnard/db/schema';
+import {
+  type AppliedThresholds,
+  type ClassifierAnswers,
+  THEMES,
+  type Theme,
+} from '@lisnard/db/schema';
 
 import type { Kind, Role } from './questions';
 
@@ -6,6 +11,7 @@ export interface Decision {
   outcome: 'published' | 'rejected';
   role: Role;
   kind: Kind;
+  themes: Theme[];
 }
 
 export interface DecideOptions {
@@ -16,12 +22,21 @@ export interface DecideOptions {
   presumeSpeaking?: boolean;
 }
 
-const PUBLISHABLE_ROLES: readonly Role[] = ['national', 'amf'];
+/** Périmètre de la campagne présidentielle : ni AMF ni mairie (ADR 0020). */
+const PUBLISHABLE_ROLES: readonly Role[] = ['national'];
 
 /**
- * Règle de publication (spec intervention-classification, ADR 0018) : publié si et
- * seulement si intervient ≥ τ_intervient (sauf chaîne officielle), rôle le plus probable
- * national ou amf, et confiance ≥ τ_role. Sans seuils pour le modèle, rien n'est publié.
+ * Seuil des thèmes quand la décision journalisée n'en a pas (journal antérieur) et
+ * qu'aucun seuil n'est défini pour le modèle : valeur initiale du design D4.
+ */
+const DEFAULT_THEME_THRESHOLD = 0.5;
+
+/**
+ * Règle de publication (spec intervention-classification, ADR 0018 et 0020) : publié si
+ * et seulement si intervient ≥ τ_intervient (sauf chaîne officielle), rôle le plus
+ * probable national et confiance ≥ τ_role. Sans seuils pour le modèle, rien n'est
+ * publié. Les thèmes (≥ τ_theme) sont calculés dans tous les cas et n'influencent
+ * pas la publication (spec intervention-themes).
  */
 export function decide(
   answers: ClassifierAnswers,
@@ -35,5 +50,7 @@ export function decide(
     (presumeSpeaking || answers.intervient >= thresholds.intervient) &&
     PUBLISHABLE_ROLES.includes(role) &&
     answers.role.confidence >= thresholds.role;
-  return { outcome: publish ? 'published' : 'rejected', role, kind };
+  const themeThreshold = thresholds?.theme ?? DEFAULT_THEME_THRESHOLD;
+  const themes = THEMES.filter((t) => (answers.themes?.[t] ?? 0) >= themeThreshold);
+  return { outcome: publish ? 'published' : 'rejected', role, kind, themes };
 }

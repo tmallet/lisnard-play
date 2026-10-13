@@ -16,6 +16,7 @@ import {
   labelAccuracy,
   loadReference,
   proposeThresholds,
+  themeScores,
 } from './calibrate';
 import { createSystemOneClassifier } from './classifier/systemone';
 import { thresholdsFor } from './classifier/thresholds';
@@ -80,6 +81,14 @@ switch (positionals[0]) {
       for (const e of ev.errors)
         console.log(
           `  ${e.kind.padEnd(12)} p=${e.intervient.toFixed(2)} ${e.role}(${e.confidence.toFixed(2)})  ${e.title.slice(0, 90)}${e.note ? `  [${e.note}]` : ''}`,
+        );
+    }
+    const themes = themeScores(cases, answers, current?.theme ?? 0.5);
+    if (themes.cases > 0) {
+      console.log(`Thèmes (${themes.cases} cas étiquetés, seuil ${current?.theme ?? 0.5}) :`);
+      for (const t of themes.scores)
+        console.log(
+          `  ${t.theme.padEnd(14)} précision ${pct(t.precision)}, rappel ${pct(t.recall)} (VP ${t.tp}, FP ${t.fp}, FN ${t.fn})`,
         );
     }
     const best = proposeThresholds(cases, answers);

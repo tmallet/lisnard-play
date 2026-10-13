@@ -4,7 +4,14 @@
  * d'un rappel d'au moins 80 %.
  */
 import type { Db } from '@lisnard/db/client';
-import { type ClassifierAnswers, classification, item, source } from '@lisnard/db/schema';
+import {
+  type ClassifierAnswers,
+  classification,
+  item,
+  source,
+  THEMES,
+  type Theme,
+} from '@lisnard/db/schema';
 import { desc, eq, sql } from 'drizzle-orm';
 
 import { decide } from './classifier/decide';
@@ -15,7 +22,8 @@ export interface ReferenceCase {
   platformId: string;
   outlet: string;
   title: string;
-  expected: { intervient: boolean; role: string; kind: string };
+  /** themes : renseigné seulement pour les cas validés sur les thèmes (design D4). */
+  expected: { intervient: boolean; role: string; kind: string; themes?: Theme[] };
   note?: string;
   synthetic?: boolean;
   state?: ClassifierState;
@@ -30,8 +38,8 @@ export async function loadReference(path: string): Promise<ReferenceCase[]> {
     .map((l) => JSON.parse(l) as ReferenceCase);
 }
 
-const shouldPublish = (c: ReferenceCase) =>
-  c.expected.intervient && (c.expected.role === 'national' || c.expected.role === 'amf');
+/** Périmètre de la campagne : seul le rôle national est publiable (ADR 0020). */
+const shouldPublish = (c: ReferenceCase) => c.expected.intervient && c.expected.role === 'national';
 
 /**
  * Probabilités par cas : dernière décision journalisée avec la version courante des
@@ -180,4 +188,40 @@ export function proposeThresholds(
     }
   }
   return best;
+}
+
+export interface ThemeScore {
+  theme: Theme;
+  tp: number;
+  fp: number;
+  fn: number;
+  precision: number;
+  recall: number;
+}
+
+/**
+ * Précision et rappel par thème, sur les cas dont les thèmes attendus sont renseignés
+ * (spec intervention-themes, design D4).
+ */
+export function themeScores(
+  cases: ReferenceCase[],
+  answers: Map<string, ClassifierAnswers>,
+  threshold: number,
+): { cases: number; scores: ThemeScore[] } {
+  const labelled = cases.filter((c) => c.expected.themes && answers.has(c.platformId));
+  const scores = THEMES.map((theme) => {
+    const score: ThemeScore = { theme, tp: 0, fp: 0, fn: 0, precision: 1, recall: 1 };
+    for (const c of labelled) {
+      const p = (answers.get(c.platformId) as ClassifierAnswers).themes?.[theme] ?? 0;
+      const predicted = p >= threshold;
+      const expected = c.expected.themes?.includes(theme) ?? false;
+      if (predicted && expected) score.tp += 1;
+      else if (predicted) score.fp += 1;
+      else if (expected) score.fn += 1;
+    }
+    if (score.tp + score.fp > 0) score.precision = score.tp / (score.tp + score.fp);
+    if (score.tp + score.fn > 0) score.recall = score.tp / (score.tp + score.fn);
+    return score;
+  });
+  return { cases: labelled.length, scores };
 }

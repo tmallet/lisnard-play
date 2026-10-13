@@ -1,7 +1,7 @@
 import { Link } from 'expo-router';
 import { Image, Pressable, Text, View } from 'react-native';
 
-import { formatDate, formatDateTime, kindLabel } from '@/lib/format';
+import { formatDate, formatDateTime, kindLabel, type Theme, themesLabel } from '@/lib/format';
 
 import { LiveBadge } from './LiveBadge';
 
@@ -10,7 +10,7 @@ export interface InterventionCardData {
   title: string;
   outlet: string;
   kind: string | null;
-  role: 'national' | 'amf';
+  themes: Theme[];
   status: 'live' | 'upcoming' | 'past';
   date: string;
   thumbnailUrl: string | null;
@@ -37,7 +37,7 @@ export function InterventionCard({ item }: { item: InterventionCardData }) {
           {item.status === 'live' ? <LiveBadge /> : null}
           <Text className="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
             {item.outlet} · {kindLabel(item.kind)}
-            {item.role === 'amf' ? ' · AMF' : ''}
+            {item.themes.length > 0 ? ` · ${themesLabel(item.themes, 2)}` : ''}
           </Text>
           <Text className="font-sans-bold text-base text-blanc leading-snug" numberOfLines={3}>
             {item.title}

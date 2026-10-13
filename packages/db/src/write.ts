@@ -12,6 +12,7 @@ import {
   item,
   type MediaRender,
   source,
+  type Theme,
 } from './schema';
 
 export interface SourceRecord {
@@ -194,6 +195,7 @@ export interface ClassificationRecord {
   outcome: 'published' | 'rejected';
   role: 'national' | 'amf' | 'mairie' | 'hors_sujet';
   kind: 'tv' | 'radio' | 'presse' | 'podcast' | 'meeting' | 'discours' | 'stream' | 'reseau_social';
+  themes: Theme[];
 }
 
 /**
@@ -213,7 +215,7 @@ export async function recordClassification(db: Db, r: ClassificationRecord): Pro
     });
     await tx
       .update(item)
-      .set({ status: r.outcome, role: r.role, kind: r.kind })
+      .set({ status: r.outcome, role: r.role, kind: r.kind, themes: r.themes })
       .where(eq(item.id, r.itemId));
   });
 }
@@ -229,19 +231,11 @@ export async function listLatestClassifications(db: Db) {
       inputHash: classification.inputHash,
       answers: classification.answers,
       outcome: classification.outcome,
+      themes: item.themes,
     })
     .from(classification)
     .innerJoin(item, eq(item.id, classification.itemId))
     .orderBy(classification.itemId, desc(classification.createdAt));
-}
-
-/** Applique un nouveau résultat issu d'un recalcul, sans nouvel appel au classifieur. */
-export async function applyOutcome(
-  db: Db,
-  itemId: string,
-  outcome: 'published' | 'rejected',
-): Promise<void> {
-  await db.update(item).set({ status: outcome }).where(eq(item.id, itemId));
 }
 
 /** Enregistre le rendu média d'un contenu (spec intervention-media). */

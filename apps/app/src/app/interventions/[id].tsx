@@ -9,7 +9,7 @@ import { MediaEmbed } from '@/components/MediaEmbed';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
 import { WebChrome } from '@/components/WebChrome';
-import { formatDate, formatDateTime, kindLabel, ROLE_LABELS, repeatsTitle } from '@/lib/format';
+import { formatDate, formatDateTime, kindLabel, repeatsTitle, themesLabel } from '@/lib/format';
 import { useTRPC } from '@/lib/trpc';
 import { colors } from '@/theme/colors';
 import { fontFamily } from '@/theme/fonts';
@@ -72,7 +72,8 @@ export default function InterventionDetail() {
           <View className="gap-5">
             {data.status === 'live' ? <LiveBadge /> : null}
             <Text className="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
-              {data.outlet} · {kindLabel(data.kind)} · {ROLE_LABELS[data.role]}
+              {data.outlet} · {kindLabel(data.kind)}
+              {data.themes.length > 0 ? ` · ${themesLabel(data.themes)}` : ''}
             </Text>
             <Text
               role="heading"

@@ -2,7 +2,7 @@
  * Classification et publication (spec intervention-classification, ADR 0004, 0005).
  */
 import type { Db } from '@lisnard/db/client';
-import { item, source } from '@lisnard/db/schema';
+import { item, source, THEMES } from '@lisnard/db/schema';
 import {
   type ClassificationTarget,
   inputHashSql,
@@ -104,6 +104,10 @@ async function classifyOne(
   }
 }
 
+/** Ordre canonique des thèmes (celui de THEMES), pour comparer deux listes. */
+const byThemeOrder = (a: string, b: string) =>
+  (THEMES as readonly string[]).indexOf(a) - (THEMES as readonly string[]).indexOf(b);
+
 /** Classe les contenus en attente ou dont l'entrée a changé (cache par empreinte). */
 export async function classifyPending(
   db: Db,
@@ -128,9 +132,10 @@ export async function classifyPending(
 }
 
 /**
- * Recalcule la publication de chaque contenu avec les seuils actuels, à partir des
- * probabilités journalisées, sans appeler le classifieur (spec « Recalcul sans nouvel
- * appel »). Chaque changement ajoute une entrée au journal, pour la traçabilité.
+ * Recalcule la publication et les thèmes de chaque contenu avec la règle et les seuils
+ * actuels, à partir des probabilités journalisées, sans appeler le classifieur (specs
+ * « Recalcul sans nouvel appel » et « Recalcul des thèmes »). Chaque changement ajoute
+ * une entrée au journal, pour la traçabilité.
  */
 export async function recompute(
   db: Db,
@@ -144,7 +149,8 @@ export async function recompute(
     const decision = decide(c.answers, thresholds, {
       presumeSpeaking: isOfficialSource(c.sourceId),
     });
-    if (decision.outcome === c.outcome) continue;
+    const sameThemes = decision.themes.join() === [...c.themes].sort(byThemeOrder).join();
+    if (decision.outcome === c.outcome && sameThemes) continue;
     await recordClassification(db, {
       itemId: c.itemId,
       model: c.model,

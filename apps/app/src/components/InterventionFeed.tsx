@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { useTRPC } from '@/lib/trpc';
 
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
-import { RoleFilter, type RoleFilterValue } from './RoleFilter';
+import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
 
 /** Rafraîchissement des directs et des interventions à venir (spec intervention-feed). */
 const REFRESH_MS = 60_000;
@@ -41,24 +41,27 @@ function Section({
   );
 }
 
-/** Accueil : « En direct », « À venir », « Passées », filtrables par rôle. */
+/** Accueil : « En direct », « À venir », « Passées », filtrables par thème. */
 export function InterventionFeed() {
   const trpc = useTRPC();
-  const [roleFilter, setRoleFilter] = useState<RoleFilterValue>('all');
-  const role = roleFilter === 'all' ? undefined : roleFilter;
+  const [themeFilter, setThemeFilter] = useState<ThemeFilterValue>('all');
+  const theme = themeFilter === 'all' ? undefined : themeFilter;
 
   const live = useQuery(
-    trpc.interventions.list.queryOptions({ status: 'live', role }, { refetchInterval: REFRESH_MS }),
+    trpc.interventions.list.queryOptions(
+      { status: 'live', theme },
+      { refetchInterval: REFRESH_MS },
+    ),
   );
   const upcoming = useQuery(
     trpc.interventions.list.queryOptions(
-      { status: 'upcoming', role },
+      { status: 'upcoming', theme },
       { refetchInterval: REFRESH_MS },
     ),
   );
   const past = useInfiniteQuery(
     trpc.interventions.list.infiniteQueryOptions(
-      { status: 'past', role, limit: 20 },
+      { status: 'past', theme, limit: 20 },
       { getNextPageParam: (last) => last.nextCursor ?? undefined },
     ),
   );
@@ -71,7 +74,7 @@ export function InterventionFeed() {
 
   return (
     <View className="gap-8">
-      <RoleFilter value={roleFilter} onChange={setRoleFilter} />
+      <ThemeFilter value={themeFilter} onChange={setThemeFilter} />
       {failed ? (
         <Text className="font-sans text-base text-blanc/85">
           Les interventions n’ont pas pu être chargées. Réessayez dans un instant.
@@ -86,7 +89,9 @@ export function InterventionFeed() {
             <SectionTitle>Passées</SectionTitle>
             {pastItems.length === 0 ? (
               <Text className="font-sans text-base text-blanc/85">
-                Les interventions de David Lisnard apparaîtront ici.
+                {theme
+                  ? 'Aucune intervention ne correspond à ce thème pour l’instant.'
+                  : 'Les interventions de David Lisnard apparaîtront ici.'}
               </Text>
             ) : (
               pastItems.map((item) => <InterventionCard key={item.id} item={item} />)

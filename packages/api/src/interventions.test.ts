@@ -21,7 +21,8 @@ function id(key: string): string {
 async function seed(
   key: string,
   opts: {
-    role?: 'national' | 'amf' | 'mairie';
+    role?: 'national' | 'mairie';
+    themes?: ('economie' | 'securite' | 'campagne')[];
     outcome?: 'published' | 'rejected';
     liveStatus?: 'live' | 'upcoming' | 'none';
     startsAt?: Date;
@@ -52,6 +53,7 @@ async function seed(
     outcome: opts.outcome ?? 'published',
     role: opts.role ?? 'national',
     kind: 'tv',
+    themes: opts.themes ?? [],
   });
   await setMedia(db, id, {
     kind: 'embed',
@@ -75,8 +77,8 @@ beforeAll(async () => {
   await seed('soon', { liveStatus: 'upcoming', startsAt: future(2), publishedAt: day(1) });
   await seed('later', { liveStatus: 'upcoming', startsAt: future(48), publishedAt: day(1) });
   await seed('p1', { publishedAt: day(10) });
-  await seed('p2', { publishedAt: day(11), role: 'amf' });
-  await seed('p3', { publishedAt: day(12) });
+  await seed('p2', { publishedAt: day(11), themes: ['economie', 'securite'] });
+  await seed('p3', { publishedAt: day(12), themes: ['securite'] });
   await seed('rejected', { publishedAt: day(13), role: 'mairie', outcome: 'rejected' });
 });
 afterAll(() => drop());
@@ -113,9 +115,25 @@ describe('interventions.list', () => {
     expect(next.nextCursor).toBeNull();
   });
 
-  test('filtre par rôle', async () => {
-    const { items } = await caller().interventions.list({ status: 'past', role: 'amf' });
-    expect(items.map((i) => [i.id, i.role])).toEqual([[id('p2'), 'amf']]);
+  test('filtre par thème', async () => {
+    const { items } = await caller().interventions.list({ status: 'past', theme: 'securite' });
+    expect(items.map((i) => [i.id, i.themes])).toEqual([
+      [id('p3'), ['securite']],
+      [id('p2'), ['economie', 'securite']],
+    ]);
+  });
+
+  test('contenu sans thème : présent sans filtre, avec une liste vide', async () => {
+    const { items } = await caller().interventions.list({ status: 'past' });
+    expect(items.find((i) => i.id === id('p1'))?.themes).toEqual([]);
+  });
+
+  test('thème inconnu : requête invalide', async () => {
+    const error = await caller()
+      // @ts-expect-error valeur hors de la liste des thèmes
+      .interventions.list({ status: 'past', theme: 'sport' })
+      .catch((e) => e);
+    expect((error as TRPCError).code).toBe('BAD_REQUEST');
   });
 
   test('n’expose ni contenu écarté ni donnée interne', async () => {
@@ -127,8 +145,8 @@ describe('interventions.list', () => {
       'id',
       'kind',
       'outlet',
-      'role',
       'status',
+      'themes',
       'thumbnailUrl',
       'title',
     ]);
