@@ -8,9 +8,9 @@ Le client n'importe que le **type** `AppRouter`.
 | Fichier | Rôle |
 |---------|------|
 | `src/trpc.ts` | `initTRPC` : `router`, `publicProcedure`, `createCallerFactory`, `errorFormatter` |
-| `src/context.ts` | `createContext({ req?, version, isDev })` |
+| `src/context.ts` | `createContext({ req?, version, isDev, db? })` : `db` est la connexion en lecture (absente si `DATABASE_URL` n'est pas défini) |
 | `src/root.ts` | `appRouter` (assemblage des procédures), `AppRouter`, `createCaller` |
-| `src/routers/*.ts` | Une procédure ou un sous-routeur par domaine |
+| `src/routers/*.ts` | Une procédure ou un sous-routeur par domaine : `health`, `interventions` (`list`, `byId`) |
 | `src/index.ts` | API publique du package |
 
 ## Conventions
@@ -22,7 +22,10 @@ Le client n'importe que le **type** `AppRouter`.
   hors développement (spec `api-transport`).
 - Sorties en JSON simple : dates en chaînes ISO 8601, pas de transformateur (ADR 0013).
 - Pas de dépendance à Expo ni à React : le package doit rester exécutable par
-  Bun seul (tests, futur worker).
+  Bun seul.
+- **Base de données en lecture seule** : n'importer que `@lisnard/db/read`
+  (ADR 0017). Seuls les tests importent `@lisnard/db/write`, pour préparer leurs
+  données. Ne jamais renvoyer de donnée interne (probabilités, seuils, journal).
 - Pas de secret dans ce package tant qu'il est servi par l'app. Les secrets
   d'ingestion restent dans le worker (ADR 0011).
 
@@ -30,7 +33,9 @@ Pas à pas pour ajouter une procédure : skill `trpc-procedure`.
 
 ## Tests
 
-`bun --filter @lisnard/api test` (`bun test`) :
+`bun --filter @lisnard/api test` (`bun test`, Postgres requis) :
 - appel direct : `createCaller(createContext({ version, isDev }))` ;
 - comportement HTTP (codes, format d'erreur) : `fetchRequestHandler` sur un
-  `Request` construit à la main (voir `src/trpc.test.ts`).
+  `Request` construit à la main (voir `src/trpc.test.ts`) ;
+- avec la base : `createTestDb()` de `@lisnard/db/testing`, puis données
+  préparées via `write` (voir `src/interventions.test.ts`).

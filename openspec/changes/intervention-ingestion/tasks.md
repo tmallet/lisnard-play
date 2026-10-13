@@ -77,9 +77,9 @@
 
 ## 10. Documentation
 
-- [ ] 10.1 `docs/architecture/README.md` : modules `packages/db` et `apps/worker`, flux collecte → classification → publication → consultation, schéma de données
-- [ ] 10.2 `docs/architecture/classifier.md` : questions, seuils, calibration, procédure de changement de modèle
-- [ ] 10.3 `packages/db/AGENTS.md` et `apps/worker/AGENTS.md` ; mise à jour de `packages/api/AGENTS.md`, `apps/app/AGENTS.md` et de l'`AGENTS.md` racine
-- [ ] 10.4 Skill `add-intervention-source` (déclarer une source, fixtures, pare-feu, règles de l'ADR 0017) et skill `classifier-jev` (questions, version, seuils, calibration, changement de modèle), avec leurs symlinks
-- [ ] 10.5 Mettre à jour `docs/architecture/commandes.md` (base locale, worker, CLI `recompute`, `reclassify`, `calibrate`, Drizzle Studio) et `.env.example`
-- [ ] 10.6 Si le spike ou l'implémentation impose un écart aux ADR 0004, 0014, 0015 ou 0017, le consigner avec le skill `record-decision` ; lancer `bun run check`
+- [x] 10.1 `docs/architecture/README.md` : modules `packages/db` et `apps/worker`, flux collecte → classification → publication → consultation, schéma de données
+- [x] 10.2 `docs/architecture/classifier.md` : questions, seuils, calibration, procédure de changement de modèle
+- [x] 10.3 `packages/db/AGENTS.md` et `apps/worker/AGENTS.md` ; mise à jour de `packages/api/AGENTS.md`, `apps/app/AGENTS.md` et de l'`AGENTS.md` racine
+- [x] 10.4 Skill `add-intervention-source` (déclarer une source, fixtures, pare-feu, règles de l'ADR 0017) et skill `classifier-jev` (questions, version, seuils, calibration, changement de modèle), avec leurs symlinks
+- [x] 10.5 Mettre à jour `docs/architecture/commandes.md` (base locale, worker, CLI `recompute`, `reclassify`, `calibrate`, Drizzle Studio) et `.env.example`
+- [x] 10.6 Si le spike ou l'implémentation impose un écart aux ADR 0004, 0014, 0015 ou 0017, le consigner avec le skill `record-decision` ; lancer `bun run check`

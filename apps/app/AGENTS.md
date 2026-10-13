@@ -22,11 +22,15 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 | Chemin | Rôle |
 |--------|------|
 | `src/app/` | Routes uniquement. Chaque fichier est un écran ; `_layout.tsx` = navigateur ; `+api.ts` = route API |
-| `src/app/_layout.tsx` | Racine : `global.css`, polices, `ApiProvider`, fond en dégradé |
+| `src/app/_layout.tsx` | Racine : `global.css`, polices, `ApiProvider`, fond en dégradé, `Stack` (`initialRouteName: '(tabs)'`, thème de navigation à fond transparent) |
 | `src/app/+html.tsx` | Document HTML web (exécuté au rendu serveur, jamais côté client) |
-| `src/app/(tabs)/` | Accueil (`index`) et `a-propos`. Navigation dans `components/AppNavigation(.web).tsx` : en-tête et liens sur le web, barre d'onglets **native** sur iOS et Android |
-| `src/app/api/trpc/[trpc]+api.ts` | Point d'accès tRPC (`GET`/`POST /api/trpc/*`) |
-| `src/components/` | Composants partagés (hors routes) |
+| `src/app/(tabs)/` | Accueil (`index`, flux `InterventionFeed`) et `a-propos`. Navigation dans `components/AppNavigation(.web).tsx` : en-tête et liens sur le web, barre d'onglets **native** sur iOS et Android |
+| `src/app/interventions/[id].tsx` | Détail d'une intervention : média, métadonnées, lien source ; distingue `NOT_FOUND` d'une erreur réseau |
+| `src/app/api/trpc/[trpc]+api.ts` | Point d'accès tRPC (`GET`/`POST /api/trpc/*`), client Postgres partagé sur `globalThis` (ADR 0019) |
+| `src/components/` | Composants partagés (hors routes) : `InterventionFeed`, `InterventionCard`, `LiveBadge`, `RoleFilter`, `MediaEmbed(.web)`, `LinkCard`… |
+| `src/lib/format.ts` | Dates en heure de Paris, libellés de rôle, de type et de statut |
+| `shims/bun.js`, `metro.config.js` | Module `bun` résolu vers `globalThis.Bun` pour Metro (ADR 0019) |
+| `server.ts` | Serveur de production Bun (`expo-server/adapter/bun`) qui sert `dist/` |
 | `src/config/identity.json` | **Source unique** du nom de l'application (lu par `config/app.ts` et `app.config.ts`) : ne jamais écrire le nom en dur ailleurs |
 | `src/config/app.ts` | `APP_NAME`, mentions (indépendance, sources), contact, `pageTitle()` |
 | `src/config/navigation.ts` | `NAV_ITEMS` : onglets (route, lien, libellé, icônes), partagés par le web et le natif |
@@ -59,8 +63,14 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 - **Métadonnées web** : `<PageHead title=… description=… />` dans chaque écran, 404
   comprise (`+not-found.tsx`) : c'est lui qui pose `<title>`, la description et les
   balises Open Graph. `+html.tsx` ne porte que les balises communes.
-- **Données** : toujours via tRPC (`useTRPC()` + `useQuery(trpc.x.queryOptions())`).
-  Pour ajouter une procédure : skill `trpc-procedure`.
+- **Données** : toujours via tRPC (`useTRPC()` + `useQuery(trpc.x.queryOptions())`,
+  ou `useInfiniteQuery(trpc.x.infiniteQueryOptions())` pour une liste paginée par
+  curseur, comme le flux). L'app n'accède jamais à la base elle-même : seule l'API
+  route lit Postgres, via `@lisnard/db/read` (ADR 0017). Pour ajouter une
+  procédure : skill `trpc-procedure`.
+- **Médias** : `MediaEmbed` affiche le lecteur de l'URL fournie par le worker
+  (iframe sur le web, `react-native-webview` sur mobile), sinon `LinkCard`. Jamais
+  de téléchargement ni de réhébergement (ADR 0007).
 - **Rendu web** : pré-rendu au build en SDK 57 (ADR 0011). Une route dynamique
   exige donc `generateStaticParams`, ou des métadonnées génériques.
 
@@ -69,13 +79,29 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 - `bun --filter @lisnard/app test` : jest-expo + React Native Testing Library.
   En RNTL 14, `render` est **asynchrone** : écrire `await render(...)`.
 - Tests à côté du code, dans des dossiers `__tests__/`.
-- Le smoke test web (`bun run smoke:web`) vérifie le HTML servi et l'API.
+- Le smoke test web (`bun run smoke:web`) vérifie le HTML servi et l'API, avec
+  le serveur Bun de production et une base jetable.
+- Les tests qui rendent un composant à requêtes créent leur propre
+  `QueryClient` (`retry: false`, `gcTime` infini) et le vident en fin de test
+  (`client.clear()`), sinon des minuteurs survivent et Jest ne se termine pas.
 
 ## Pièges
 
 - `CI=1 bunx expo start` **désactive la surveillance des fichiers** : les
   modifications ne sont plus servies. Pour itérer, lancer Metro sans `CI`
-  (`bunx expo start < /dev/null` dans un terminal non interactif).
+  (`bun run dev < /dev/null` dans un terminal non interactif).
+- **Les API routes exigent le runtime Bun** (`Bun.sql`) : passer par
+  `bun run dev`, qui lance `expo start` sous Bun avec le `.env` racine, plutôt
+  que `bunx expo start` (Node). Erreur typique sinon : « Unable to resolve
+  module bun » ou `Bun is not defined` (ADR 0019).
+- **État serveur** (connexion, cache) : le garder sur `globalThis`. Metro
+  réévalue les modules à chaque rechargement, et un pool recréé à chaque fois
+  épuise les connexions Postgres (« too many clients »).
+- **Fond blanc sur le web** : la `Stack` peint le fond de son thème. Le thème
+  de navigation de `_layout.tsx` le rend transparent pour laisser voir le dégradé.
+- **Lecteurs intégrés** : le navigateur de prévisualisation de l'agent bloque
+  les iframes externes. Vérifier la lecture dans un vrai navigateur ou sur le
+  simulateur iOS.
 
 ## Natif
 

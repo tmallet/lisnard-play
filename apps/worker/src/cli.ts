@@ -2,7 +2,7 @@
  * Commandes d'exploitation du worker (design D4, D5) :
  *   bun run cli recompute                        recalcule la publication avec les seuils actuels
  *   bun run cli reclassify [--model M] [--version N]  reclasse en rappelant le classifieur
- *   bun run cli calibrate [--validated]          mesure les seuils sur eval/reference.jsonl
+ *   bun run cli calibrate [--validated] [--model M]  mesure les seuils sur eval/reference.jsonl
  *   bun run cli backfill                         rattrape toutes les vidéos des chaînes officielles
  */
 import { resolve } from 'node:path';
@@ -56,7 +56,10 @@ switch (positionals[0]) {
     break;
   }
   case 'calibrate': {
-    const classifier = createSystemOneClassifier({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+    const classifier = createSystemOneClassifier({
+      apiKey: requireEnv('OPENROUTER_API_KEY'),
+      ...(values.model && { model: values.model }),
+    });
     const all = await loadReference(resolve(import.meta.dir, '../eval/reference.jsonl'));
     const cases = values.validated ? all.filter((c) => c.validated) : all;
     const answers = await collectAnswers(db, classifier, cases);
@@ -89,7 +92,7 @@ switch (positionals[0]) {
   }
   default:
     console.error(
-      'Usage : bun run cli <recompute | reclassify [--model M] [--version N] | calibrate [--validated] | backfill>',
+      'Usage : bun run cli <recompute | reclassify [--model M] [--version N] | calibrate [--validated] [--model M] | backfill>',
     );
     process.exit(1);
 }
