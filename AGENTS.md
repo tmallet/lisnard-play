@@ -10,9 +10,10 @@ présidentielle 2027. Le périmètre est sa campagne présidentielle : ni l'AMF 
 la mairie de Cannes (ADR 0020). Les interventions sont classées par thèmes. Le contexte complet se trouve dans `openspec/config.yaml` (`context`).
 
 État actuel : **ingestion en place**. Le worker collecte YouTube et Google News,
-classe avec Jev, résout les médias et écrit dans Postgres ; l'app affiche le flux
-paginé et le détail des interventions (ADR 0014 à 0019). Restent à venir : les
-résumés et transcriptions, les notifications et le SSR (SDK 58).
+classe avec Jev (périmètre de campagne, thèmes), résout les médias, résume les
+vidéos avec Gemini et écrit dans Postgres ; l'app affiche le flux paginé, filtrable
+par thème, et le détail avec le résumé (ADR 0014 à 0021). Restent à venir : les
+transcriptions, les notifications et le SSR (SDK 58).
 
 ## Démarrer
 
@@ -66,6 +67,8 @@ Pour travailler en bac à sable (agents en autonomie) :
   parlent qu'à l'API tRPC.
 - **Médias (ADR 0007)** : intégration du lecteur officiel ou lien vers la
   source, jamais de téléchargement ni de réhébergement.
+- **Presse (ADR 0021)** : jamais de résumé d'article ni de lecture de son texte ;
+  seules les balises de partage de l'en-tête sont lues.
 - **Secrets** : jamais dans le code, l'image ni un fichier commité.
   `OPENROUTER_API_KEY` et `YOUTUBE_API_KEY` ne résident que dans le worker et
   le `.env` local : ne jamais les afficher.

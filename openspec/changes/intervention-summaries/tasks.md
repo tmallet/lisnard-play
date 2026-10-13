@@ -11,7 +11,7 @@
 ## 3. Résumés
 
 - [x] 3.1 `summaries/prompt.ts` : consigne et `PROMPT_VERSION = 1`, conformes à la spec `intervention-summaries` ; schéma JSON de sortie
-- [x] 3.2 `summaries/openrouter.ts` : client (`SUMMARY_MODEL` épinglé, fournisseur Google AI Studio, `response_format`, coût), validation zod, `fetch` injectable
+- [x] 3.2 `summaries/openrouter.ts` : client (`SUMMARY_MODEL` épinglé, fournisseur Google AI Studio, `response_format`, coût), validation de la sortie (comme `parseAnswers`), `fetch` injectable
 - [x] 3.3 `summaries/task.ts` : sélection, budget quotidien (`SUMMARY_DAILY_BUDGET_USD`), plafond par cycle, vidéos trop longues ignorées, échecs et plafond de tentatives (D2, D4, D5)
 - [x] 3.4 Tâche `summarize` dans le planificateur (2 min) ; CLI `summarize [--budget N] [--retry]`
 - [x] 3.5 Tests : contenus éligibles ou non (direct, article, Dailymotion), « ne s'exprime pas », échecs puis abandon, budget atteint, nouvelle `PROMPT_VERSION`
@@ -38,7 +38,7 @@
 
 ## 7. Documentation
 
-- [ ] 7.1 `docs/architecture/resumes.md` : modèle, consigne, garde-fous, coûts, procédure de changement de modèle ou de consigne ; lien depuis `docs/architecture/README.md` (schéma, cycle du worker)
-- [ ] 7.2 `docs/architecture/commandes.md` (`summarize`, `media --refresh`), `deploiement.md` (étapes de reprise, `SUMMARY_DAILY_BUDGET_USD`) et `.env.example`
-- [ ] 7.3 `apps/worker/AGENTS.md` (module `summaries/`), `packages/db/AGENTS.md`, `apps/app/AGENTS.md`, `AGENTS.md` racine (état)
-- [ ] 7.4 ADR 0021 déjà rédigé ; consigner tout écart avec le skill `record-decision`
+- [x] 7.1 `docs/architecture/resumes.md` : modèle, consigne, garde-fous, coûts, procédure de changement de modèle ou de consigne ; lien depuis `docs/architecture/README.md` (schéma, cycle du worker)
+- [x] 7.2 `docs/architecture/commandes.md` (`summarize`, `media --refresh`), `deploiement.md` (étapes de reprise, `SUMMARY_DAILY_BUDGET_USD`) et `.env.example`
+- [x] 7.3 `apps/worker/AGENTS.md` (module `summaries/`), `packages/db/AGENTS.md`, `apps/app/AGENTS.md`, `AGENTS.md` racine (état)
+- [x] 7.4 ADR 0021 déjà rédigé ; consigner tout écart avec le skill `record-decision`

@@ -76,7 +76,7 @@ rattrapage.
   - `response_format: json_schema` pour `{ speaks: boolean, summary: string,
     points: string[] }` ;
   - `usage: { include: true }` pour journaliser le coût.
-- **Validation** : la réponse est validée par zod. Une forme invalide compte
+- **Validation** : la réponse est validée par `parseSummaryOutput`, sur le modèle de `parseAnswers` (le worker ne dépend pas de zod). Une forme invalide compte
   comme un échec (D5).
 - **Consigne** : `summaries/prompt.ts`, avec `PROMPT_VERSION = 1`. Le texte
   reprend la spec `intervention-summaries` : 3 phrases au plus, attribution,

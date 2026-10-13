@@ -47,8 +47,10 @@ réutiliser `apps/app/dist`.
 | `bun apps/worker/src/cli.ts calibrate --validated [--model M]` | Mesure précision et rappel sur le jeu de référence (modèle épinglé par défaut), et propose des seuils |
 | `bun apps/worker/src/cli.ts recompute` | Applique les seuils et la règle actuels aux décisions journalisées (sans appel au modèle) |
 | `bun apps/worker/src/cli.ts reclassify [--model M] [--version N]` | Reclasse en rappelant le modèle |
+| `bun apps/worker/src/cli.ts summarize [--budget N] [--retry]` | Résume les vidéos jusqu'au plafond du jour (N $) ; `--retry` relance les abandons |
+| `bun apps/worker/src/cli.ts media --refresh [--source ID]` | Recalcule le rendu des contenus publiés (cartes des articles Google News) |
 
-Procédures du classifieur : [classifier.md](classifier.md).
+Procédures du classifieur : [classifier.md](classifier.md). Résumés : [resumes.md](resumes.md).
 
 ## Base de données (`packages/db`)
 
@@ -92,8 +94,9 @@ Voir `.env.example`. Un fichier `.env*` n'est jamais commité (sauf `.env.exampl
 | Variable | Usage |
 |----------|-------|
 | `DATABASE_URL` | Postgres (local : `postgres://lisnard:lisnard@localhost:5433/lisnard`) |
-| `OPENROUTER_API_KEY` | Worker : classifieur Jev |
+| `OPENROUTER_API_KEY` | Worker : classifieur Jev et résumés (Gemini) |
 | `YOUTUBE_API_KEY` | Worker : API YouTube Data |
+| `SUMMARY_DAILY_BUDGET_USD` | Worker : plafond quotidien des résumés, en dollars (1 par défaut) |
 | `EXPO_PUBLIC_API_URL` | URL de base de l'API pour les clients mobiles hors développement |
 | `EXPO_PUBLIC_SITE_URL` | Origine déclarée par le lecteur vidéo mobile (défaut : `https://lisnard-play.app`) |
 
