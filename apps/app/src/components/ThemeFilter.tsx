@@ -1,4 +1,4 @@
-import { Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { THEME_LABELS, THEME_ORDER, type Theme } from '@/lib/format';
 
@@ -10,8 +10,9 @@ const OPTIONS: { value: ThemeFilterValue; label: string }[] = [
 ];
 
 /**
- * Filtre par thème (spec intervention-feed) : « Tout » puis les sept thèmes. Une ligne
- * qui défile horizontalement sur mobile, des pastilles qui passent à la ligne sur le web.
+ * Filtre par thème (spec intervention-feed) : « Tout » puis les sept thèmes, en
+ * pastilles qui passent à la ligne. Toutes restent visibles, y compris sur un
+ * téléphone : une ligne défilante masquait les thèmes au-delà du bord de l'écran.
  */
 export function ThemeFilter({
   value,
@@ -20,46 +21,30 @@ export function ThemeFilter({
   value: ThemeFilterValue;
   onChange: (value: ThemeFilterValue) => void;
 }) {
-  const chips = OPTIONS.map((option) => {
-    const selected = option.value === value;
-    return (
-      <Pressable
-        key={option.value}
-        accessibilityRole="radio"
-        accessibilityState={{ selected }}
-        onPress={() => onChange(option.value)}
-        className={`rounded-full border px-4 py-1.5 ${selected ? 'border-chamois bg-chamois' : 'border-blanc/30 active:bg-blanc/10'}`}
-      >
-        <Text
-          className={`font-sans-semibold text-sm ${selected ? 'text-bleu-sombre' : 'text-blanc'}`}
-        >
-          {option.label}
-        </Text>
-      </Pressable>
-    );
-  });
-
-  if (Platform.OS === 'web')
-    return (
-      <View
-        accessibilityRole="radiogroup"
-        accessibilityLabel="Filtrer par thème"
-        className="flex-row flex-wrap gap-2"
-      >
-        {chips}
-      </View>
-    );
   return (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
+    <View
       accessibilityRole="radiogroup"
       accessibilityLabel="Filtrer par thème"
-      // Défile jusqu.aux bords de l.écran, au-delà de la marge de Screen (px-6).
-      className="-mx-6"
-      contentContainerClassName="gap-2 px-6"
+      className="flex-row flex-wrap gap-2"
     >
-      {chips}
-    </ScrollView>
+      {OPTIONS.map((option) => {
+        const selected = option.value === value;
+        return (
+          <Pressable
+            key={option.value}
+            accessibilityRole="radio"
+            accessibilityState={{ selected }}
+            onPress={() => onChange(option.value)}
+            className={`rounded-full border px-4 py-1.5 ${selected ? 'border-chamois bg-chamois' : 'border-blanc/30 active:bg-blanc/10'}`}
+          >
+            <Text
+              className={`font-sans-semibold text-sm ${selected ? 'text-bleu-sombre' : 'text-blanc'}`}
+            >
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }

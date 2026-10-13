@@ -2,7 +2,7 @@
 
 - [x] 1.1 `THEMES` et le type `Theme` dans `packages/db/src/schema.ts` ; `theme` ajouté à `AppliedThresholds` ; réponses de thème ajoutées à `ClassifierAnswers` (D2, D4)
 - [x] 1.2 Colonne `item.themes text[] NOT NULL DEFAULT '{}'` et index GIN ; migration générée avec `db:generate` (D3)
-- [x] 1.3 `write.ts` : `applyOutcome` écrit `themes` ; `read.ts` : filtre `theme` (`themes @> ARRAY[...]`), `themes` exposé à la place de `role` ; tests de `db.test.ts` mis à jour
+- [x] 1.3 `write.ts` : `recordClassification` écrit `themes` ; `read.ts` : filtre `theme` (`themes @> ARRAY[...]`), `themes` exposé à la place de `role` ; tests de `db.test.ts` mis à jour
 
 ## 2. Classifieur
 
@@ -25,7 +25,7 @@
 ## 5. App
 
 - [x] 5.1 `lib/format.ts` : `THEME_LABELS: Record<Theme, string>` (type inféré depuis `AppRouter`) et formatage de la liste des thèmes (deux au plus, puis « +N »)
-- [x] 5.2 `ThemeFilter` remplace `RoleFilter` : défilement horizontal sur mobile, passage à la ligne sur le web, état actif accessible (D7, skill `charte-ui`)
+- [x] 5.2 `ThemeFilter` remplace `RoleFilter` : pastilles qui passent à la ligne sur toutes les plateformes, état actif accessible (D7, skill `charte-ui`)
 - [x] 5.3 `InterventionFeed` : filtre par thème transmis aux requêtes des trois sections ; message dédié pour un thème sans intervention
 - [x] 5.4 `InterventionCard` et écran de détail : thèmes à la place du rôle ; suppression de `ROLE_LABELS`
 - [x] 5.5 Tests : `ThemeFilter`, carte avec plusieurs thèmes et sans thème, flux filtré et vide

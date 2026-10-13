@@ -106,9 +106,11 @@ décision, pour une bascule qui n'arrive qu'une fois.
 ### D7 — Interface
 
 - **`ThemeFilter`** remplace `RoleFilter` : des pastilles « Tout » puis les sept
-  thèmes. Sur mobile, elles sont dans un `ScrollView` horizontal ; sur le web,
-  elles passent à la ligne. L'état actif se lit à la fois par la couleur et par
-  `aria-selected` / `accessibilityState` (skill `charte-ui`).
+  thèmes, qui passent à la ligne sur toutes les plateformes. Une ligne défilante
+  a d'abord été essayée sur mobile, mais rien n'indiquait qu'il y avait d'autres
+  thèmes au-delà du bord de l'écran (retour du porteur du projet). Les pastilles
+  occupent quatre lignes sur un iPhone. L'état actif se lit à la fois par la
+  couleur et par `accessibilityState` (skill `charte-ui`).
 - **Liste vide** pour un thème : message dédié (spec `intervention-feed`).
 - **Carte** : la ligne de métadonnées devient « Média · Type · Thème 1, Thème 2 »,
   avec deux thèmes au plus puis « +N ».
