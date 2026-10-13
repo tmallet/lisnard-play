@@ -10,9 +10,9 @@ context: |
   mairie de Cannes. Celles liées à la présidence de l'AMF sont incluses et
   étiquetées (ADR 0006).
 
-  Stack (ADR 0002, 0003) :
+  Stack (ADR 0002, 0011) :
   - Monorepo Bun (gestionnaire de paquets + workspaces ; runtime du worker)
-  - Expo (dernière version) + Expo Router, web d'abord (SSR), iOS et Android
+  - Expo (dernière version) + Expo Router, web d'abord (pré-rendu en SDK 57, SSR en SDK 58+), iOS et Android
   - tRPC pour la communication front/back, monté dans des API routes Expo
   - Uniwind (Tailwind v4 pour React Native) pour le style
   - Worker d'ingestion séparé (tâche planifiée) : collecte, classification, publication

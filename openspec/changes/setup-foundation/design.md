@@ -42,6 +42,8 @@ scripts/docs-check.ts   contrôle de la doc
 Les scripts racine délèguent par `bun --filter`.
 
 ### D2 — Expo Router en sortie serveur
+> **Mise à jour à l'implémentation** : en SDK 57, `output: "server"` pré-rend les pages au build et sert les API routes ; le SSR par requête n'est stable qu'en SDK 58. Voir ADR 0011 (remplace l'ADR 0003).
+
 `app.json` → `web.output: "server"` pour obtenir à la fois le SSR des pages et
 les API routes (ADR 0003). Les métadonnées (titre, description, Open Graph,
 `lang="fr"`) sont posées dans `app/+html.tsx` (document racine) et par page
@@ -73,8 +75,10 @@ casserait la décision de l'ADR 0003. On ne l'utilise qu'en repli (voir Risques)
 `--color-bleu-sombre`, `--color-chamois`, `--color-blanc`, `--color-emeraude`)
 et `--font-*` pour Montserrat. La configuration Metro est enveloppée par
 l'utilitaire Uniwind, selon sa documentation pour le SDK courant.
-Le fond en dégradé (160°, bleu → bleu sombre) passe par `expo-linear-gradient`
-dans la mise en page racine, avec `bg-bleu-sombre` en repli.
+Le fond en dégradé (160°, bleu → bleu sombre) passe par le support natif des
+dégradés d'Uniwind (`bg-linear-160 from-bleu to-bleu-sombre`), avec
+`bg-bleu-sombre` en repli. *Mise à jour à l'implémentation* : `expo-linear-gradient`
+est inutile, ce qui fait une dépendance de moins.
 
 ### D5 — Police Montserrat embarquée
 Graisses 400, 600, 700 et 800 via `@expo-google-fonts/montserrat`, chargées
@@ -144,7 +148,11 @@ Voir ADR 0010.
 - **Performance** : `node_modules` (racine et workspaces) dans des volumes
   nommés, cache Bun dans un volume. L'option « Clone in volume » est
   documentée pour le cas où le montage reste lent.
-- **Ports redirigés** : 8081 (Metro, bundles web et mobile, API routes en dev).
+- **Ports redirigés** : 8081 (Metro, bundles web et mobile, API routes en dev)
+  et 8082 en repli. Le port de l'hôte doit être identique à celui du conteneur,
+  car le manifeste Expo annonce `localhost:<port>`. Le pare-feu les autorise en
+  entrée (`DEV_PORTS`), puisque Docker Desktop relaie depuis une adresse
+  extérieure au réseau de l'hôte.
   Le simulateur iOS et l'émulateur Android de l'hôte joignent
   `localhost:8081`. Un téléphone physique passe par
   `REACT_NATIVE_PACKAGER_HOSTNAME=<IP LAN de l'hôte>` ou `expo start --tunnel`.

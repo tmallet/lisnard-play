@@ -1,11 +1,11 @@
 ---
 id: "0003"
 title: Web d'abord, API routes tRPC et worker d'ingestion séparé
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [architecture, web, ingestion]
 supersedes: null
-superseded-by: null
+superseded-by: "0011"
 related-specs: []
 related-changes: []
 ---

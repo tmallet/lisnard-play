@@ -1,0 +1,32 @@
+@import "tailwindcss";
+@import "uniwind";
+
+/*
+ * Charte réduite « Nouvelle Énergie » (ADR 0001) : palette et Montserrat uniquement.
+ * Jamais de logo ni d'hexagone signature.
+ */
+@theme {
+  --color-bleu: #1d257a;
+  --color-bleu-sombre: #0f1752;
+  --color-chamois: #b0ad85;
+  --color-blanc: #f9f9f9;
+  --color-emeraude: #52c985;
+
+  /* Noms exacts des polices chargées par expo-font (src/theme/fonts.ts). */
+  --font-sans: "Montserrat_400Regular";
+  --font-sans-semibold: "Montserrat_600SemiBold";
+  --font-sans-bold: "Montserrat_700Bold";
+  --font-sans-extrabold: "Montserrat_800ExtraBold";
+}
+
+/* Web uniquement : focus clavier visible, contour émeraude (spec app-shell, accessibilité). */
+:focus-visible {
+  outline: 2px solid #52c985;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: #b0ad85;
+  color: #0f1752;
+}

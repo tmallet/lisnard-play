@@ -1,7 +1,7 @@
 ---
 id: "0010"
 title: Versions d'outils via asdf et devcontainer bac à sable pour agents
-status: proposed
+status: accepted
 date: 2026-10-13
 tags: [outillage, environnement, agents, securite]
 supersedes: null
@@ -61,6 +61,16 @@ virtualisation imbriquée qu'exige l'émulateur Android.
 
 ## Conséquences
 
+- Versions retenues à l'implémentation : Bun 1.4.3, Node 24.21.0 (LTS).
+- Les CLI npm globales (`openspec`, `codex`…) s'installent **par version de
+  Node** avec asdf : dans le dépôt, il faut les installer pour Node 24.21.0.
+- Le port de Metro doit être identique côté hôte et côté conteneur (le
+  manifeste Expo annonce `localhost:<port>`) : 8081, ou 8082 en repli. Le
+  pare-feu les autorise en entrée, car Docker Desktop relaie les ports
+  redirigés depuis une adresse extérieure au réseau de l'hôte.
+- Certains noms GitHub se résolvent vers des IP absentes de
+  `api.github.com/meta` : la liste blanche les résout aussi par DNS.
+
 - Modifier une version d'outil revient à modifier `.tool-versions` (puis
   `package.json`), ce qui reconstruit le conteneur et met à jour la CI.
 - Ajouter un service externe (nouvelle API, nouvelle source d'ingestion)
@@ -69,6 +79,3 @@ virtualisation imbriquée qu'exige l'émulateur Android.
   fichiers montés et pousser avec les identifiants transférés. La revue des PR
   reste le garde-fou.
 
-## Points ouverts
-
-- Passer à `accepted` à la validation du change `setup-foundation`.
