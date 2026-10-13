@@ -41,7 +41,7 @@
     "ios": "bun --env-file=../../.env --bun expo start --ios",
     "android": "bun --env-file=../../.env --bun expo start --android",
     "web": "bun --env-file=../../.env --bun expo start --web",
-    "export:web": "bun --bun expo export --platform web",
+    "export:web": "bunx expo export --platform web",
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "start": "bun server.ts"

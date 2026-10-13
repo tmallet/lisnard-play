@@ -94,6 +94,10 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   `bun run dev`, qui lance `expo start` sous Bun avec le `.env` racine, plutôt
   que `bunx expo start` (Node). Erreur typique sinon : « Unable to resolve
   module bun » ou `Bun is not defined` (ADR 0019).
+- **Export web** : `bunx expo export`, qui tourne sous Node s'il est installé.
+  Sous Bun (`bun --bun expo export`), Metro échoue sur Linux dès que Node est
+  aussi présent (« Cannot find module './Worker.js' »), comme sur la CI.
+  L'image Docker, sans Node, exporte sous Bun sans problème.
 - **État serveur** (connexion, cache) : le garder sur `globalThis`. Metro
   réévalue les modules à chaque rechargement, et un pool recréé à chaque fois
   épuise les connexions Postgres (« too many clients »).

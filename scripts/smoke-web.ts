@@ -68,7 +68,9 @@ function checkPage(path: string, html: string, expectedTitle: string | null, not
 const trpcUrl = (procedure: string, input: unknown) =>
   `${BASE}/api/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify(input))}`;
 
-if (!process.env.SKIP_EXPORT) await run(['bun', '--bun', 'expo', 'export', '--platform', 'web']);
+// Export sous Node quand il est installé : sous Bun, Metro (SDK 57) échoue sur Linux quand Node est
+// aussi présent (« Cannot find module './Worker.js' »). L'export n'exécute pas les API routes.
+if (!process.env.SKIP_EXPORT) await run(['bunx', 'expo', 'export', '--platform', 'web']);
 
 // Base jetable avec une intervention publiée (rendu média compris).
 const { db, url, drop } = await createTestDb();
