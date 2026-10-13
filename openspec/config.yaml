@@ -27,8 +27,9 @@ context: |
   sinon carte de lien vers la source. Jamais de réhébergement de contenu.
 
   Charte visuelle : palette Nouvelle Énergie (bleu #1d257a, bleu sombre #0f1752,
-  chamois #b0ad85, blanc #f9f9f9, émeraude #52c985) et police Montserrat. Pas de
-  logo Nouvelle Énergie ni d'élément identifiant de la campagne.
+  chamois #b0ad85, blanc #f9f9f9, émeraude #52c985) et police Montserrat,
+  conformes aux tokens --ne-* des sites officiels (ADR 0012). Pas de logo, pas
+  de texture hexagonale, aucun fichier du kit militant.
 
   Documentation (ADR 0008) : tout est documenté en français, de façon structurée
   et exploitable par les agents de codage.

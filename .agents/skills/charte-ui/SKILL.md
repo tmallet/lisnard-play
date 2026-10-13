@@ -6,7 +6,9 @@ description: Règles visuelles de l'application (charte réduite Nouvelle Énerg
 # Charte UI
 
 L'application est **indépendante** (ADR 0001) : elle reprend la palette et la
-police de la charte Nouvelle Énergie, et rien d'autre.
+police de la charte Nouvelle Énergie, et rien d'autre. Les sources de la charte
+(sites officiels, kit militant), la palette officielle étendue et les éléments
+exclus sont dans l'**ADR 0012**.
 
 ## Interdits
 
@@ -14,7 +16,11 @@ police de la charte Nouvelle Énergie, et rien d'autre.
   la campagne (photos officielles, slogans).
 - Tout nom d'application ou formulation qui suggère un lien officiel.
 - Retirer ou masquer la mention d'indépendance (`INDEPENDENCE_NOTICE`).
-- Une couleur hors palette.
+- Une couleur hors palette. Pour ajouter un token, partir des valeurs
+  officielles `--ne-*` (ADR 0012) et le décider explicitement.
+- Tout fichier du kit militant (textures hexagonales, fond, polices Tubqal Pro
+  ou Tango Sans) : il n'entre jamais dans le dépôt.
+- Une autre police que Montserrat (police web des sites officiels).
 
 ## Tokens (`apps/app/src/global.css`)
 
