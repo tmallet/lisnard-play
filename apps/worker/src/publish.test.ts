@@ -84,13 +84,14 @@ describe('règle de publication', () => {
 
 describe('client System One', () => {
   test('envoie modèle épinglé, état et questions ; lit la réponse', async () => {
-    let sent: { url: string; body: Record<string, unknown>; auth: string | null } | null = null;
+    // Tableau plutôt que variable réassignée : TypeScript ne suit pas les affectations dans une closure.
+    const requests: { url: string; body: Record<string, unknown>; auth: string | null }[] = [];
     const fakeFetch = (async (url: string, init: RequestInit) => {
-      sent = {
+      requests.push({
         url,
         body: JSON.parse(String(init.body)),
         auth: new Headers(init.headers).get('Authorization'),
-      };
+      });
       return Response.json({
         model: 'typesafe/jev-1.13-20260917',
         answers: {
@@ -115,6 +116,7 @@ describe('client System One', () => {
       publishedAt: '2026-06-01T05:50:00.000Z',
       startsAt: null,
     });
+    const sent = requests[0];
     expect(sent?.url).toBe('https://openrouter.ai/api/v1/systemone');
     expect(sent?.auth).toBe('Bearer k');
     expect(sent?.body.model).toBe(PINNED_MODEL);
