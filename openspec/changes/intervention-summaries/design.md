@@ -104,8 +104,11 @@ Le client suit le modèle du classifieur : injection de `fetch` et classe
 
 ### D5 — Échecs
 
-Une erreur réseau, un HTTP non 2xx ou une réponse invalide incrémentent
-`summary_attempts`. Au troisième échec, `summary = { kind: 'none', reason:
+Une erreur réseau, un HTTP 4xx (hors 402 et 429) ou une réponse invalide
+incrémentent `summary_attempts`. Un HTTP 402 (crédit épuisé), 429 ou 5xx lève
+`SummaryServiceUnavailable` : le cycle s'arrête sans rien décompter. Ce cas a
+été ajouté après qu'un crédit épuisé a fait abandonner 96 vidéos en un seul
+passage. Au troisième échec, `summary = { kind: 'none', reason:
 'failed' }`. Une nouvelle `promptVersion` ou une commande `summarize --retry`
 remet les compteurs à zéro.
 

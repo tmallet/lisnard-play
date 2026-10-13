@@ -67,12 +67,18 @@ version de la consigne change, les résumés existants DOIVENT être régénér�
 Le système DOIT plafonner la dépense quotidienne consacrée aux résumés et le
 nombre de résumés produits par cycle. Un échec (réseau, réponse invalide) DOIT
 laisser le contenu sans résumé, retenté lors d'un cycle ultérieur, dans la
-limite de trois tentatives. Un résumé absent NE DOIT jamais empêcher la
+limite de trois tentatives. Une indisponibilité du service (crédit épuisé, limite de
+débit, panne) NE DOIT PAS compter comme une tentative : elle interrompt le cycle,
+qui reprend plus tard. Un résumé absent NE DOIT jamais empêcher la
 publication ni l'affichage d'une intervention.
 
 #### Scenario: Plafond quotidien atteint
 - **WHEN** la dépense du jour en résumés atteint le plafond configuré
 - **THEN** aucun nouveau résumé n'est demandé avant le lendemain, et les interventions restent visibles sans résumé
+
+#### Scenario: Crédit épuisé
+- **WHEN** le fournisseur répond que le crédit est épuisé
+- **THEN** le cycle s'arrête, aucune tentative n'est décomptée, et les vidéos restent à résumer pour un cycle ultérieur
 
 #### Scenario: Échecs répétés
 - **WHEN** la production du résumé d'un contenu échoue trois fois

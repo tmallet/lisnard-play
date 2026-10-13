@@ -50,6 +50,7 @@ d'abord.
 | Plafond quotidien | `SUMMARY_DAILY_BUDGET_USD` (1 $ par défaut), calculé en base depuis minuit, heure de Paris |
 | Vidéos trop longues | plus de 3 h : `kind: 'none', reason: 'too_long'`, sans appel |
 | Échecs | 3 tentatives, puis `reason: 'failed'` pour la version courante de la consigne |
+| Service indisponible | HTTP 402 (crédit épuisé), 429 ou 5xx : cycle interrompu, aucune tentative consommée |
 
 **Stockage** : `item.summary` (jsonb) contient le texte et les points, ou le
 motif d'absence, avec le modèle, la version de la consigne, la date et le coût.

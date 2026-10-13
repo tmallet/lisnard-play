@@ -11,6 +11,7 @@ import {
   parseSummaryOutput,
   type Summarizer,
   type SummaryOutput,
+  SummaryServiceUnavailable,
 } from './openrouter';
 import { PROMPT_VERSION, SUMMARY_MODEL, SUMMARY_MODEL_LONG, summaryModelFor } from './prompt';
 import { parisMidnight, summarizePending } from './task';
@@ -208,6 +209,21 @@ describe('production des résumés', () => {
     expect(summarizer.calls).toBe(3);
   });
 
+  test('service indisponible : cycle interrompu, aucune tentative consommée', async () => {
+    const id = await published('credit');
+    const summarizer = new FakeSummarizer();
+    summarizer.summarize = async () => {
+      throw new SummaryServiceUnavailable('OpenRouter : HTTP 402');
+    };
+    const stats = await summarizePending(db, summarizer, { dailyBudget: 1 });
+    expect(stats.unavailable).toBe('OpenRouter : HTTP 402');
+    const [row] = await db
+      .select({ attempts: item.summaryAttempts, summary: item.summary })
+      .from(item)
+      .where(eq(item.id, id));
+    expect(row).toEqual({ attempts: 0, summary: null });
+  });
+
   test('plafond quotidien : arrêt dès que la dépense du jour l’atteint', async () => {
     for (const key of ['a', 'b', 'c']) await published(key);
     const summarizer = new FakeSummarizer(0.6);
@@ -217,5 +233,25 @@ describe('production des résumés', () => {
     const tomorrow = () => new Date(Date.now() + 24 * 3600_000);
     const next = await summarizePending(db, summarizer, { dailyBudget: 1, now: tomorrow });
     expect(next.summarized).toBe(1);
+  });
+});
+
+describe('service indisponible', () => {
+  test('HTTP 402, 429 ou 5xx : erreur dédiée ; 400 : échec ordinaire', async () => {
+    const respond = (status: number) =>
+      createOpenRouterSummarizer({
+        apiKey: 'k',
+        fetch: (async () => new Response('{}', { status })) as unknown as typeof fetch,
+      }).summarize({
+        url: 'https://www.youtube.com/watch?v=x',
+        title: 't',
+        outlet: 'o',
+        durationS: 30,
+      });
+    for (const status of [402, 429, 503])
+      expect(await respond(status).catch((e) => e)).toBeInstanceOf(SummaryServiceUnavailable);
+    const bad = await respond(400).catch((e) => e);
+    expect(bad).toBeInstanceOf(Error);
+    expect(bad).not.toBeInstanceOf(SummaryServiceUnavailable);
   });
 });

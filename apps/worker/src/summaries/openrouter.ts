@@ -12,6 +12,12 @@ import {
 
 const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
 
+/**
+ * Indisponibilité qui ne tient pas à la vidéo : crédit épuisé (402), limite de débit
+ * (429), panne du fournisseur (5xx). Le cycle s'arrête sans compter de tentative.
+ */
+export class SummaryServiceUnavailable extends Error {}
+
 export interface SummaryOutput {
   speaks: boolean;
   summary: string;
@@ -96,6 +102,8 @@ export function createOpenRouterSummarizer(options: {
         // Une vidéo longue prend environ 35 s (essai du 2026-10-13).
         signal: AbortSignal.timeout(180_000),
       });
+      if (res.status === 402 || res.status === 429 || res.status >= 500)
+        throw new SummaryServiceUnavailable(`OpenRouter : HTTP ${res.status}`);
       if (!res.ok) throw new Error(`OpenRouter : HTTP ${res.status}`);
       const body = (await res.json()) as ApiResponse;
       return {

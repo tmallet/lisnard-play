@@ -12,7 +12,7 @@ import {
 } from '@lisnard/db/write';
 
 import { errorMessage, log } from '../log';
-import type { Summarizer } from './openrouter';
+import { type Summarizer, SummaryServiceUnavailable } from './openrouter';
 import { PROMPT_VERSION } from './prompt';
 
 export interface SummarizeOptions {
@@ -33,6 +33,8 @@ export interface SummarizeStats {
   failed: number;
   cost: number;
   budgetReached: boolean;
+  /** Service indisponible (crédit, débit, panne) : cycle interrompu, à reprendre plus tard. */
+  unavailable?: string;
 }
 
 /** Minuit à Paris pour la date donnée : début de la période du plafond quotidien. */
@@ -108,6 +110,12 @@ export async function summarizePending(
       if (output.speaks) stats.summarized += 1;
       else stats.notSpeaking += 1;
     } catch (error) {
+      if (error instanceof SummaryServiceUnavailable) {
+        // Rien ne tient à la vidéo : on n'use pas ses tentatives et on arrête le cycle.
+        stats.unavailable = error.message;
+        log.error('résumés interrompus : service indisponible', { error: error.message });
+        break;
+      }
       // Le contenu reste sans résumé ; abandon au plafond de tentatives (spec).
       stats.failed += 1;
       const { abandoned } = await recordSummaryFailure(

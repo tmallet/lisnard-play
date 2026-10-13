@@ -70,7 +70,7 @@ switch (positionals[0]) {
       const stats = await summarizePending(db, summarizer, { dailyBudget });
       console.log(stats);
       const done = stats.summarized + stats.notSpeaking + stats.skipped + stats.failed;
-      if (stats.budgetReached || done === 0) break;
+      if (stats.budgetReached || stats.unavailable || done === 0) break;
     }
     break;
   }
