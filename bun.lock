@@ -15,6 +15,7 @@
       "dependencies": {
         "@expo-google-fonts/montserrat": "^0.4.2",
         "@lisnard/api": "workspace:*",
+        "@lisnard/db": "workspace:*",
         "@tanstack/react-query": "5.104.2",
         "@trpc/client": "11.19.0",
         "@trpc/server": "11.19.0",
@@ -61,6 +62,7 @@
       "name": "@lisnard/api",
       "version": "0.1.0",
       "dependencies": {
+        "@lisnard/db": "workspace:*",
         "@trpc/server": "11.19.0",
         "zod": "4.6.7",
       },

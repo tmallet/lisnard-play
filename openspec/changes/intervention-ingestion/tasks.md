@@ -48,10 +48,10 @@
 
 ## 7. API
 
-- [ ] 7.1 `packages/api` : dépendance à `@lisnard/db` (`read`), contexte avec accès à la base
-- [ ] 7.2 `interventions.list` : filtres `status` et `role`, curseur, `limit ≤ 50`, tri par statut, statut temporel calculé (spec `intervention-feed`)
-- [ ] 7.3 `interventions.byId` : détail, rendu média, `NOT_FOUND` si absent ou non publié
-- [ ] 7.4 Tests sur Postgres : filtres, tri, pagination, exclusion des contenus non publiés et des données internes, `NOT_FOUND`, taille de page invalide
+- [x] 7.1 `packages/api` : dépendance à `@lisnard/db` (`read`), contexte avec accès à la base
+- [x] 7.2 `interventions.list` : filtres `status` et `role`, curseur, `limit ≤ 50`, tri par statut, statut temporel calculé (spec `intervention-feed`)
+- [x] 7.3 `interventions.byId` : détail, rendu média, `NOT_FOUND` si absent ou non publié
+- [x] 7.4 Tests sur Postgres : filtres, tri, pagination, exclusion des contenus non publiés et des données internes, `NOT_FOUND`, taille de page invalide
 
 ## 8. Interface
 

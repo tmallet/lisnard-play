@@ -1,3 +1,5 @@
+import type { Db } from '@lisnard/db/client';
+
 export interface CreateContextOptions {
   /** Requête HTTP entrante (absente pour les appels serveur directs). */
   req?: Request;
@@ -5,6 +7,8 @@ export interface CreateContextOptions {
   version: string;
   /** Mode développement : active les détails d'erreur (pile d'appels). */
   isDev: boolean;
+  /** Base de données en lecture (ADR 0017) ; absente si DATABASE_URL n'est pas configuré. */
+  db?: Db | null;
 }
 
 export type Context = CreateContextOptions;
