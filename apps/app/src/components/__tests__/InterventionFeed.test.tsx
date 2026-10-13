@@ -1,8 +1,9 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen } from '@testing-library/react-native';
 
 import type { InterventionCardData } from '../InterventionCard';
 import { InterventionFeed } from '../InterventionFeed';
+import { ScrollEndProvider } from '../ScrollEnd';
 
 jest.mock('expo-router', () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
@@ -12,6 +13,8 @@ type Lists = Record<'live' | 'upcoming' | 'past', InterventionCardData[]>;
 const lists: Lists = { live: [], upcoming: [], past: [] };
 
 type Input = { status: keyof Lists; theme?: string };
+// Préfixe « mock » : jest autorise cette variable dans la fabrique de jest.mock.
+const mockPaging = { size: Number.POSITIVE_INFINITY };
 const select = (input: Input) =>
   lists[input.status].filter((i) => !input.theme || (i.themes as string[]).includes(input.theme));
 
@@ -24,9 +27,21 @@ jest.mock('@/lib/trpc', () => ({
           queryKey: ['list', input],
           queryFn: async () => ({ items: select(input), nextCursor: null }),
         }),
-        infiniteQueryOptions: (input: Input, opts: { getNextPageParam: () => null }) => ({
+        infiniteQueryOptions: (
+          input: Input,
+          opts: { getNextPageParam: (last: { nextCursor: string | null }) => unknown },
+        ) => ({
           queryKey: ['infinite', input],
-          queryFn: async () => ({ items: select(input), nextCursor: null }),
+          // Pagination simulée : pages de pageSize éléments, curseur = position de départ.
+          queryFn: async ({ pageParam }: { pageParam: string | null }) => {
+            const start = Number(pageParam ?? 0);
+            const all = select(input);
+            const end = start + mockPaging.size;
+            return {
+              items: all.slice(start, end),
+              nextCursor: end < all.length ? String(end) : null,
+            };
+          },
           initialPageParam: null,
           getNextPageParam: opts.getNextPageParam,
         }),
@@ -51,6 +66,8 @@ const item = (
 });
 
 let client: QueryClient;
+/** Abonnés à la fin de défilement, comme les fournit Screen. */
+const endListeners = new Set<() => void>();
 
 async function renderFeed() {
   // gcTime infini : aucun minuteur de nettoyage ne survit aux tests.
@@ -59,7 +76,9 @@ async function renderFeed() {
   });
   await render(
     <QueryClientProvider client={client}>
-      <InterventionFeed />
+      <ScrollEndProvider value={endListeners}>
+        <InterventionFeed />
+      </ScrollEndProvider>
     </QueryClientProvider>,
   );
 }
@@ -70,6 +89,7 @@ beforeEach(() => {
   lists.live = [];
   lists.upcoming = [];
   lists.past = [];
+  mockPaging.size = Number.POSITIVE_INFINITY;
 });
 
 test('aucune intervention : message, sans sections vides', async () => {
@@ -110,4 +130,17 @@ test('thème sans intervention : message dédié', async () => {
   expect(
     await screen.findByText('Aucune intervention ne correspond à ce thème pour l’instant.'),
   ).toBeTruthy();
+});
+
+test('chargement continu : la page suivante arrive en fin de défilement', async () => {
+  mockPaging.size = 2;
+  lists.past = [item('p1', 'past'), item('p2', 'past'), item('p3', 'past')];
+  await renderFeed();
+  expect(await screen.findByText('Intervention p2')).toBeTruthy();
+  expect(screen.queryByText('Intervention p3')).toBeNull();
+  expect(screen.queryByText('Voir plus')).toBeNull();
+  await act(async () => {
+    for (const listener of endListeners) listener();
+  });
+  expect(await screen.findByText('Intervention p3')).toBeTruthy();
 });

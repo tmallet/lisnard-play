@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { APP_NAME } from '@/config/app';
 
 import { Footer } from './Footer';
+import { ScrollEndProvider, useScrollEndSource } from './ScrollEnd';
 
 interface ScreenProps {
   children: ReactNode;
@@ -20,28 +21,33 @@ interface ScreenProps {
  *   porte (exigence des onglets natifs pour détecter le défilement).
  * - En-tête : le nom de l'application en surtitre (spec app-shell, nom centralisé).
  * - Pied de page : la mention d'indépendance (spec app-shell).
+ * - Fin de défilement signalée au contenu (chargement continu du flux, ScrollEnd).
  */
 export function Screen({ children, footer = true }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const scrollEnd = useScrollEndSource();
   return (
-    <View
-      collapsable={false}
-      className="flex-1 bg-bleu-sombre bg-linear-160 from-bleu to-bleu-sombre"
-    >
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={Platform.OS === 'android' ? { paddingTop: insets.top } : undefined}
-        contentContainerClassName="w-full max-w-3xl self-center gap-6 px-6 py-10"
+    <ScrollEndProvider value={scrollEnd.listeners}>
+      <View
+        collapsable={false}
+        className="flex-1 bg-bleu-sombre bg-linear-160 from-bleu to-bleu-sombre"
       >
-        <Text
-          role="banner"
-          className="font-sans-semibold text-blanc/75 text-xs uppercase tracking-widest"
+        <ScrollView
+          {...scrollEnd.scrollProps}
+          contentInsetAdjustmentBehavior="automatic"
+          style={Platform.OS === 'android' ? { paddingTop: insets.top } : undefined}
+          contentContainerClassName="w-full max-w-3xl self-center gap-6 px-6 py-10"
         >
-          {APP_NAME}
-        </Text>
-        {children}
-        {footer && <Footer />}
-      </ScrollView>
-    </View>
+          <Text
+            role="banner"
+            className="font-sans-semibold text-blanc/75 text-xs uppercase tracking-widest"
+          >
+            {APP_NAME}
+          </Text>
+          {children}
+          {footer && <Footer />}
+        </ScrollView>
+      </View>
+    </ScrollEndProvider>
   );
 }

@@ -68,6 +68,11 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   curseur, comme le flux). L'app n'accède jamais à la base elle-même : seule l'API
   route lit Postgres, via `@lisnard/db/read` (ADR 0017). Pour ajouter une
   procédure : skill `trpc-procedure`.
+- **Listes longues** : le contenu d'un écran défile dans le `ScrollView` de
+  `Screen`. Pour charger la suite d'une liste à l'approche du bas, appeler
+  `useOnEndReached(cb)` (`components/ScrollEnd.tsx`) plutôt qu'ajouter un bouton
+  ou une `FlatList` imbriquée. Le rappel doit se protéger lui-même (`hasNextPage`,
+  `isFetchingNextPage`), car il est appelé à chaque défilement près du bas.
 - **Médias** : `MediaEmbed` affiche le lecteur de l'URL fournie par le worker
   (iframe sur le web, `react-native-webview` sur mobile), sinon `LinkCard`. Jamais
   de téléchargement ni de réhébergement (ADR 0007).

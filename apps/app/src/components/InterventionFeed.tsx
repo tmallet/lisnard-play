@@ -1,10 +1,11 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import { useTRPC } from '@/lib/trpc';
 
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
+import { useOnEndReached } from './ScrollEnd';
 import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
 
 /** Rafraîchissement des directs et des interventions à venir (spec intervention-feed). */
@@ -66,6 +67,11 @@ export function InterventionFeed() {
     ),
   );
 
+  // Chargement continu : la page suivante arrive à l'approche du bas de l'écran.
+  useOnEndReached(() => {
+    if (past.hasNextPage && !past.isFetchingNextPage && !past.isError) past.fetchNextPage();
+  });
+
   const liveItems = live.data?.items ?? [];
   const upcomingItems = upcoming.data?.items ?? [];
   const pastItems = past.data?.pages.flatMap((p) => p.items) ?? [];
@@ -96,17 +102,13 @@ export function InterventionFeed() {
             ) : (
               pastItems.map((item) => <InterventionCard key={item.id} item={item} />)
             )}
-            {past.hasNextPage && (
-              <Pressable
-                accessibilityRole="button"
-                onPress={() => past.fetchNextPage()}
-                disabled={past.isFetchingNextPage}
-                className="self-center rounded-full border border-chamois px-5 py-2"
+            {past.isFetchingNextPage && (
+              <Text
+                accessibilityLiveRegion="polite"
+                className="self-center font-sans text-blanc/70"
               >
-                <Text className="font-sans-semibold text-chamois">
-                  {past.isFetchingNextPage ? 'Chargement…' : 'Voir plus'}
-                </Text>
-              </Pressable>
+                Chargement…
+              </Text>
             )}
           </View>
         </>

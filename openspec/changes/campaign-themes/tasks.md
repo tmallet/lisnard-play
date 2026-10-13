@@ -31,6 +31,8 @@
 - [x] 5.5 Tests : `ThemeFilter`, carte avec plusieurs thèmes et sans thème, flux filtré et vide
 - [x] 5.6 Vérification visuelle sur le web et sur le simulateur iOS (filtre défilable, état actif, détail)
 
+- [x] 5.7 Accueil : chargement continu des interventions passées (`useOnEndReached`, `ScrollEnd`) à la place du bouton « Voir plus » ; retrait du statut de l'API en bas de l'accueil (demande du porteur du projet)
+
 ## 6. Qualité
 
 - [x] 6.1 Smoke test web : l'intervention de test porte un thème, et `interventions.list` filtré par ce thème la renvoie
