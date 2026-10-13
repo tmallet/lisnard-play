@@ -117,6 +117,59 @@ Les choix d'outillage sont consignés dans l'**ADR 0009** (Biome, `bun test`,
 - un dossier de `.agents/skills/` n'a pas son symlink dans `.claude/skills/`
   (et inversement), ou un `SKILL.md` n'a pas de `name` ou de `description`.
 
+### D9 — Versions d'outils : asdf et `.tool-versions`
+Voir ADR 0010. `.tool-versions` à la racine épingle `bun` et `nodejs` (Node
+LTS, requis par certains outils Expo). Il est lu :
+- en local, par asdf ;
+- dans le devcontainer, par asdf installé dans l'image (`asdf install` au build) ;
+- en CI, par `oven-sh/setup-bun` (`bun-version-file`) et `actions/setup-node`
+  (`node-version-file`), sans installer asdf sur le runner. Le fichier reste
+  la source unique, et le job est plus rapide.
+Le champ `engines` et `packageManager` du `package.json` racine reprennent
+les mêmes versions, et `docs:check` vérifie leur cohérence avec `.tool-versions`.
+
+### D10 — Devcontainer : environnement reproductible et bac à sable pour agents
+Voir ADR 0010.
+
+```
+.devcontainer/
+  devcontainer.json    image locale, volumes, ports, postCreate, capacités réseau
+  Dockerfile           Debian slim + asdf + plugins nodejs/bun + outils (git, gh,
+                       openspec, Claude Code, Codex) · utilisateur non root
+  init-firewall.sh     iptables/ipset : refus par défaut en sortie, liste blanche
+```
+
+- **Versions** : `asdf install` à partir de `.tool-versions` (copié au build),
+  donc les mêmes versions que l'hôte et la CI.
+- **Performance** : `node_modules` (racine et workspaces) dans des volumes
+  nommés, cache Bun dans un volume. L'option « Clone in volume » est
+  documentée pour le cas où le montage reste lent.
+- **Ports redirigés** : 8081 (Metro, bundles web et mobile, API routes en dev).
+  Le simulateur iOS et l'émulateur Android de l'hôte joignent
+  `localhost:8081`. Un téléphone physique passe par
+  `REACT_NATIVE_PACKAGER_HOSTNAME=<IP LAN de l'hôte>` ou `expo start --tunnel`.
+- **Pare-feu** (`postStartCommand`, capacités `NET_ADMIN`/`NET_RAW`) :
+  sortie refusée par défaut, liste blanche limitée à registry.npmjs.org,
+  github.com (+ API et contenus), api.anthropic.com, api.openai.com,
+  openrouter.ai, les domaines Expo (exp.host, expo.dev, u.expo.dev), les
+  sources asdf/Bun/Node et le DNS. Le script vérifie au démarrage qu'un domaine
+  hors liste est bien bloqué, et échoue sinon.
+- **Secrets** : aucun secret dans l'image. Les variables (`ANTHROPIC_API_KEY`,
+  `OPENROUTER_API_KEY`…) viennent de l'environnement de l'hôte via
+  `remoteEnv`, et seulement celles nécessaires. L'authentification GitHub
+  passe par le transfert d'identifiants de l'éditeur.
+- **Autonomie des agents** : dans ce conteneur, et seulement là, on peut lancer
+  les agents sans confirmation à chaque commande. Le pare-feu et l'absence
+  d'accès au système de fichiers de l'hôte (hors dépôt) bornent les risques.
+  Ce mode est documenté dans `docs/architecture/devcontainer.md`, avec ses
+  limites : un agent peut toujours modifier le dépôt monté et pousser avec les
+  identifiants transférés.
+
+*Alternatives* : versions épinglées directement dans l'image (sans asdf) →
+deux sources de vérité ; Nix/devbox → plus lourd et non utilisé par le
+porteur du projet, qui a déjà asdf ; mise → équivalent, mais asdf est déjà
+en place sur le poste.
+
 ## Risks / Trade-offs
 
 - **[Bun + Metro]** Les installations isolées de Bun en workspaces peuvent
@@ -134,6 +187,15 @@ Les choix d'outillage sont consignés dans l'**ADR 0009** (Biome, `bun test`,
 - **[Mention sur mobile]** Un pied de page permanent mange de la place sur
   petit écran. → Sur mobile, la mention figure dans « À propos » et en bas de
   la page d'accueil, conformément à la spec.
+- **[Pare-feu trop strict]** Un domaine manquant casse `bun install` ou un
+  appel d'API dans le conteneur. → La liste blanche est un tableau unique en
+  tête de `init-firewall.sh`, documenté. L'erreur réseau est explicite et
+  l'ajout d'un domaine passe par une PR.
+- **[Domaines résolus en IP]** La liste blanche par IP (ipset) peut dériver si
+  les IP d'un CDN changent. → Résolution à chaque démarrage, plus les plages
+  publiées par GitHub (`/meta`).
+- **[Plugins asdf]** Le plugin `bun` est communautaire. → Version épinglée
+  dans `.tool-versions`, et la CI ne dépend pas d'asdf (D9).
 - **[Smoke test]** Le test lance un vrai serveur en CI, donc plus lent et plus
   fragile. → Délais explicites, un seul job, et aucune dépendance réseau
   externe.

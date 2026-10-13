@@ -1,5 +1,6 @@
 ## 1. Monorepo
 
+- [ ] 1.0 Créer `.tool-versions` (versions stables de `bun` et `nodejs` LTS) et vérifier `asdf install` sur le poste (design D9)
 - [ ] 1.1 Créer le `package.json` racine (workspaces `apps/*`, `packages/*`, `private: true`) et `bunfig.toml` avec `install.linker = "hoisted"` (design D1)
 - [ ] 1.2 Ajouter `tsconfig.base.json` (strict) et `biome.json`, puis les scripts racine `format`, `lint`, `typecheck`, `test` et `check` délégués par `bun --filter` (ADR 0009)
 - [ ] 1.3 Compléter `.gitignore` (node_modules, `.expo`, `dist`, `.env*` sauf `.env.example`) et ajouter `.env.example` avec `EXPO_PUBLIC_API_URL`
@@ -38,16 +39,28 @@
 - [ ] 5.3 Écrire `scripts/smoke-web.ts` : export web, serveur local, requêtes sans JavaScript sur `/`, `/a-propos` et `/api/trpc/health`, vérification de `lang`, `<title>`, des meta OG, de la mention et de la réponse de santé (D7)
 - [ ] 5.4 Ajouter un test de typage qui prouve qu'un changement incompatible de `AppRouter` fait échouer `bun run typecheck` (ex. `// @ts-expect-error` sur un usage client invalide)
 - [ ] 5.5 Écrire `scripts/docs-check.ts` selon le design D8 et l'exposer en `bun run docs:check`. Le faire passer sur la doc existante
-- [ ] 5.6 Créer `.github/workflows/ci.yml` : installation Bun avec cache, `bun run check`, puis smoke test web, sur PR et sur `main`
+- [ ] 5.6 Créer `.github/workflows/ci.yml` : Bun et Node installés depuis `.tool-versions` (`bun-version-file`, `node-version-file`), cache, `bun run check`, puis smoke test web, sur PR et sur `main`
+- [ ] 5.8 Étendre `docs:check` : cohérence entre `.tool-versions`, `packageManager` et `engines` du `package.json` racine
 - [ ] 5.7 Vérifier localement que `bun run check` et le smoke test passent sans erreur
 
-## 6. Documentation
+## 6. Devcontainer
 
-- [ ] 6.1 Créer `docs/architecture/README.md` (vue d'ensemble : schéma des modules, flux requête web → SSR → tRPC, emplacement des tokens et de la config) et `docs/architecture/commandes.md` (install, dev, check, smoke, docs:check)
-- [ ] 6.2 Créer `apps/app/AGENTS.md` (routes, coquille, tokens Uniwind, `src/config/app.ts`, tests jest-expo) et `packages/api/AGENTS.md` (structure du routeur, conventions de procédure, erreurs, tests)
-- [ ] 6.3 Mettre à jour `AGENTS.md` racine : retirer l'état « pré-code », ajouter les commandes, les nouveaux skills et le renvoi vers `docs/architecture/`
-- [ ] 6.4 Créer le skill `docs-sync` (quelle doc mettre à jour selon les fichiers touchés, `bun run check` en fin de tâche) dans `.agents/skills/`, avec son symlink dans `.claude/skills/`
-- [ ] 6.5 Créer le skill `charte-ui` (tokens, règle du mot chamois, interdits de l'ADR 0001, composants `Title`/`Footer`, accessibilité), avec son symlink
-- [ ] 6.6 Créer le skill `trpc-procedure` (où déclarer, validation zod, public ou protégé, tests via `createCaller`, usage client), avec son symlink
-- [ ] 6.7 Passer l'ADR 0009 en `accepted` (frontmatter + index). Si les tâches 2.2 ou 2.3 ont imposé un repli, créer l'ADR correspondant avec le skill `record-decision`
-- [ ] 6.8 Ajouter `.env.example` et le flux CI dans `docs/architecture/commandes.md`, puis lancer `bun run docs:check`
+- [ ] 6.1 Écrire `.devcontainer/Dockerfile` : Debian slim, utilisateur non root, asdf + plugins `nodejs` et `bun`, `asdf install` depuis `.tool-versions`, git, gh, openspec, Claude Code, Codex, iptables/ipset (D10)
+- [ ] 6.2 Écrire `.devcontainer/devcontainer.json` : volumes nommés pour `node_modules` et le cache Bun, port 8081 redirigé, `remoteEnv` limité aux variables nécessaires, capacités `NET_ADMIN`/`NET_RAW`, `postCreateCommand: bun install`
+- [ ] 6.3 Écrire `.devcontainer/init-firewall.sh` (liste blanche en tête de fichier, refus par défaut, auto-vérification qu'un domaine hors liste est bloqué) et le lancer en `postStartCommand`
+- [ ] 6.4 Vérifier dans le conteneur : `bun install`, `bun run check`, smoke test web, `bun run dev` joignable depuis le navigateur de l'hôte
+- [ ] 6.5 Vérifier le workflow mobile : simulateur iOS de l'hôte connecté à Metro dans le conteneur via `localhost:8081`, et téléphone physique via `REACT_NATIVE_PACKAGER_HOSTNAME` ou `--tunnel`
+- [ ] 6.6 Vérifier qu'un agent lancé sans confirmation dans le conteneur ne peut pas joindre un domaine hors liste (ex. `curl https://example.com` échoue)
+
+## 7. Documentation
+
+- [ ] 7.1 Créer `docs/architecture/README.md` (vue d'ensemble : schéma des modules, flux requête web → SSR → tRPC, emplacement des tokens et de la config) et `docs/architecture/commandes.md` (install, dev, check, smoke, docs:check)
+- [ ] 7.2 Créer `apps/app/AGENTS.md` (routes, coquille, tokens Uniwind, `src/config/app.ts`, tests jest-expo) et `packages/api/AGENTS.md` (structure du routeur, conventions de procédure, erreurs, tests)
+- [ ] 7.3 Mettre à jour `AGENTS.md` racine : retirer l'état « pré-code », ajouter les commandes, les nouveaux skills et le renvoi vers `docs/architecture/`
+- [ ] 7.4 Créer le skill `docs-sync` (quelle doc mettre à jour selon les fichiers touchés, `bun run check` en fin de tâche) dans `.agents/skills/`, avec son symlink dans `.claude/skills/`
+- [ ] 7.5 Créer le skill `charte-ui` (tokens, règle du mot chamois, interdits de l'ADR 0001, composants `Title`/`Footer`, accessibilité), avec son symlink
+- [ ] 7.6 Créer le skill `trpc-procedure` (où déclarer, validation zod, public ou protégé, tests via `createCaller`, usage client), avec son symlink
+- [ ] 7.7 Passer l'ADR 0009 en `accepted` (frontmatter + index). Si les tâches 2.2 ou 2.3 ont imposé un repli, créer l'ADR correspondant avec le skill `record-decision`
+- [ ] 7.8 Ajouter `.env.example` et le flux CI dans `docs/architecture/commandes.md`, puis lancer `bun run docs:check`
+- [ ] 7.9 Créer `docs/architecture/devcontainer.md` : démarrage, volumes, workflow mobile hôte ↔ conteneur, pare-feu (ajouter un domaine), mode autonome des agents et ses limites
+- [ ] 7.10 Passer l'ADR 0010 en `accepted` (frontmatter + index) et mentionner `.tool-versions` et le devcontainer dans `AGENTS.md`

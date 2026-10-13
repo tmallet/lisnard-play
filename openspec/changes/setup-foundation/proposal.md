@@ -23,6 +23,12 @@ garantit que la documentation reste cohérente.
 - **Outillage de documentation** : script `docs:check` (frontmatter des ADR,
   cohérence de l'index, liens internes, symlinks des skills) et CI GitHub
   Actions qui lance typecheck, lint, tests et `docs:check` (ADR 0008).
+- **Versions d'outils gérées par asdf** : un `.tool-versions` à la racine
+  (Bun, Node) est la source unique pour le poste local, le devcontainer et la
+  CI (ADR 0010).
+- **Devcontainer** : environnement reproductible, et bac à sable sûr où les
+  agents de codage peuvent travailler en autonomie, avec un pare-feu sortant
+  en liste blanche (ADR 0010).
 - Premiers documents d'architecture (`docs/architecture/`), `AGENTS.md` par
   module, et les skills `docs-sync`, `charte-ui` et `trpc-procedure` (ADR 0008).
 
@@ -57,7 +63,12 @@ garantit que la documentation reste cohérente.
   `packages/api`, configuration TypeScript, lint et format partagée.
 - **Dépendances** : expo, expo-router, react-native, uniwind, @trpc/server,
   @trpc/client, @trpc/tanstack-react-query, @tanstack/react-query, zod.
-- **Outillage** : `scripts/docs-check.ts`, `.github/workflows/ci.yml`.
+- **Outillage** : `scripts/docs-check.ts`, `.github/workflows/ci.yml`,
+  `.tool-versions`, `.devcontainer/` (Dockerfile, `devcontainer.json`, script
+  de pare-feu).
+- **Limite connue** : le simulateur iOS et l'émulateur Android restent sur la
+  machine hôte, et se connectent à Metro dans le conteneur par redirection de
+  ports.
 - **Documentation** : `docs/architecture/`, `apps/app/AGENTS.md`,
   `packages/api/AGENTS.md`, nouveaux skills dans `.agents/skills/`, mise à
   jour d'`AGENTS.md` (l'état « pré-code » disparaît).

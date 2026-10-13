@@ -21,3 +21,4 @@ Règles :
 | [0007](0007-rendu-medias-oembed.md) | Rendu des médias — intégration oEmbed, sinon lien vers la source | accepted | ingestion, media, ui |
 | [0008](0008-systeme-de-documentation.md) | Système de documentation structuré pour les agents de codage | accepted | documentation, outillage, agents |
 | [0009](0009-outillage-qualite.md) | Outillage qualité — Biome, bun test, jest-expo, smoke test web, GitHub Actions | proposed | outillage, qualite, ci |
+| [0010](0010-asdf-et-devcontainer.md) | Versions d'outils via asdf et devcontainer bac à sable pour agents | proposed | outillage, environnement, agents, securite |
