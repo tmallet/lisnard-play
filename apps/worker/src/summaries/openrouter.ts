@@ -34,7 +34,8 @@ interface ApiResponse {
   usage?: { cost?: number };
 }
 
-const MAX_SUMMARY_CHARS = 900;
+/** Trois courts paragraphes au plus (consigne v2). */
+const MAX_SUMMARY_CHARS = 2500;
 
 /** Valide la sortie du modèle ; toute forme inattendue est une erreur (nouvelle tentative). */
 export function parseSummaryOutput(content: string | undefined): SummaryOutput {
@@ -47,7 +48,7 @@ export function parseSummaryOutput(content: string | undefined): SummaryOutput {
     : [];
   if (!summary || summary.length > MAX_SUMMARY_CHARS) throw new Error('réponse invalide : summary');
   if (points.length === 0) throw new Error('réponse invalide : points');
-  return { speaks: true, summary, points: points.slice(0, 4).map((p) => p.trim()) };
+  return { speaks: true, summary, points: points.slice(0, 6).map((p) => p.trim()) };
 }
 
 export function createOpenRouterSummarizer(options: {

@@ -16,8 +16,9 @@ pour 0,002 $ par clip et 0,10 $ par débat complet.
 
 - **Résumé des vidéos** : pour chaque intervention publiée dont le média est
   une vidéo YouTube, le worker demande à Gemini, via OpenRouter, un résumé
-  factuel et neutre de ce que dit David Lisnard (3 phrases au plus), ainsi que 2
-  à 4 points clés.
+  factuel et neutre de ce que dit David Lisnard, proportionné à la durée (de
+  trois phrases pour un extrait à trois courts paragraphes pour un débat),
+  ainsi que 3 à 6 points clés.
   - Le résultat est stocké avec le modèle et la version de la consigne.
   - Il est affiché sous le lecteur de l'écran de détail avec la mention « Résumé généré
     automatiquement ».

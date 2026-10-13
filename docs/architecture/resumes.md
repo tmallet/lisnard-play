@@ -15,14 +15,20 @@ une vidéo (ADR 0021, spec `intervention-summaries`). Code :
   `{ speaks, summary, points }`, validée par `parseSummaryOutput`.
 - **Clé** : `OPENROUTER_API_KEY`, la même que pour Jev, réservée au worker.
 
-## Consigne (`prompt.ts`, version 1)
+## Consigne (`prompt.ts`, version 2)
 
-- Français, factuel, neutre, trois phrases au plus, propos attribués (« Il
-  estime que… »).
-- Deux à quatre points clés de quelques mots.
+- Français, factuel, neutre, propos attribués (« Il estime que… »).
+- Longueur proportionnée à la vidéo : trois ou quatre phrases pour un extrait de
+  moins de trois minutes, jusqu'à trois courts paragraphes (dix phrases au plus)
+  pour une interview ou un débat, séparés par une ligne vide.
+- Ordre des sujets abordés, propositions concrètes, chiffres et exemples.
+- Trois à six points clés de quelques mots.
 - Ni opinion, ni citation de plus de quinze mots, ni information absente de la
   vidéo.
 - `speaks: false` si David Lisnard ne s'exprime pas : rien n'est affiché.
+
+La version 1 (trois phrases au plus) a été jugée trop courte par le porteur du
+projet le 2026-10-13.
 
 Toute modification du texte ou du schéma incrémente `PROMPT_VERSION`. Les
 résumés existants sont alors régénérés au fil des cycles, les plus récents

@@ -14,7 +14,14 @@ export function SummaryBlock({ text, points }: { text: string; points: string[] 
       >
         Résumé
       </Text>
-      <Text className="font-sans text-base text-blanc leading-relaxed">{text}</Text>
+      {text
+        .split(/\n\s*\n/)
+        .filter((paragraph) => paragraph.trim())
+        .map((paragraph) => (
+          <Text key={paragraph} className="font-sans text-base text-blanc leading-relaxed">
+            {paragraph.trim()}
+          </Text>
+        ))}
       <View className="gap-1.5">
         {points.map((point) => (
           <View key={point} className="flex-row gap-2">

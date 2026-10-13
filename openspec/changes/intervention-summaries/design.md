@@ -79,7 +79,7 @@ rattrapage.
 - **Validation** : la réponse est validée par `parseSummaryOutput`, sur le modèle de `parseAnswers` (le worker ne dépend pas de zod). Une forme invalide compte
   comme un échec (D5).
 - **Consigne** : `summaries/prompt.ts`, avec `PROMPT_VERSION = 1`. Le texte
-  reprend la spec `intervention-summaries` : 3 phrases au plus, attribution,
+  reprend la spec `intervention-summaries` : longueur proportionnée à la durée, attribution,
   neutralité, pas de citation de plus de 15 mots, rien qui ne soit dans la
   vidéo.
 - **Contexte** : le titre et le média sont fournis au modèle pour l'aider à

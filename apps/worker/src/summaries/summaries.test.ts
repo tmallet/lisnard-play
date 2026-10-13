@@ -40,8 +40,10 @@ class FakeSummarizer implements Summarizer {
 describe('sortie du modèle', () => {
   test('valide, tronque les points et refuse une forme inattendue', () => {
     expect(
-      parseSummaryOutput(JSON.stringify({ ...SPEAKS, points: ['a', ' b ', '', 'c', 'd', 'e'] })),
-    ).toEqual({ ...SPEAKS, points: ['a', 'b', 'c', 'd'] });
+      parseSummaryOutput(
+        JSON.stringify({ ...SPEAKS, points: ['a', ' b ', '', 'c', 'd', 'e', 'f', 'g'] }),
+      ),
+    ).toEqual({ ...SPEAKS, points: ['a', 'b', 'c', 'd', 'e', 'f'] });
     expect(parseSummaryOutput('{"speaks":false,"summary":"x","points":["y"]}')).toEqual({
       speaks: false,
       summary: '',

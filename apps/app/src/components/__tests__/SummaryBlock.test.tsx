@@ -26,3 +26,9 @@ test('carte de lien : ouvre l’URL reçue (celle de l’éditeur pour un articl
   await fireEvent.press(screen.getByRole('link'));
   expect(open).toHaveBeenCalledWith('https://www.lejdd.fr/article');
 });
+
+test('résumé en plusieurs paragraphes : un bloc de texte par paragraphe', async () => {
+  await render(<SummaryBlock text={'Premier paragraphe.\n\nSecond paragraphe.'} points={['a']} />);
+  expect(screen.getByText('Premier paragraphe.')).toBeTruthy();
+  expect(screen.getByText('Second paragraphe.')).toBeTruthy();
+});

@@ -44,9 +44,9 @@ texte d'un article pour en produire un résumé automatique exposerait le projet
   - le modèle est `google/gemini-3.5-flash-lite`, épinglé, appelé via
     OpenRouter et restreint au fournisseur Google AI Studio, le seul qui accepte
     les URL YouTube ;
-  - la consigne est versionnée et la sortie structurée en JSON : résumé de
-    3 phrases au plus, 2 à 4 points clés, et un indicateur « David Lisnard
-    s'exprime » ;
+  - la consigne est versionnée et la sortie structurée en JSON : résumé
+    proportionné à la durée (trois phrases à trois courts paragraphes), 3 à 6
+    points clés, et un indicateur « David Lisnard s'exprime » ;
   - chaque résumé est stocké avec le modèle et la version de la consigne.
 - **Jev reste le seul juge de la publication.** Le résumé n'influence ni la
   publication ni les thèmes (ADR 0018, 0020).
@@ -75,7 +75,7 @@ texte d'un article pour en produire un résumé automatique exposerait le projet
 - **Résumer les articles à partir de leur texte** : droit voisin, et pages
   souvent payantes.
 - **Modèle plus puissant (Pro)** : 5 à 10 fois plus cher, pour un gain inutile
-  sur des résumés de 3 phrases.
+  sur des résumés de quelques paragraphes.
 
 ## Conséquences
 
