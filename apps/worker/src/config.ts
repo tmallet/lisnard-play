@@ -7,6 +7,8 @@ export const HISTORY_START = new Date('2026-03-30T22:00:00Z');
 export const CADENCE_MS = {
   youtube: 3 * 60_000,
   rss: 15 * 60_000,
+  /** Rattrapage des chaînes officielles : au démarrage, puis une fois par jour (ADR 0018). */
+  backfill: 24 * 60 * 60_000,
 } as const;
 
 /** Intervalle de la boucle de planification. */

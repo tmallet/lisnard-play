@@ -108,3 +108,8 @@ export const SOURCES: SourceConfig[] = [
     active: true,
   },
 ];
+
+/** Chaîne officielle de David Lisnard : il y intervient par construction (ADR 0018). */
+export function isOfficialSource(sourceId: string): boolean {
+  return SOURCES.some((s) => s.id === sourceId && s.kind === 'youtube' && s.official === true);
+}

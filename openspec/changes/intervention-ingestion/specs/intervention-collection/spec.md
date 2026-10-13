@@ -82,6 +82,22 @@ ses métadonnées sans créer de doublon.
 - **WHEN** une vidéo déjà enregistrée réapparaît dans une collecte ultérieure
 - **THEN** aucun nouvel enregistrement n'est créé et ses métadonnées sont mises à jour
 
+### Requirement: Rattrapage des chaînes officielles
+Pour une chaîne YouTube officielle de David Lisnard, le système DOIT collecter
+toutes ses vidéos publiées depuis le début de l'historique, et pas seulement les
+plus récentes exposées par le flux. Ce rattrapage DOIT avoir lieu au démarrage du
+worker, puis au moins une fois par jour, et pouvoir être relancé à la demande.
+Il DOIT s'arrêter à la première vidéo antérieure au début de l'historique et ne
+pas créer de doublon.
+
+#### Scenario: Rattrapage initial
+- **WHEN** le worker démarre et que la chaîne officielle compte 195 vidéos depuis le 31 mars 2026
+- **THEN** les 195 vidéos sont enregistrées, et aucune vidéo antérieure au 31 mars 2026 n'est demandée au-delà de la première rencontrée
+
+#### Scenario: Rattrapage répété
+- **WHEN** le rattrapage est relancé sans nouvelle vidéo
+- **THEN** aucun nouvel enregistrement n'est créé
+
 ### Requirement: Début de l'historique
 Le système NE DOIT PAS enregistrer de contenu dont la date de diffusion, ou à
 défaut de publication, est antérieure au 31 mars 2026 à 00:00, heure de Paris.

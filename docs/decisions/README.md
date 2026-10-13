@@ -16,7 +16,7 @@ Règles :
 | [0002](0002-stack-technique.md) | Stack technique — Expo, Bun, tRPC, Uniwind | accepted | architecture, stack |
 | [0003](0003-web-d-abord-worker-separe.md) | Web d'abord, API routes tRPC et worker d'ingestion séparé | superseded | architecture, web, ingestion |
 | [0004](0004-classification-jev-openrouter.md) | Classifier la pertinence avec Jev via OpenRouter (System One) | accepted | ingestion, ia, classifier |
-| [0005](0005-publication-automatique-journal.md) | Publication tout automatique et journal des décisions du classifieur | accepted | ingestion, ia, classifier, notifications |
+| [0005](0005-publication-automatique-journal.md) | Publication tout automatique et journal des décisions du classifieur | superseded | ingestion, ia, classifier, notifications |
 | [0006](0006-perimetre-des-interventions.md) | Périmètre des interventions — tout sauf la mairie de Cannes | accepted | produit, perimetre, classifier |
 | [0007](0007-rendu-medias-oembed.md) | Rendu des médias — intégration oEmbed, sinon lien vers la source | accepted | ingestion, media, ui |
 | [0008](0008-systeme-de-documentation.md) | Système de documentation structuré pour les agents de codage | accepted | documentation, outillage, agents |
@@ -29,3 +29,4 @@ Règles :
 | [0015](0015-hebergement-coolify-docker.md) | Hébergement — conteneurs Docker sur Coolify, runtime Bun partout | accepted | architecture, hebergement, deploiement |
 | [0016](0016-debut-historique-31-mars-2026.md) | Début de l'historique — 31 mars 2026, annonce de candidature | accepted | produit, perimetre, ingestion |
 | [0017](0017-collecte-et-frontiere-ecriture.md) | Stratégie de collecte (YouTube RSS + videos.list), lecture d'URL externes et frontière d'écriture | accepted | ingestion, donnees, securite, architecture |
+| [0018](0018-chaine-officielle-rattrapage-et-publication.md) | Publication automatique, journal des décisions et cas de la chaîne officielle | accepted | ingestion, ia, classifier, notifications |

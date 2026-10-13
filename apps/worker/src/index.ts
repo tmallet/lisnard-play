@@ -6,7 +6,7 @@ import { runMigrations } from '@lisnard/db/migrate';
 import { upsertSources } from '@lisnard/db/write';
 
 import { createSystemOneClassifier } from './classifier/systemone';
-import { recheckLive, runCollection } from './collect';
+import { recheckLive, runBackfill, runCollection } from './collect';
 import { CADENCE_MS, HEARTBEAT_FILE, LEADER_LOCK_KEY, requireEnv, TICK_MS } from './config';
 import { log } from './log';
 import { resolvePendingMedia } from './media/task';
@@ -40,6 +40,12 @@ const ctx: SourceContext = {
 const classifier = createSystemOneClassifier({ apiKey: requireEnv('OPENROUTER_API_KEY') });
 
 const tasks: Task[] = [
+  {
+    // Premier cycle au démarrage, puis quotidien : toutes les vidéos des chaînes officielles.
+    name: 'backfill:youtube',
+    everyMs: CADENCE_MS.backfill,
+    run: () => runBackfill(db, SOURCES, ctx),
+  },
   {
     name: 'collect:youtube',
     everyMs: CADENCE_MS.youtube,

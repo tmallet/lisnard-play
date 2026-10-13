@@ -17,6 +17,7 @@ import { MAX_DESCRIPTION, QUESTIONS_VERSION } from './classifier/questions';
 import { thresholdsFor } from './classifier/thresholds';
 import type { Classifier, ClassifierState } from './classifier/types';
 import { errorMessage, log } from './log';
+import { isOfficialSource } from './sources.config';
 
 export interface ClassifyOptions {
   limit?: number;
@@ -74,7 +75,9 @@ async function classifyOne(
     const thresholds = thresholdsFor(classifier.model);
     if (!thresholds)
       log.error('aucun seuil pour le modèle : publication bloquée', { model: classifier.model });
-    const decision = decide(result.answers, thresholds);
+    const decision = decide(result.answers, thresholds, {
+      presumeSpeaking: isOfficialSource(target.sourceId),
+    });
     await recordClassification(db, {
       itemId: target.id,
       model: result.model,
@@ -124,7 +127,9 @@ export async function recompute(
   for (const c of latest) {
     // Le modèle épinglé étant un instantané daté, le modèle servi est le même identifiant.
     const thresholds = thresholdsLookup(c.model);
-    const decision = decide(c.answers, thresholds);
+    const decision = decide(c.answers, thresholds, {
+      presumeSpeaking: isOfficialSource(c.sourceId),
+    });
     if (decision.outcome === c.outcome) continue;
     await recordClassification(db, {
       itemId: c.itemId,

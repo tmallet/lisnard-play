@@ -81,7 +81,8 @@ classification  id, item_id, model, questions_version, input_hash,
 - **Date de tri** : `coalesce(starts_at, published_at)`.
 
 ### D3 — Sources
-Stratégie YouTube : ADR 0017.
+Stratégie YouTube : ADR 0017. Rattrapage des chaînes officielles par leur
+playlist « uploads » : ADR 0018.
 
 - **YouTube** : flux RSS public
   `https://www.youtube.com/feeds/videos.xml?channel_id=<id>`, gratuit et sans
@@ -105,7 +106,8 @@ Stratégie YouTube : ADR 0017.
   journalisé.
 
 ### D4 — Classifieur
-Modèle, questions et seuils : ADR 0004 et 0005.
+Modèle, questions et seuils : ADR 0004. Règle de publication (dont l'exception de
+la chaîne officielle) : ADR 0018, qui remplace l'ADR 0005.
 
 - **Client** : client REST minimal, sans SDK, sur
   `POST https://openrouter.ai/api/v1/systemone` (`Authorization: Bearer`). Le

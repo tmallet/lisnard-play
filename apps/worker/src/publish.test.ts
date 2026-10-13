@@ -152,7 +152,10 @@ describe('classification en base', () => {
 
   beforeAll(async () => {
     ({ db, drop } = await createTestDb());
-    await upsertSources(db, [{ id: 'yt:bfmtv', kind: 'youtube', name: 'BFMTV', active: true }]);
+    await upsertSources(db, [
+      { id: 'yt:bfmtv', kind: 'youtube', name: 'BFMTV', active: true },
+      { id: 'yt:david-lisnard', kind: 'youtube', name: 'David Lisnard', active: true },
+    ]);
   });
   afterAll(() => drop());
   beforeEach(async () => {
@@ -193,6 +196,36 @@ describe('classification en base', () => {
       .where(eq(classification.itemId, ids.national));
     expect(entry).toMatchObject({ model: PINNED_MODEL, questionsVersion: QUESTIONS_VERSION });
     expect(entry?.thresholds).toEqual(thresholdsFor(PINNED_MODEL));
+  });
+
+  test('chaîne officielle : intervention présumée, mais le rôle mairie reste écarté', async () => {
+    const add = (key: string) =>
+      upsertItem(db, {
+        sourceId: 'yt:david-lisnard',
+        platformId: `yt:off-${key}`,
+        url: `https://www.youtube.com/watch?v=${key}`,
+        title: `Contenu ${key}`,
+        description: '',
+        publishedAt: new Date('2026-06-01T00:00:00Z'),
+      });
+    const clip = (await add('clip')).id;
+    const cannes = (await add('cannes')).id;
+    const lowSpeaking = (role: string): ClassifierAnswers => ({
+      intervient: 0.6,
+      role: { choice: role, confidence: 0.95, probabilities: {} },
+      kind: { choice: 'stream', confidence: 1, probabilities: {} },
+    });
+    const classifier: Classifier = {
+      model: PINNED_MODEL,
+      classify: async (state) => ({
+        model: PINNED_MODEL,
+        answers: lowSpeaking(state.title.includes('cannes') ? 'mairie' : 'national'),
+        cost: 0,
+      }),
+    };
+    await classifyPending(db, classifier, { sleep: noSleep });
+    expect((await statusOf(clip))?.status).toBe('published');
+    expect((await statusOf(cannes))?.status).toBe('rejected');
   });
 
   test('cache : pas de nouvel appel si l’entrée n’a pas changé', async () => {

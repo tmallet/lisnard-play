@@ -9,7 +9,7 @@ import { HISTORY_START } from './config';
 import { errorMessage, log } from './log';
 import { collectRss } from './sources/rss';
 import type { Candidate, SourceConfig, SourceContext } from './sources/types';
-import { collectYoutube, fetchVideoDetails } from './sources/youtube';
+import { backfillYoutube, collectYoutube, fetchVideoDetails } from './sources/youtube';
 import { mentionsLisnard } from './text';
 
 export interface CollectStats {
@@ -52,6 +52,35 @@ export async function runCollection(
     } catch (error) {
       stats.failed.push(source.id);
       log.error('collecte : source en échec', { source: source.id, error: errorMessage(error) });
+    }
+  }
+  return stats;
+}
+
+/**
+ * Rattrapage de l'historique des chaînes officielles depuis le début de l'historique
+ * (ADR 0016, ADR 0018) : toutes leurs vidéos, et pas seulement les 15 du flux RSS.
+ */
+export async function runBackfill(
+  db: Db,
+  sources: SourceConfig[],
+  ctx: SourceContext,
+): Promise<CollectStats> {
+  const stats: CollectStats = { sources: 0, failed: [], fetched: 0, kept: 0, inserted: 0 };
+  for (const source of sources) {
+    if (source.kind !== 'youtube' || !source.official || !source.active) continue;
+    stats.sources += 1;
+    try {
+      const candidates = await backfillYoutube(source, HISTORY_START, ctx);
+      stats.fetched += candidates.length;
+      for (const c of candidates.filter((c) => keepCandidate(source, c))) {
+        const { inserted } = await upsertItem(db, { ...c, sourceId: source.id });
+        stats.kept += 1;
+        if (inserted) stats.inserted += 1;
+      }
+    } catch (error) {
+      stats.failed.push(source.id);
+      log.error('rattrapage : source en échec', { source: source.id, error: errorMessage(error) });
     }
   }
   return stats;

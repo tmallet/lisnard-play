@@ -23,6 +23,8 @@
 - [x] 3.6 Isolation des pannes par source, journalisation structurée, compteur de quota YouTube, fichier de pulsation pour le healthcheck
 - [x] 3.7 Tests sur fixtures : flux RSS, `videos.list` (upcoming, live, ended, none), Google News ; pré-filtre ; seuil d'historique ; source en panne ; verrou à deux instances
 
+- [x] 3.8 Rattrapage des chaînes officielles via la playlist « uploads » (au démarrage, puis quotidien, et commande `backfill`), avec arrêt au début de l'historique (ADR 0018)
+
 ## 4. Worker : classification et publication
 
 - [x] 4.1 Interface `Classifier` et client System One (SDK ou REST, selon le spike) ; état envoyé et questions `QUESTIONS_VERSION = 1` (design D4)
@@ -31,6 +33,8 @@
 - [x] 4.4 Reprise sur erreur : 3 tentatives, puis l'élément reste `pending`
 - [x] 4.5 CLI : `recompute` (nouveaux seuils sans appel au modèle) et `reclassify` (filtrable par modèle ou version)
 - [x] 4.6 Tests avec un classifieur factice : chaque scénario de la spec `intervention-classification` (national, AMF, mairie, simple citation, modèle sans seuils, indisponibilité, recalcul)
+
+- [x] 4.7 Chaîne officielle : intervention présumée dans la règle de publication et le recalcul, filtre sur le rôle conservé (ADR 0018)
 
 ## 5. Calibration
 

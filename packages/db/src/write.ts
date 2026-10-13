@@ -224,6 +224,7 @@ export async function listLatestClassifications(db: Db) {
   return db
     .selectDistinctOn([classification.itemId], {
       itemId: classification.itemId,
+      sourceId: item.sourceId,
       model: classification.model,
       questionsVersion: classification.questionsVersion,
       inputHash: classification.inputHash,
@@ -231,6 +232,7 @@ export async function listLatestClassifications(db: Db) {
       outcome: classification.outcome,
     })
     .from(classification)
+    .innerJoin(item, eq(item.id, classification.itemId))
     .orderBy(classification.itemId, desc(classification.createdAt));
 }
 

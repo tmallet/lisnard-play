@@ -1,7 +1,7 @@
 # Classifieur
 
 Décide si un contenu collecté est une intervention publique de David Lisnard
-dans le périmètre de l'application (ADR 0004, 0005, 0006). Code :
+dans le périmètre de l'application (ADR 0004, 0006, 0018). Code :
 `apps/worker/src/classifier/` et `apps/worker/src/publish.ts`.
 
 ## Modèle
@@ -28,7 +28,9 @@ source, dates. Jev ne produit pas de texte : il ne fait que décider.
 ## Règle de publication (`decide.ts`)
 
 Un contenu est publié si et seulement si :
-- `intervient ≥ τ_intervient` ;
+- `intervient ≥ τ_intervient`, sauf pour la chaîne officielle de David Lisnard
+  (`official: true` dans `sources.config.ts`), où son intervention est présumée
+  (ADR 0018) ;
 - le rôle le plus probable est `national` ou `amf` ;
 - la confiance de ce rôle est `≥ τ_role`.
 
@@ -62,7 +64,7 @@ communiqué de la ville, homonyme, AMF…).
   faux positifs sur environ 50 publications).
 - **Choix des seuils** : on maximise la précision sous la contrainte d'un rappel
   d'au moins 80 % (design D5), car une fausse publication coûte plus cher qu'un
-  oubli (ADR 0005).
+  oubli (ADR 0018).
 - **Erreurs restantes à 0,75** :
   - 1 faux positif (une chronique radio qui présente sa proposition) ;
   - 10 faux négatifs, surtout des déplacements de campagne et des reprises

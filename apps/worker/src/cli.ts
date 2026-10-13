@@ -3,6 +3,7 @@
  *   bun run cli recompute                        recalcule la publication avec les seuils actuels
  *   bun run cli reclassify [--model M] [--version N]  reclasse en rappelant le classifieur
  *   bun run cli calibrate [--validated]          mesure les seuils sur eval/reference.jsonl
+ *   bun run cli backfill                         rattrape toutes les vidéos des chaînes officielles
  */
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -18,8 +19,10 @@ import {
 } from './calibrate';
 import { createSystemOneClassifier } from './classifier/systemone';
 import { thresholdsFor } from './classifier/thresholds';
+import { runBackfill } from './collect';
 import { requireEnv } from './config';
 import { reclassify, recompute } from './publish';
+import { SOURCES } from './sources.config';
 
 const { positionals, values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -45,6 +48,11 @@ switch (positionals[0]) {
       ...(values.version && { questionsVersion: Number(values.version) }),
     };
     console.log(await reclassify(db, classifier, filter));
+    break;
+  }
+  case 'backfill': {
+    const ctx = { fetch, youtubeApiKey: requireEnv('YOUTUBE_API_KEY'), quota: { youtubeUnits: 0 } };
+    console.log({ ...(await runBackfill(db, SOURCES, ctx)), youtubeUnits: ctx.quota.youtubeUnits });
     break;
   }
   case 'calibrate': {
@@ -81,7 +89,7 @@ switch (positionals[0]) {
   }
   default:
     console.error(
-      'Usage : bun run cli <recompute | reclassify [--model M] [--version N] | calibrate [--validated]>',
+      'Usage : bun run cli <recompute | reclassify [--model M] [--version N] | calibrate [--validated] | backfill>',
     );
     process.exit(1);
 }
