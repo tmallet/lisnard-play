@@ -48,5 +48,5 @@ bout en bout entre le front et le back.
 
 ## Points ouverts
 
-- Base de données : Postgres ou SQLite/Turso.
-- Hébergement des API routes (EAS Hosting ou autre).
+- ~~Base de données : Postgres ou SQLite/Turso.~~ Tranché : ADR 0014.
+- ~~Hébergement des API routes (EAS Hosting ou autre).~~ Tranché : ADR 0015.

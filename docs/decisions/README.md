@@ -25,3 +25,7 @@ Règles :
 | [0011](0011-rendu-web-prerendu-sdk57.md) | Web d'abord — pré-rendu et API routes en SDK 57, SSR à la montée en SDK 58 | accepted | architecture, web, ingestion |
 | [0012](0012-sources-charte-graphique.md) | Sources de la charte graphique — référence numérique, typographie et éléments exclus | accepted | charte, produit, juridique |
 | [0013](0013-conventions-api-et-polices.md) | Conventions de l'API (sérialisation, erreurs) et polices embarquées | accepted | architecture, api, securite, charte |
+| [0014](0014-base-de-donnees-postgres-drizzle.md) | Base de données — PostgreSQL, Drizzle ORM et driver Bun.sql | accepted | architecture, donnees, stack |
+| [0015](0015-hebergement-coolify-docker.md) | Hébergement — conteneurs Docker sur Coolify, runtime Bun partout | accepted | architecture, hebergement, deploiement |
+| [0016](0016-debut-historique-31-mars-2026.md) | Début de l'historique — 31 mars 2026, annonce de candidature | accepted | produit, perimetre, ingestion |
+| [0017](0017-collecte-et-frontiere-ecriture.md) | Stratégie de collecte (YouTube RSS + videos.list), lecture d'URL externes et frontière d'écriture | accepted | ingestion, donnees, securite, architecture |

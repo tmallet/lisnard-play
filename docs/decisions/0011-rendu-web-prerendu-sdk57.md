@@ -58,6 +58,9 @@ Ce qui change :
 
 ## Conséquences
 
+- Hébergement et planification du worker : tranchés par l'ADR 0015 (Coolify,
+  runtime Bun).
+
 - Tant qu'on est en SDK 57, une page dynamique (ex. `/interventions/[id]`)
   devra être pré-rendue via `generateStaticParams`, ou bien rendue côté client
   avec des métadonnées génériques. La montée en SDK 58 devient un prérequis
