@@ -25,12 +25,12 @@
 
 ## 4. Worker : classification et publication
 
-- [ ] 4.1 Interface `Classifier` et client System One (SDK ou REST, selon le spike) ; état envoyé et questions `QUESTIONS_VERSION = 1` (design D4)
-- [ ] 4.2 `thresholds.ts` par modèle ; aucune publication si le modèle n'a pas de seuils
-- [ ] 4.3 `publish.ts` : règle de publication, journalisation, dénormalisation `status` / `role` / `kind`, cache par `input_hash`
-- [ ] 4.4 Reprise sur erreur : 3 tentatives, puis l'élément reste `pending`
-- [ ] 4.5 CLI : `recompute` (nouveaux seuils sans appel au modèle) et `reclassify` (filtrable par modèle ou version)
-- [ ] 4.6 Tests avec un classifieur factice : chaque scénario de la spec `intervention-classification` (national, AMF, mairie, simple citation, modèle sans seuils, indisponibilité, recalcul)
+- [x] 4.1 Interface `Classifier` et client System One (SDK ou REST, selon le spike) ; état envoyé et questions `QUESTIONS_VERSION = 1` (design D4)
+- [x] 4.2 `thresholds.ts` par modèle ; aucune publication si le modèle n'a pas de seuils
+- [x] 4.3 `publish.ts` : règle de publication, journalisation, dénormalisation `status` / `role` / `kind`, cache par `input_hash`
+- [x] 4.4 Reprise sur erreur : 3 tentatives, puis l'élément reste `pending`
+- [x] 4.5 CLI : `recompute` (nouveaux seuils sans appel au modèle) et `reclassify` (filtrable par modèle ou version)
+- [x] 4.6 Tests avec un classifieur factice : chaque scénario de la spec `intervention-classification` (national, AMF, mairie, simple citation, modèle sans seuils, indisponibilité, recalcul)
 
 ## 5. Calibration
 

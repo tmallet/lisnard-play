@@ -15,6 +15,20 @@
       "when": 1791904779323,
       "tag": "0001_item_outlet",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791905020153,
+      "tag": "0002_nullable_thresholds",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791905224969,
+      "tag": "0003_fix_jsonb_strings",
+      "breakpoints": true
     }
   ]
 }

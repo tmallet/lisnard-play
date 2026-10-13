@@ -1,15 +1,27 @@
 import { sql } from 'drizzle-orm';
 import {
   boolean,
+  customType,
   index,
   integer,
-  jsonb,
   pgEnum,
   pgTable,
   text,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+
+/**
+ * jsonb transmis au driver Bun.sql sous forme d'objet. Le type jsonb standard de
+ * Drizzle sérialise en chaîne, que Bun.sql réencode : la valeur serait stockée comme
+ * une chaîne JSON au lieu d'un objet (constaté le 2026-10-13).
+ */
+const jsonb = <T>(name: string) =>
+  customType<{ data: T; driverData: unknown }>({
+    dataType: () => 'jsonb',
+    toDriver: (value) => value,
+    fromDriver: (value) => (typeof value === 'string' ? JSON.parse(value) : value) as T,
+  })(name);
 
 /** Types de source (design D3). */
 export const sourceKind = pgEnum('source_kind', ['youtube', 'rss']);
@@ -93,7 +105,7 @@ export const item = pgTable(
     status: itemStatus('status').notNull().default('pending'),
     role: interventionRole('role'),
     kind: interventionKind('kind'),
-    media: jsonb('media').$type<MediaRender>(),
+    media: jsonb<MediaRender>('media'),
     firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -120,8 +132,9 @@ export const classification = pgTable(
     questionsVersion: integer('questions_version').notNull(),
     /** Hash de l'état envoyé et de la version des questions (cache, design D4). */
     inputHash: text('input_hash').notNull(),
-    answers: jsonb('answers').$type<ClassifierAnswers>().notNull(),
-    thresholds: jsonb('thresholds').$type<AppliedThresholds>().notNull(),
+    answers: jsonb<ClassifierAnswers>('answers').notNull(),
+    /** null : aucun seuil défini pour le modèle, publication bloquée. */
+    thresholds: jsonb<AppliedThresholds>('thresholds'),
     outcome: classificationOutcome('outcome').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

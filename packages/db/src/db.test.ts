@@ -95,15 +95,19 @@ describe('journal des décisions', () => {
     expect(row?.role).toBe('national');
   });
 
-  test('un contenu modifié après sa classification redevient une cible', async () => {
+  test('cible : en attente, puis seulement si l’entrée envoyée au classifieur change', async () => {
     const { id } = await candidate('yt:t1');
-    expect((await listClassificationTargets(db, 10)).map((t) => t.id)).toEqual([id]);
-    await recordClassification(db, decision(id));
-    expect(await listClassificationTargets(db, 10)).toHaveLength(0);
+    const [target] = await listClassificationTargets(db, 10, 1);
+    expect(target?.id).toBe(id);
+    await recordClassification(db, decision(id, { inputHash: target?.inputHash ?? '' }));
+    expect(await listClassificationTargets(db, 10, 1)).toHaveLength(0);
+    // Un changement de statut de diffusion ne modifie pas l’entrée : pas de nouvel appel.
+    await candidate('yt:t1', { liveStatus: 'ended' });
+    expect(await listClassificationTargets(db, 10, 1)).toHaveLength(0);
+    // Un nouveau titre, ou une nouvelle version des questions, en fait une cible.
     await candidate('yt:t1', { title: 'Nouveau titre' });
-    const targets = await listClassificationTargets(db, 10);
-    expect(targets.map((t) => t.id)).toEqual([id]);
-    expect(targets[0]?.lastInputHash).toBe('h1');
+    expect((await listClassificationTargets(db, 10, 1)).map((t) => t.id)).toEqual([id]);
+    expect((await listClassificationTargets(db, 10, 2)).map((t) => t.id)).toEqual([id]);
   });
 });
 
@@ -174,5 +178,16 @@ describe('lecture publique', () => {
     await recordClassification(db, decision(amf.id, { role: 'amf' }));
     const { items } = await listPublished(db, { status: 'past', role: 'amf', limit: 50 });
     expect(items.map((i) => [i.id, i.role])).toEqual([[amf.id, 'amf']]);
+  });
+});
+
+describe('stockage jsonb', () => {
+  test('les réponses du classifieur sont des objets jsonb, pas des chaînes', async () => {
+    const { id } = await candidate('yt:json');
+    await recordClassification(db, decision(id));
+    const [row] = (await db.execute(
+      sql`select jsonb_typeof(answers) as a, (answers->>'intervient')::float as p from ${classification}`,
+    )) as unknown as { a: string; p: number }[];
+    expect(row).toEqual({ a: 'object', p: 0.9 });
   });
 });

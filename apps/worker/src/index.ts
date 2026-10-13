@@ -5,9 +5,11 @@ import { createDb } from '@lisnard/db/client';
 import { runMigrations } from '@lisnard/db/migrate';
 import { upsertSources } from '@lisnard/db/write';
 
+import { createSystemOneClassifier } from './classifier/systemone';
 import { recheckLive, runCollection } from './collect';
 import { CADENCE_MS, HEARTBEAT_FILE, LEADER_LOCK_KEY, requireEnv, TICK_MS } from './config';
 import { log } from './log';
+import { classifyPending } from './publish';
 import { Scheduler, type Task, tryAcquireLeaderLock } from './scheduler';
 import type { SourceContext } from './sources/types';
 import { SOURCES } from './sources.config';
@@ -34,6 +36,8 @@ const ctx: SourceContext = {
   quota: { youtubeUnits: 0 },
 };
 
+const classifier = createSystemOneClassifier({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+
 const tasks: Task[] = [
   {
     name: 'collect:youtube',
@@ -57,6 +61,11 @@ const tasks: Task[] = [
         SOURCES.filter((s) => s.kind === 'rss'),
         ctx,
       ),
+  },
+  {
+    name: 'classify',
+    everyMs: TICK_MS,
+    run: () => classifyPending(db, classifier),
   },
 ];
 

@@ -117,13 +117,25 @@ export async function listLiveToRecheck(db: Db): Promise<{ platformId: string }[
 export interface ClassificationTarget {
   id: string;
   sourceId: string;
+  sourceKind: 'youtube' | 'rss';
   outlet: string;
   url: string;
   title: string;
   description: string;
   publishedAt: Date;
   startsAt: Date | null;
-  lastInputHash: string | null;
+  /** Empreinte de l'entrée envoyée au classifieur, calculée en SQL (design D4). */
+  inputHash: string;
+}
+
+/**
+ * Empreinte des champs envoyés au classifieur et de la version des questions.
+ * Un contenu ne redevient une cible que si elle change (cache, design D4).
+ */
+export function inputHashSql(questionsVersion: number) {
+  return sql<string>`md5(concat_ws('|', ${questionsVersion}::text, ${item.title}, ${item.description},
+    coalesce(${item.outlet}, ${source.name}), ${source.kind}::text,
+    ${item.publishedAt}::text, coalesce(${item.startsAt}::text, '')))`;
 }
 
 /**
@@ -133,6 +145,7 @@ export interface ClassificationTarget {
 export async function listClassificationTargets(
   db: Db,
   limit: number,
+  questionsVersion: number,
 ): Promise<ClassificationTarget[]> {
   const last = db
     .select({
@@ -141,7 +154,6 @@ export async function listClassificationTargets(
         sql<string>`(array_agg(${classification.inputHash} order by ${classification.createdAt} desc))[1]`.as(
           'last_hash',
         ),
-      lastAt: sql<Date>`max(${classification.createdAt})`.as('last_at'),
     })
     .from(classification)
     .groupBy(classification.itemId)
@@ -150,18 +162,24 @@ export async function listClassificationTargets(
     .select({
       id: item.id,
       sourceId: item.sourceId,
+      sourceKind: source.kind,
       outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
       url: item.url,
       title: item.title,
       description: item.description,
       publishedAt: item.publishedAt,
       startsAt: item.startsAt,
-      lastInputHash: last.inputHash,
+      inputHash: inputHashSql(questionsVersion),
     })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
     .leftJoin(last, eq(last.itemId, item.id))
-    .where(or(eq(item.status, 'pending'), sql`${item.updatedAt} > ${last.lastAt}`))
+    .where(
+      or(
+        eq(item.status, 'pending'),
+        sql`${last.inputHash} is distinct from ${inputHashSql(questionsVersion)}`,
+      ),
+    )
     .orderBy(item.firstSeenAt)
     .limit(limit);
 }
@@ -172,7 +190,8 @@ export interface ClassificationRecord {
   questionsVersion: number;
   inputHash: string;
   answers: ClassifierAnswers;
-  thresholds: AppliedThresholds;
+  /** null : aucun seuil défini pour le modèle, publication bloquée (spec). */
+  thresholds: AppliedThresholds | null;
   outcome: 'published' | 'rejected';
   role: 'national' | 'amf' | 'mairie' | 'hors_sujet';
   kind: 'tv' | 'radio' | 'presse' | 'podcast' | 'meeting' | 'discours' | 'stream' | 'reseau_social';
@@ -206,6 +225,8 @@ export async function listLatestClassifications(db: Db) {
     .selectDistinctOn([classification.itemId], {
       itemId: classification.itemId,
       model: classification.model,
+      questionsVersion: classification.questionsVersion,
+      inputHash: classification.inputHash,
       answers: classification.answers,
       outcome: classification.outcome,
     })

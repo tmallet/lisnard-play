@@ -1,0 +1,1 @@
+ALTER TABLE "classification" ALTER COLUMN "thresholds" DROP NOT NULL;
