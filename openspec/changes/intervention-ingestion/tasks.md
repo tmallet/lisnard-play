@@ -55,12 +55,12 @@
 
 ## 8. Interface
 
-- [ ] 8.1 Installer `react-native-webview` avec `bunx expo install`
-- [ ] 8.2 Composants `InterventionCard`, `LiveBadge` (émeraude), `LinkCard`, `MediaEmbed` (`.web.tsx` avec iframe sandboxée, `.tsx` avec WebView limitée à l'hôte du fournisseur)
-- [ ] 8.3 Accueil : sections « En direct », « À venir », « Passées », rafraîchissement toutes les 60 s, chargement progressif, filtre de rôle, état vide (spec `intervention-feed`)
-- [ ] 8.4 Écran `src/app/interventions/[id].tsx` : rendu côté client, `PageHead` avec titre générique puis titre de l'intervention, lien vers la source
-- [ ] 8.5 Tests de composants : badge en direct, carte, sections vides masquées, état vide ; vérification au clavier et des contrastes (skill `charte-ui`)
-- [ ] 8.6 Vérification sur web et simulateur iOS avec une base remplie de fixtures
+- [x] 8.1 Installer `react-native-webview` avec `bunx expo install`
+- [x] 8.2 Composants `InterventionCard`, `LiveBadge` (émeraude), `LinkCard`, `MediaEmbed` (`.web.tsx` avec iframe sandboxée, `.tsx` avec WebView limitée à l'hôte du fournisseur)
+- [x] 8.3 Accueil : sections « En direct », « À venir », « Passées », rafraîchissement toutes les 60 s, chargement progressif, filtre de rôle, état vide (spec `intervention-feed`)
+- [x] 8.4 Écran `src/app/interventions/[id].tsx` : rendu côté client, `PageHead` avec titre générique puis titre de l'intervention, lien vers la source
+- [x] 8.5 Tests de composants : badge en direct, carte, sections vides masquées, état vide ; vérification au clavier et des contrastes (skill `charte-ui`)
+- [x] 8.6 Vérification sur web et simulateur iOS avec une base remplie de fixtures
 
 ## 9. Déploiement et CI
 

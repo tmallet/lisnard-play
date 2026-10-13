@@ -4,11 +4,18 @@ import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 
 import pkg from '../../../../package.json';
 
-// Connexion créée à la première requête et réutilisée ; absente si DATABASE_URL n'est pas défini.
-let db: Db | null | undefined;
+/**
+ * Connexion unique, créée à la première requête et gardée sur globalThis : en
+ * développement, le module est réévalué à chaque rechargement et créerait sinon un
+ * nouveau pool à chaque fois (épuisement des connexions Postgres).
+ */
+const store = globalThis as typeof globalThis & { __lisnardDb?: Db | null };
 function getDb(): Db | null {
-  if (db === undefined) db = process.env.DATABASE_URL ? createDb(process.env.DATABASE_URL) : null;
-  return db;
+  if (store.__lisnardDb === undefined) {
+    const url = process.env.DATABASE_URL;
+    store.__lisnardDb = url ? createDb(url, { max: 5, idleTimeout: 30 }) : null;
+  }
+  return store.__lisnardDb;
 }
 
 function handler(req: Request) {

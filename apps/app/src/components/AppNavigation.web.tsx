@@ -1,33 +1,12 @@
-import { Link, Slot } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Slot } from 'expo-router';
 
-import { APP_NAME } from '@/config/app';
-import { NAV_ITEMS } from '@/config/navigation';
+import { WebChrome } from './WebChrome';
 
-import { Footer } from './Footer';
-
-/** Web : en-tête avec liens, contenu, pied de page avec la mention d'indépendance. */
+/** Web : les onglets deviennent l'en-tête de WebChrome ; le contenu s'affiche dessous. */
 export function AppNavigation() {
   return (
-    <View className="min-h-full flex-1">
-      <View role="banner" className="flex-row items-center gap-6 px-6 py-4">
-        <Text className="mr-auto font-sans-extrabold text-blanc uppercase tracking-widest">
-          {APP_NAME}
-        </Text>
-        <View role="navigation" className="flex-row gap-5">
-          {NAV_ITEMS.map((link) => (
-            <Link key={link.href} href={link.href} asChild>
-              <Pressable>
-                <Text className="font-sans-semibold text-blanc">{link.label}</Text>
-              </Pressable>
-            </Link>
-          ))}
-        </View>
-      </View>
-      <View role="main" className="flex-1">
-        <Slot />
-      </View>
-      <Footer inset />
-    </View>
+    <WebChrome>
+      <Slot />
+    </WebChrome>
   );
 }
