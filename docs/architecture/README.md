@@ -2,7 +2,7 @@
 
 Description du système tel qu'il est construit. Le « pourquoi » des choix est
 dans les [ADR](../decisions/README.md), le comportement attendu dans
-`openspec/specs/` (alimenté à l'archivage des changes OpenSpec).
+[`openspec/specs/`](../../openspec/specs) (`api-transport`, `app-shell`).
 
 État : socle (change `setup-foundation`). La base de données, le worker
 d'ingestion et le classifieur ne sont pas encore construits (ADR 0004 à 0007).

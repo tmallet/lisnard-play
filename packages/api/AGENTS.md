@@ -20,7 +20,7 @@ Le client n'importe que le **type** `AppRouter`.
 - Les erreurs volontaires passent par `TRPCError` avec un code explicite. Une
   erreur inattendue devient `INTERNAL_SERVER_ERROR`, avec un message masqué
   hors développement (spec `api-transport`).
-- Sorties en JSON simple : dates en chaînes ISO 8601 (pas de transformateur).
+- Sorties en JSON simple : dates en chaînes ISO 8601, pas de transformateur (ADR 0013).
 - Pas de dépendance à Expo ni à React : le package doit rester exécutable par
   Bun seul (tests, futur worker).
 - Pas de secret dans ce package tant qu'il est servi par l'app. Les secrets

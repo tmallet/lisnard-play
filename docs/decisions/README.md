@@ -24,3 +24,4 @@ Règles :
 | [0010](0010-asdf-et-devcontainer.md) | Versions d'outils via asdf et devcontainer bac à sable pour agents | accepted | outillage, environnement, agents, securite |
 | [0011](0011-rendu-web-prerendu-sdk57.md) | Web d'abord — pré-rendu et API routes en SDK 57, SSR à la montée en SDK 58 | accepted | architecture, web, ingestion |
 | [0012](0012-sources-charte-graphique.md) | Sources de la charte graphique — référence numérique, typographie et éléments exclus | accepted | charte, produit, juridique |
+| [0013](0013-conventions-api-et-polices.md) | Conventions de l'API (sérialisation, erreurs) et polices embarquées | accepted | architecture, api, securite, charte |

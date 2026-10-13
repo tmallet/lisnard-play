@@ -53,6 +53,7 @@ l'exigence « contenu présent sans JavaScript », mais sans API routes, ce qui
 casserait la décision de l'ADR 0003. On ne l'utilise qu'en repli (voir Risques).
 
 ### D3 — Montage tRPC
+Voir ADR 0013 (sérialisation et politique d'erreurs).
 - `packages/api` exporte `appRouter`, son type `AppRouter` et
   `createContext`. Une procédure `health` (`publicProcedure.query`) renvoie
   `{ status: "ok", version, time }`, où `version` vient du `package.json` de l'app.
@@ -81,6 +82,7 @@ dégradés d'Uniwind (`bg-linear-160 from-bleu to-bleu-sombre`), avec
 est inutile, ce qui fait une dépendance de moins.
 
 ### D5 — Police Montserrat embarquée
+Voir ADR 0013.
 Graisses 400, 600, 700 et 800 via `@expo-google-fonts/montserrat`, chargées
 par `expo-font`. Les fichiers sont embarqués dans le bundle : aucun appel à
 Google Fonts à l'exécution, donc pas de fuite d'adresse IP vers un tiers ni de
