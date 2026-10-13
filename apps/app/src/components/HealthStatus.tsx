@@ -6,10 +6,10 @@ import { useTRPC } from '@/lib/trpc';
 /** Statut de l'API, affiché en développement uniquement (spec api-transport). */
 export function HealthStatus() {
   if (!__DEV__) return null;
-  return <HealthStatusInner />;
+  return <HealthStatusQuery />;
 }
 
-function HealthStatusInner() {
+function HealthStatusQuery() {
   const trpc = useTRPC();
   const { data, error, isPending } = useQuery(trpc.health.queryOptions());
   const label = isPending

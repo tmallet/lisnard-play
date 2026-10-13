@@ -1,11 +1,8 @@
 import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
-// Valeurs de la charte (ADR 0001) : les options natives exigent des couleurs JS.
-const CHAMOIS = '#b0ad85';
-const BLANC_70 = 'rgba(249,249,249,0.7)';
-const BLEU_SOMBRE = '#0f1752';
-// Fond uni sous chaque onglet (évite un flash clair) ; le dégradé est dessiné par <Screen>.
-const CONTENT_STYLE = { backgroundColor: BLEU_SOMBRE };
+import { NAV_ITEMS } from '@/config/navigation';
+import { blancSecondaire, colors } from '@/theme/colors';
+import { fontFamily } from '@/theme/fonts';
 
 /**
  * iOS et Android : barre d'onglets native (UITabBar / BottomNavigationView).
@@ -14,26 +11,26 @@ const CONTENT_STYLE = { backgroundColor: BLEU_SOMBRE };
 export function AppNavigation() {
   return (
     <NativeTabs
-      tintColor={CHAMOIS}
-      iconColor={{ default: BLANC_70, selected: CHAMOIS }}
+      tintColor={colors.chamois}
+      iconColor={{ default: blancSecondaire, selected: colors.chamois }}
       labelStyle={{
-        default: { color: BLANC_70, fontFamily: 'Montserrat_600SemiBold' },
-        selected: { color: CHAMOIS, fontFamily: 'Montserrat_600SemiBold' },
+        default: { color: blancSecondaire, fontFamily: fontFamily.semibold },
+        selected: { color: colors.chamois, fontFamily: fontFamily.semibold },
       }}
-      backgroundColor={BLEU_SOMBRE}
-      indicatorColor="rgba(176,173,133,0.2)"
+      backgroundColor={colors.bleuSombre}
+      indicatorColor={colors.bleu}
     >
-      <NativeTabs.Trigger name="index" contentStyle={CONTENT_STYLE}>
-        <NativeTabs.Trigger.Label>Accueil</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="a-propos" contentStyle={CONTENT_STYLE}>
-        <NativeTabs.Trigger.Label>À propos</NativeTabs.Trigger.Label>
-        <NativeTabs.Trigger.Icon
-          sf={{ default: 'info.circle', selected: 'info.circle.fill' }}
-          md="info"
-        />
-      </NativeTabs.Trigger>
+      {NAV_ITEMS.map((item) => (
+        <NativeTabs.Trigger
+          key={item.route}
+          name={item.route}
+          // Fond uni sous chaque onglet (évite un flash clair) ; le dégradé est dessiné par <Screen>.
+          contentStyle={{ backgroundColor: colors.bleuSombre }}
+        >
+          <NativeTabs.Trigger.Label>{item.label}</NativeTabs.Trigger.Label>
+          <NativeTabs.Trigger.Icon sf={item.icon.sf} md={item.icon.md} />
+        </NativeTabs.Trigger>
+      ))}
     </NativeTabs>
   );
 }

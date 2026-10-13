@@ -1,6 +1,5 @@
 {
   "expo": {
-    "name": "Lisnard Play",
     "slug": "lisnard-play",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,7 +7,7 @@
     "scheme": "lisnardplay",
     "userInterfaceStyle": "dark",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/images/icon.png"
     },
     "android": {
       "adaptiveIcon": {
@@ -30,7 +29,7 @@
         {
           "backgroundColor": "#0f1752",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120
         }
       ]
     ],

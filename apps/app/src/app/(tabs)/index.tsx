@@ -1,6 +1,5 @@
-import { Platform, Text } from 'react-native';
+import { Text } from 'react-native';
 
-import { Footer } from '@/components/Footer';
 import { HealthStatus } from '@/components/HealthStatus';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
@@ -18,7 +17,6 @@ export default function Home() {
         La liste des interventions arrive bientôt.
       </Text>
       <HealthStatus />
-      {Platform.OS !== 'web' && <Footer />}
     </Screen>
   );
 }

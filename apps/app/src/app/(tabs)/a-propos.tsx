@@ -8,7 +8,7 @@ import { APP_NAME, CONTACT, INDEPENDENCE_NOTICE, SOURCES_NOTICE } from '@/config
 
 export default function About() {
   return (
-    <Screen>
+    <Screen footer={false}>
       <PageHead title="À propos" description={INDEPENDENCE_NOTICE} />
       <Title highlight="propos">À propos</Title>
       <Text className="font-sans text-base text-blanc/85 leading-relaxed">

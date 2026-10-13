@@ -17,10 +17,11 @@ lisnard-play/
 │  │  ├─ +html.tsx      document HTML web (lang, meta de base)
 │  │  ├─ (tabs)/        navigation : index (accueil), a-propos
 │  │  └─ api/trpc/[trpc]+api.ts   point d'accès tRPC
-│  ├─ src/components/   Title, Footer, Screen, PageHead, AppNavigation(.web), HealthStatus
-│  ├─ src/config/app.ts identité : APP_NAME, mentions, contact (source unique)
+│  ├─ src/components/   Title, Footer, Screen(.web), PageHead, AppNavigation(.web), HealthStatus
+│  ├─ src/config/       identity.json (nom), app.ts (mentions, contact), navigation.ts (onglets)
+│  ├─ app.config.ts     nom natif lu dans identity.json
 │  ├─ src/lib/          client tRPC (trpc.tsx), URL de l'API (api-url.ts)
-│  ├─ src/theme/        chargement des polices
+│  ├─ src/theme/        colors.ts, fonts.ts : valeurs JS de la charte, chargement des polices
 │  └─ src/global.css    Tailwind + Uniwind + tokens de la charte
 ├─ packages/api/        @lisnard/api : routeur tRPC, contexte, procédures
 ├─ scripts/             docs-check.ts, smoke-web.ts

@@ -12,7 +12,6 @@ const APP_DIR = resolve(import.meta.dir, '../apps/app');
 const EXPO = resolve(import.meta.dir, '../node_modules/.bin/expo');
 const PORT = Number(process.env.SMOKE_PORT ?? 8091);
 const BASE = `http://localhost:${PORT}`;
-const NOTICE = 'Application indépendante, non affiliée à David Lisnard ni à Nouvelle Énergie.';
 
 const failures: string[] = [];
 function check(label: string, ok: boolean) {
@@ -38,7 +37,7 @@ async function waitForServer(timeoutMs = 30_000) {
   throw new Error(`Le serveur ne répond pas sur ${BASE}`);
 }
 
-function checkPage(path: string, html: string, expectedTitle: string) {
+function checkPage(path: string, html: string, expectedTitle: string, notice: string) {
   check(`${path} : <html lang="fr">`, /<html[^>]*\blang="fr"/.test(html));
   check(
     `${path} : <title> « ${expectedTitle} »`,
@@ -54,7 +53,7 @@ function checkPage(path: string, html: string, expectedTitle: string) {
       new RegExp(`<meta[^>]*property="${prop}"[^>]*content="[^"]+"`).test(html),
     );
   }
-  check(`${path} : mention d'indépendance`, html.includes(NOTICE));
+  check(`${path} : mention d'indépendance`, html.includes(notice));
 }
 
 if (!process.env.SKIP_EXPORT) await run([EXPO, 'export', '--platform', 'web']);
@@ -67,13 +66,13 @@ const server = Bun.spawn([EXPO, 'serve', '--port', String(PORT)], {
 
 try {
   await waitForServer();
-  const { APP_NAME } = await import('../apps/app/src/config/app');
+  const { INDEPENDENCE_NOTICE, pageTitle } = await import('../apps/app/src/config/app');
 
   const home = await (await fetch(`${BASE}/`)).text();
-  checkPage('/', home, APP_NAME);
+  checkPage('/', home, pageTitle(), INDEPENDENCE_NOTICE);
 
   const about = await (await fetch(`${BASE}/a-propos`)).text();
-  checkPage('/a-propos', about, `À propos · ${APP_NAME}`);
+  checkPage('/a-propos', about, pageTitle('À propos'), INDEPENDENCE_NOTICE);
 
   const res = await fetch(`${BASE}/api/trpc/health`);
   const body = (await res.json()) as {

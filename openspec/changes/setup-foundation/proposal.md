@@ -11,7 +11,8 @@ garantit que la documentation reste cohérente.
 - Création du **monorepo Bun** (workspaces `apps/*`, `packages/*`), avec
   TypeScript strict, lint et format partagés (ADR 0002).
 - Création de `apps/app` : **Expo (dernier SDK) + Expo Router**, cibles web
-  (sortie serveur, SSR), iOS et Android (ADR 0003).
+  (sortie serveur : pré-rendu au build et API routes en SDK 57, ADR 0011), iOS et
+  Android.
 - Intégration d'**Uniwind** et déclaration des tokens de la charte réduite
   (palette, Montserrat), conformément à l'ADR 0001.
 - **Coquille de l'application** : mise en page commune, page d'accueil

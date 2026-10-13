@@ -27,7 +27,11 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 | `src/app/(tabs)/` | Accueil (`index`) et `a-propos`. Navigation dans `components/AppNavigation(.web).tsx` : en-tête et liens sur le web, barre d'onglets **native** sur iOS et Android |
 | `src/app/api/trpc/[trpc]+api.ts` | Point d'accès tRPC (`GET`/`POST /api/trpc/*`) |
 | `src/components/` | Composants partagés (hors routes) |
-| `src/config/app.ts` | **Source unique** du nom et des mentions : ne jamais écrire le nom en dur ailleurs |
+| `src/config/identity.json` | **Source unique** du nom de l'application (lu par `config/app.ts` et `app.config.ts`) : ne jamais écrire le nom en dur ailleurs |
+| `src/config/app.ts` | `APP_NAME`, mentions (indépendance, sources), contact, `pageTitle()` |
+| `src/config/navigation.ts` | `NAV_ITEMS` : onglets (route, lien, libellé, icônes), partagés par le web et le natif |
+| `src/theme/colors.ts`, `src/theme/fonts.ts` | Valeurs JS de la charte (couleurs, noms Montserrat) pour les API qui n'acceptent pas de classes |
+| `app.config.ts` | Complète `app.json` avec le nom issu de `identity.json` |
 | `src/lib/trpc.tsx` | `ApiProvider`, `useTRPC` |
 | `src/global.css` | Tailwind + Uniwind + tokens de la charte |
 | `src/uniwind-types.d.ts` | Généré par Metro (Uniwind), commité pour la vérification des types en CI |
@@ -35,21 +39,26 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 ## Conventions
 
 - **Style** : `className` avec les tokens de la charte (`bg-bleu-sombre`,
-  `text-chamois`, `font-sans-extrabold`…). Pas de couleur en dur, sauf là où
-  une API exige une valeur JS (options de navigation). Règles complètes : skill `charte-ui`.
+  `text-chamois`, `font-sans-extrabold`…). Quand une API exige une valeur JS
+  (options natives, `+html.tsx`), importer `colors` / `fontFamily` depuis
+  `src/theme/` : jamais de code hex ni de nom de police en dur. Règles complètes : skill `charte-ui`.
 - **Composant tiers sans `className`** : l'envelopper avec `withUniwind`
-  (exemple : `SafeAreaView` dans `Screen.tsx`).
-- **Variantes par plateforme** : fichiers `.web.tsx` / `.tsx` (exemple :
-  `AppNavigation`). Sur mobile, la mention d'indépendance est affichée dans
-  le contenu ; sur le web, dans le pied de page.
+  (`import { withUniwind } from 'uniwind'`).
+- **Variantes par plateforme** : fichiers `.web.tsx` / `.tsx` (`AppNavigation`,
+  `Screen`) plutôt que des `Platform.OS` dans les écrans.
 - **Navigation mobile** : `NativeTabs` (`expo-router/unstable-native-tabs` en SDK 57,
   `expo-router/native-tabs` à partir du SDK 58). Icônes : `sf` (SF Symbols, iOS) et
   `md` (Material, Android). Sur iOS 26+, la barre est en Liquid Glass et le système
   ignore `backgroundColor` et adapte lui-même les couleurs.
-- **Écrans** : toujours envelopper le contenu dans `<Screen>`. Il porte le dégradé
-  sur mobile (le conteneur des onglets natifs masque la racine) et place le
-  `ScrollView` comme premier élément, ce qu'exigent les onglets natifs.
-- **Métadonnées web** : `<PageHead title=… description=… />` dans chaque écran.
+- **Écrans** : toujours envelopper le contenu dans `<Screen>`. Sur mobile
+  (`Screen.tsx`), il fournit la mise en page commune : dégradé (le conteneur des
+  onglets natifs masque la racine), nom de l'app en surtitre, pied de page avec la
+  mention d'indépendance (`footer={false}` si l'écran l'affiche déjà), et un
+  `ScrollView` en premier élément, ce qu'exigent les onglets natifs. Sur le web
+  (`Screen.web.tsx`), en-tête et pied de page viennent d'`AppNavigation.web.tsx`.
+- **Métadonnées web** : `<PageHead title=… description=… />` dans chaque écran, 404
+  comprise (`+not-found.tsx`) : c'est lui qui pose `<title>`, la description et les
+  balises Open Graph. `+html.tsx` ne porte que les balises communes.
 - **Données** : toujours via tRPC (`useTRPC()` + `useQuery(trpc.x.queryOptions())`).
   Pour ajouter une procédure : skill `trpc-procedure`.
 - **Rendu web** : pré-rendu au build en SDK 57 (ADR 0011). Une route dynamique

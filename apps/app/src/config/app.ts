@@ -1,9 +1,12 @@
+import identity from './identity.json';
+
 /**
- * Source unique de l'identité de l'application (spec app-shell).
- * Le nom est provisoire (ADR 0001, point ouvert) : le changer ici le propage
- * à l'en-tête, à « À propos », aux titres de page et aux balises Open Graph.
+ * Identité de l'application (spec app-shell).
+ * Le nom vit dans identity.json, seule source lue aussi par app.config.ts (nom natif).
+ * Il est provisoire (ADR 0001, point ouvert) : le changer là le propage à l'en-tête,
+ * à « À propos », aux titres de page, aux balises Open Graph et au nom de l'app installée.
  */
-export const APP_NAME = 'Lisnard Play';
+export const APP_NAME: string = identity.name;
 
 export const APP_DESCRIPTION =
   'Toutes les interventions publiques de David Lisnard, candidat à l’élection présidentielle 2027 : en direct, à venir et passées.';

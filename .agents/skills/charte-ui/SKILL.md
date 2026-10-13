@@ -44,8 +44,10 @@ Barre d'onglets native : couleurs passées en options JS (`AppNavigation.tsx`).
 Sur iOS 26+, le Liquid Glass ignore `backgroundColor` et adapte les teintes : c'est
 le comportement natif attendu, ne pas le contourner.
 
-Si une API exige une valeur JS (options de navigation, par exemple), reprendre
-les valeurs hexadécimales ci-dessus, jamais d'autres.
+Si une API exige une valeur JS (options natives, `+html.tsx`), importer `colors`
+(`src/theme/colors.ts`) et `fontFamily` (`src/theme/fonts.ts`) : jamais de code hex
+ni de nom de police en dur, jamais de valeur dérivée (opacité, teinte) hors
+`blancSecondaire`.
 
 ## Composants existants
 
@@ -53,9 +55,12 @@ les valeurs hexadécimales ci-dessus, jamais d'autres.
   `highlight` met **un seul** mot ou groupe de mots en chamois.
   `<Title highlight="David Lisnard">Toutes les interventions de David Lisnard</Title>`
 - `Footer` : mention d'indépendance. Sur le web, elle est dans le pied de page
-  global (`AppNavigation.web.tsx`). Sur mobile, elle s'ajoute en bas des écrans
-  de contenu.
-- `Screen` : conteneur de page (zone sûre, défilement, largeur maximale `max-w-3xl`).
+  global (`AppNavigation.web.tsx`). Sur mobile, `Screen` l'ajoute en bas de chaque
+  écran.
+- `Screen` : conteneur de page. Sur mobile, il dessine dégradé, surtitre avec le
+  nom et pied de page ; sur le web, défilement et largeur maximale `max-w-3xl`.
+- Icônes de l'app (`assets/images/`) : monogramme « LP » provisoire en Montserrat
+  ExtraBold (L blanc, P chamois) sur le dégradé, sans logo ni hexagone.
 - `PageHead` : `<title>` et balises Open Graph d'un écran web.
 
 ## Accessibilité (spec app-shell)

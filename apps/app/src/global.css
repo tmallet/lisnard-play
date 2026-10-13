@@ -21,12 +21,12 @@
 
 /* Web uniquement : focus clavier visible, contour émeraude (spec app-shell, accessibilité). */
 :focus-visible {
-  outline: 2px solid #52c985;
+  outline: 2px solid var(--color-emeraude);
   outline-offset: 3px;
   border-radius: 2px;
 }
 
 ::selection {
-  background: #b0ad85;
-  color: #0f1752;
+  background: var(--color-chamois);
+  color: var(--color-bleu-sombre);
 }

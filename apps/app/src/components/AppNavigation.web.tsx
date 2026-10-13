@@ -2,13 +2,9 @@ import { Link, Slot } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
 import { APP_NAME } from '@/config/app';
+import { NAV_ITEMS } from '@/config/navigation';
 
 import { Footer } from './Footer';
-
-const LINKS = [
-  { href: '/', label: 'Accueil' },
-  { href: '/a-propos', label: 'À propos' },
-] as const;
 
 /** Web : en-tête avec liens, contenu, pied de page avec la mention d'indépendance. */
 export function AppNavigation() {
@@ -19,7 +15,7 @@ export function AppNavigation() {
           {APP_NAME}
         </Text>
         <View role="navigation" className="flex-row gap-5">
-          {LINKS.map((link) => (
+          {NAV_ITEMS.map((link) => (
             <Link key={link.href} href={link.href} asChild>
               <Pressable>
                 <Text className="font-sans-semibold text-blanc">{link.label}</Text>
