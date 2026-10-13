@@ -50,6 +50,8 @@ pour retrouver ses prises de position sur un sujet.
   recentré, thèmes) et règle de publication (rôle `national` seul).
 - `intervention-feed` : filtre par thème au lieu du rôle dans la liste et sur
   l'accueil ; thèmes affichés à la place du rôle sur les cartes et le détail.
+- `app-shell` : plus de surtitre portant le nom de l’application sur les écrans
+  mobiles.
 
 Ces deux capacités sont créées par le change `intervention-ingestion`, encore
 actif. Il doit être archivé avant celui-ci, pour que les deltas s'appliquent

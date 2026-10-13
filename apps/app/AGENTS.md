@@ -56,7 +56,7 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   ignore `backgroundColor` et adapte lui-même les couleurs.
 - **Écrans** : toujours envelopper le contenu dans `<Screen>`. Sur mobile
   (`Screen.tsx`), il fournit la mise en page commune : dégradé (le conteneur des
-  onglets natifs masque la racine), nom de l'app en surtitre, pied de page avec la
+  onglets natifs masque la racine), pied de page avec la
   mention d'indépendance (`footer={false}` si l'écran l'affiche déjà), et un
   `ScrollView` en premier élément, ce qu'exigent les onglets natifs. Sur le web
   (`Screen.web.tsx`), en-tête et pied de page viennent d'`AppNavigation.web.tsx`.

@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
-import { Platform, ScrollView, Text, View } from 'react-native';
+import { Platform, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import { APP_NAME } from '@/config/app';
 
 import { Footer } from './Footer';
 import { ScrollEndProvider, useScrollEndSource } from './ScrollEnd';
@@ -19,7 +17,6 @@ interface ScreenProps {
  * - Dégradé signature (ADR 0001) dessiné ici : le conteneur des onglets natifs masque
  *   la racine. ScrollView ne gérant pas les dégradés, une View non « collapsable » le
  *   porte (exigence des onglets natifs pour détecter le défilement).
- * - En-tête : le nom de l'application en surtitre (spec app-shell, nom centralisé).
  * - Pied de page : la mention d'indépendance (spec app-shell).
  * - Fin de défilement signalée au contenu (chargement continu du flux, ScrollEnd).
  */
@@ -38,12 +35,6 @@ export function Screen({ children, footer = true }: ScreenProps) {
           style={Platform.OS === 'android' ? { paddingTop: insets.top } : undefined}
           contentContainerClassName="w-full max-w-3xl self-center gap-6 px-6 py-10"
         >
-          <Text
-            role="banner"
-            className="font-sans-semibold text-blanc/75 text-xs uppercase tracking-widest"
-          >
-            {APP_NAME}
-          </Text>
           {children}
           {footer && <Footer />}
         </ScrollView>

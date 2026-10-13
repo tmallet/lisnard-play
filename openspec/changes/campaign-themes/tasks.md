@@ -32,6 +32,7 @@
 - [x] 5.6 Vérification visuelle sur le web et sur le simulateur iOS (filtre défilable, état actif, détail)
 
 - [x] 5.7 Accueil : chargement continu des interventions passées (`useOnEndReached`, `ScrollEnd`) à la place du bouton « Voir plus » ; retrait du statut de l'API en bas de l'accueil (demande du porteur du projet)
+- [x] 5.8 Écrans mobiles : retrait du surtitre portant le nom de l’application (demande du porteur du projet, delta `app-shell`)
 
 ## 6. Qualité
 
