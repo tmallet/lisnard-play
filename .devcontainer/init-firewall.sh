@@ -24,6 +24,13 @@ ALLOWED_DOMAINS=(
   "chatgpt.com"
   # Classifieur (ADR 0004)
   "openrouter.ai"
+  # Sources et médias du worker (ADR 0017) : flux et oEmbed YouTube, API YouTube Data,
+  # Google News, oEmbed Dailymotion. La lecture Open Graph de sites arbitraires reste
+  # bloquée ici : le worker se replie alors sur un lien minimal (spec intervention-media).
+  "www.youtube.com"
+  "www.googleapis.com"
+  "news.google.com"
+  "www.dailymotion.com"
   # Expo (CLI, manifestes, tunnel exclu)
   "api.expo.dev"
   "exp.host"

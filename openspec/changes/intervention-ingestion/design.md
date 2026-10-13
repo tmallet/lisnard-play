@@ -207,7 +207,7 @@ Voir ADR 0014 et 0015.
   healthcheck Docker.
 - **Devcontainer** : passage à docker compose avec un service `postgres`
   (même version majeure qu'en production). Le pare-feu gagne
-  `www.youtube.com`, `youtube.googleapis.com`, `news.google.com`, les
+  `www.youtube.com`, `www.googleapis.com` (API YouTube Data), `news.google.com`, les
   endpoints oEmbed et les hôtes des flux RSS configurés.
 - **CI** : service Postgres dans le job. Les tests d'intégration de `@lisnard/db`
   et du worker utilisent une base jetable, migrée au démarrage du test.

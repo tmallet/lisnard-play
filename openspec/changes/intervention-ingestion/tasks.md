@@ -64,12 +64,12 @@
 
 ## 9. Déploiement et CI
 
-- [ ] 9.1 `apps/app/server.ts` (adaptateur `expo-server/adapter/bun`) et `apps/app/Dockerfile` multi-étapes
-- [ ] 9.2 `apps/worker/Dockerfile` ; migrations au démarrage ; healthcheck sur le fichier de pulsation
-- [ ] 9.3 Construire les deux images localement et vérifier qu'elles démarrent face au Postgres du devcontainer
-- [ ] 9.4 CI : service Postgres, tests d'intégration, smoke test web étendu (`/interventions/<id>` en 200, accueil avec des données de fixtures)
-- [ ] 9.5 Pare-feu du devcontainer : ajout des domaines YouTube, Google News, des endpoints oEmbed et des hôtes RSS configurés
-- [ ] 9.6 Rédiger `docs/architecture/deploiement.md` : services Coolify, variables d'environnement par service, sauvegardes Postgres, ordre de mise en production (design, Migration Plan)
+- [x] 9.1 `apps/app/server.ts` (adaptateur `expo-server/adapter/bun`) et `apps/app/Dockerfile` multi-étapes
+- [x] 9.2 `apps/worker/Dockerfile` ; migrations au démarrage ; healthcheck sur le fichier de pulsation
+- [x] 9.3 Construire les deux images localement et vérifier qu'elles démarrent face au Postgres du devcontainer
+- [x] 9.4 CI : service Postgres, tests d'intégration, smoke test web étendu (`/interventions/<id>` en 200, accueil avec des données de fixtures)
+- [x] 9.5 Pare-feu du devcontainer : ajout des domaines YouTube, Google News, des endpoints oEmbed et des hôtes RSS configurés
+- [x] 9.6 Rédiger `docs/architecture/deploiement.md` : services Coolify, variables d'environnement par service, sauvegardes Postgres, ordre de mise en production (design, Migration Plan)
 
 ## 10. Documentation
 
