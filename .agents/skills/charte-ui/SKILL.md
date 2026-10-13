@@ -30,8 +30,13 @@ police de la charte Nouvelle Énergie, et rien d'autre.
 | `font-sans-bold` | Montserrat 700 | chapeaux, accroches |
 | `font-sans-extrabold` | Montserrat 800 | titres (majuscules) |
 
-Fond de page : `bg-bleu-sombre bg-linear-160 from-bleu to-bleu-sombre` (déjà
-posé dans `_layout.tsx`).
+Fond de page : `bg-bleu-sombre bg-linear-160 from-bleu to-bleu-sombre`. Sur le
+web, il est posé dans `_layout.tsx`. Sur mobile, c'est `Screen` qui le dessine,
+car les onglets natifs masquent la racine : tout écran passe donc par `<Screen>`.
+
+Barre d'onglets native : couleurs passées en options JS (`AppNavigation.tsx`).
+Sur iOS 26+, le Liquid Glass ignore `backgroundColor` et adapte les teintes : c'est
+le comportement natif attendu, ne pas le contourner.
 
 Si une API exige une valeur JS (options de navigation, par exemple), reprendre
 les valeurs hexadécimales ci-dessus, jamais d'autres.

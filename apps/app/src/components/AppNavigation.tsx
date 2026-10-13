@@ -1,21 +1,39 @@
-import { Tabs } from 'expo-router';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 
-/** iOS et Android : barre d'onglets aux couleurs de la charte. */
+// Valeurs de la charte (ADR 0001) : les options natives exigent des couleurs JS.
+const CHAMOIS = '#b0ad85';
+const BLANC_70 = 'rgba(249,249,249,0.7)';
+const BLEU_SOMBRE = '#0f1752';
+// Fond uni sous chaque onglet (évite un flash clair) ; le dégradé est dessiné par <Screen>.
+const CONTENT_STYLE = { backgroundColor: BLEU_SOMBRE };
+
+/**
+ * iOS et Android : barre d'onglets native (UITabBar / BottomNavigationView).
+ * Sur iOS 26+, le système dessine la barre en Liquid Glass et ignore `backgroundColor`.
+ */
 export function AppNavigation() {
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        sceneStyle: { backgroundColor: 'transparent' },
-        tabBarStyle: { backgroundColor: '#0f1752', borderTopColor: 'rgba(249,249,249,0.15)' },
-        tabBarActiveTintColor: '#b0ad85',
-        tabBarInactiveTintColor: 'rgba(249,249,249,0.7)',
-        tabBarLabelStyle: { fontFamily: 'Montserrat_600SemiBold', fontSize: 13 },
-        tabBarIconStyle: { display: 'none' },
+    <NativeTabs
+      tintColor={CHAMOIS}
+      iconColor={{ default: BLANC_70, selected: CHAMOIS }}
+      labelStyle={{
+        default: { color: BLANC_70, fontFamily: 'Montserrat_600SemiBold' },
+        selected: { color: CHAMOIS, fontFamily: 'Montserrat_600SemiBold' },
       }}
+      backgroundColor={BLEU_SOMBRE}
+      indicatorColor="rgba(176,173,133,0.2)"
     >
-      <Tabs.Screen name="index" options={{ title: 'Accueil' }} />
-      <Tabs.Screen name="a-propos" options={{ title: 'À propos' }} />
-    </Tabs>
+      <NativeTabs.Trigger name="index" contentStyle={CONTENT_STYLE}>
+        <NativeTabs.Trigger.Label>Accueil</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'house', selected: 'house.fill' }} md="home" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="a-propos" contentStyle={CONTENT_STYLE}>
+        <NativeTabs.Trigger.Label>À propos</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          sf={{ default: 'info.circle', selected: 'info.circle.fill' }}
+          md="info"
+        />
+      </NativeTabs.Trigger>
+    </NativeTabs>
   );
 }

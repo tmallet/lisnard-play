@@ -23,7 +23,8 @@ export default function RootLayout() {
 
   return (
     <ApiProvider>
-      {/* Dégradé signature de la charte (160°, bleu → bleu sombre), repli bg-bleu-sombre. */}
+      {/* Dégradé signature (160°, bleu → bleu sombre). Web : visible derrière tout le contenu.
+          Mobile : masqué par les onglets natifs, chaque <Screen> le redessine. */}
       <View className="flex-1 bg-bleu-sombre bg-linear-160 from-bleu to-bleu-sombre">
         <StatusBar style="light" />
         <Slot />

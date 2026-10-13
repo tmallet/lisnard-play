@@ -18,7 +18,7 @@
 - [x] 3.1 Créer `src/config/app.ts` (`APP_NAME` provisoire, `INDEPENDENCE_NOTICE`, `CONTACT`) comme source unique (D6)
 - [x] 3.2 Écrire `app/+html.tsx` : `lang="fr"`, meta description, balises `og:title`, `og:description` et `og:type` alimentées par `src/config/app.ts`
 - [x] 3.3 Créer la mise en page racine : fond en dégradé 160° bleu → bleu sombre (Uniwind `bg-linear-160`, voir design D4), repli `bg-bleu-sombre`, texte blanc
-- [x] 3.4 Créer la navigation : en-tête avec liens sur le web, barre d'onglets sur mobile ; routes `(tabs)/index` et `(tabs)/a-propos`
+- [x] 3.4 Créer la navigation : en-tête avec liens sur le web, barre d'onglets native (`NativeTabs`) sur iOS et Android ; routes `(tabs)/index` et `(tabs)/a-propos`
 - [x] 3.5 Créer le composant `Footer` (mention d'indépendance visible sur toutes les pages web) et l'ajouter en bas de l'accueil sur mobile
 - [x] 3.6 Créer le composant `Title` (Montserrat 800, majuscules, un seul mot chamois via `highlight`)
 - [x] 3.7 Rédiger l'écran « À propos » : objet de l'application, mention d'indépendance, origine publique des contenus, contact

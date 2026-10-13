@@ -92,8 +92,11 @@ dépendance réseau.
   et `og:title`.
 - Routes : `(tabs)/index` (accueil provisoire, statut de santé visible en
   développement), `(tabs)/a-propos`. Sur le web, la navigation devient un
-  en-tête avec liens et la mention est dans un pied de page ; sur mobile, une
-  barre d'onglets.
+  en-tête avec liens et la mention est dans un pied de page ; sur mobile, la **barre
+  d'onglets native** (`NativeTabs` de `expo-router/unstable-native-tabs` en SDK 57 :
+  UITabBar/Liquid Glass sur iOS, BottomNavigationView sur Android), icônes SF
+  Symbols et Material. Le conteneur natif masquant le fond de la racine, `Screen`
+  redessine le dégradé sur mobile.
 - Composants : `Footer` (mention), `Title` (règle « un seul mot chamois » via
   une prop `highlight`).
 

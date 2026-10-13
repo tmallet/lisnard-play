@@ -62,6 +62,10 @@ développement, il passe par l'hôte de Metro (`src/lib/api-url.ts`).
   `chamois`, `blanc`, `emeraude`, `font-sans[-semibold|-bold|-extrabold]`.
 - Le dégradé de fond est géré nativement par Uniwind
   (`bg-linear-160 from-bleu to-bleu-sombre`), sans dépendance supplémentaire.
+  Sur le web, il est posé à la racine. Sur mobile, chaque `Screen` le dessine,
+  car le conteneur des onglets natifs masque la racine.
+- Navigation : en-tête web (`AppNavigation.web.tsx`), barre d'onglets native
+  sur iOS et Android (`AppNavigation.tsx`, `NativeTabs`).
 - Montserrat est embarquée via `@expo-google-fonts/montserrat`, sans appel
   réseau à Google.
 - Règles de la charte : skill `charte-ui`, ADR 0001.
