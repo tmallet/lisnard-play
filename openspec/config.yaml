@@ -1,32 +1,66 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Produit : application web et mobile indépendante qui recense les interventions
+  publiques (en direct, programmées et passées) de David Lisnard, candidat à
+  l'élection présidentielle française de 2027. Elle n'est PAS affiliée à
+  David Lisnard ni à Nouvelle Énergie (voir ADR 0001).
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Périmètre : toutes ses interventions publiques SAUF celles qui relèvent de la
+  mairie de Cannes. Celles liées à la présidence de l'AMF sont incluses et
+  étiquetées (ADR 0006).
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Stack (ADR 0002, 0003) :
+  - Monorepo Bun (gestionnaire de paquets + workspaces ; runtime du worker)
+  - Expo (dernière version) + Expo Router, web d'abord (SSR), iOS et Android
+  - tRPC pour la communication front/back, monté dans des API routes Expo
+  - Uniwind (Tailwind v4 pour React Native) pour le style
+  - Worker d'ingestion séparé (tâche planifiée) : collecte, classification, publication
+
+  Classification (ADR 0004, 0005) : décision de pertinence par un modèle
+  « System One » (Jev, typesafe/jev-1.13) via OpenRouter, en mode tout
+  automatique. Version épinglée, seuils par modèle, chaque décision journalisée.
+  Jev ne produit pas de texte : les métadonnées (titre, date, média, statut
+  live) sont extraites de manière déterministe.
+
+  Médias (ADR 0007) : intégration via oEmbed quand la plateforme le permet,
+  sinon carte de lien vers la source. Jamais de réhébergement de contenu.
+
+  Charte visuelle : palette Nouvelle Énergie (bleu #1d257a, bleu sombre #0f1752,
+  chamois #b0ad85, blanc #f9f9f9, émeraude #52c985) et police Montserrat. Pas de
+  logo Nouvelle Énergie ni d'élément identifiant de la campagne.
+
+  Documentation (ADR 0008) : tout est documenté en français, de façon structurée
+  et exploitable par les agents de codage.
+  - AGENTS.md : point d'entrée
+  - docs/decisions/ : ADR (source durable du « pourquoi »)
+  - docs/architecture/ : description du système
+  - openspec/specs/ : comportement attendu
+  - .agents/skills/ : procédures récurrentes (symlinkées dans .claude/skills/)
+
+  Conventions : code et identifiants en anglais ; documentation, specs, ADR et
+  textes de l'interface en français ; commits au format Conventional Commits.
+
+rules:
+  proposal:
+    - Rédiger en français.
+    - Inclure une section « Hors périmètre ».
+    - Citer les ADR existants concernés par leur numéro (ex. « ADR 0004 »).
+  specs:
+    - Rédiger en français.
+    - Exprimer la pertinence et l'éligibilité d'une intervention conformément au périmètre de l'ADR 0006.
+  design:
+    - Rédiger en français.
+    - Toute décision d'architecture durable doit faire l'objet d'un ADR dans docs/decisions/ (skill record-decision) ; le design.md renvoie à l'ADR par son numéro au lieu de dupliquer son contenu.
+    - Si une décision contredit un ADR accepté, créer un nouvel ADR qui le remplace (supersedes) plutôt que modifier l'ancien.
+  tasks:
+    - Rédiger en français.
+    - Terminer par une section « Documentation » listant les mises à jour de docs/architecture/, des AGENTS.md concernés, des skills et des ADR.
+
+operations:
+  apply:
+    guidance:
+      - Avant de conclure, appliquer le skill docs-sync s'il existe ; sinon vérifier manuellement que docs/ et les AGENTS.md reflètent le code livré.
+  archive:
+    guidance:
+      - Vérifier que chaque décision du design.md archivé est bien portée par un ADR dans docs/decisions/.
