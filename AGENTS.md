@@ -54,7 +54,7 @@ Pour travailler en bac à sable (agents en autonomie) :
   vérifié par `docs:check`). Ne jamais installer une autre version de Bun ou
   Node « en passant » (ADR 0010).
 - **Indépendance (ADR 0001)** : palette et Montserrat uniquement, jamais de
-  logo ni de visuel officiel, mention « non affiliée » visible. Skill `charte-ui`.
+  logo ni de visuel officiel, mention d'indépendance visible. Skill `charte-ui`.
 - **Expo (SDK 57)** : consulter la doc versionnée avant toute API Expo ou React
   Native, et ajouter les dépendances avec `bunx expo install` (voir
   `apps/app/AGENTS.md`).

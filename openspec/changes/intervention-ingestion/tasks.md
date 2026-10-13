@@ -83,3 +83,4 @@
 - [x] 10.4 Skill `add-intervention-source` (déclarer une source, fixtures, pare-feu, règles de l'ADR 0017) et skill `classifier-jev` (questions, version, seuils, calibration, changement de modèle), avec leurs symlinks
 - [x] 10.5 Mettre à jour `docs/architecture/commandes.md` (base locale, worker, CLI `recompute`, `reclassify`, `calibrate`, Drizzle Studio) et `.env.example`
 - [x] 10.6 Si le spike ou l'implémentation impose un écart aux ADR 0004, 0014, 0015 ou 0017, le consigner avec le skill `record-decision` ; lancer `bun run check`
+- [x] 10.7 Nouvelle formulation de la mention d'indépendance, fournie par le porteur du projet (delta `app-shell`, précision de l'ADR 0001)

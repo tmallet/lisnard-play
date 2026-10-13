@@ -12,7 +12,7 @@ export const APP_DESCRIPTION =
   'Toutes les interventions publiques de David Lisnard, candidat à l’élection présidentielle 2027 : en direct, à venir et passées.';
 
 export const INDEPENDENCE_NOTICE =
-  'Application indépendante, non affiliée à David Lisnard ni à Nouvelle Énergie.';
+  'Initiative indépendante de soutiens. Ce site ne dépend ni de Nouvelle Énergie ni de David Lisnard.';
 
 export const SOURCES_NOTICE =
   'Les contenus référencés proviennent exclusivement de sources publiques (chaînes vidéo, médias, podcasts). Ils sont intégrés quand la plateforme le permet, sinon un lien renvoie vers la source.';
