@@ -7,6 +7,7 @@ import { upsertItem, upsertSources } from '@lisnard/db/write';
 import { eq, sql } from 'drizzle-orm';
 
 import { decide } from './classifier/decide';
+import { QUESTIONS_VERSION } from './classifier/questions';
 import { createSystemOneClassifier, PINNED_MODEL, parseAnswers } from './classifier/systemone';
 import type { Classifier, ClassifierState } from './classifier/types';
 import { classifyPending, reclassify, recompute } from './publish';
@@ -189,7 +190,7 @@ describe('classification en base', () => {
       .select()
       .from(classification)
       .where(eq(classification.itemId, ids.national));
-    expect(entry).toMatchObject({ model: PINNED_MODEL, questionsVersion: 1 });
+    expect(entry).toMatchObject({ model: PINNED_MODEL, questionsVersion: QUESTIONS_VERSION });
     expect(entry?.thresholds).toEqual({ intervient: 0.5, role: 0.6 });
   });
 

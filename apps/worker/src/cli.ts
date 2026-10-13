@@ -2,20 +2,33 @@
  * Commandes d'exploitation du worker (design D4, D5) :
  *   bun run cli recompute                        recalcule la publication avec les seuils actuels
  *   bun run cli reclassify [--model M] [--version N]  reclasse en rappelant le classifieur
+ *   bun run cli calibrate [--validated]          mesure les seuils sur eval/reference.jsonl
  */
+import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { createDb } from '@lisnard/db/client';
 import { runMigrations } from '@lisnard/db/migrate';
-
+import {
+  collectAnswers,
+  evaluate,
+  labelAccuracy,
+  loadReference,
+  proposeThresholds,
+} from './calibrate';
 import { createSystemOneClassifier } from './classifier/systemone';
+import { thresholdsFor } from './classifier/thresholds';
 import { requireEnv } from './config';
 import { reclassify, recompute } from './publish';
 
 const { positionals, values } = parseArgs({
   args: Bun.argv.slice(2),
   allowPositionals: true,
-  options: { model: { type: 'string' }, version: { type: 'string' } },
+  options: {
+    model: { type: 'string' },
+    version: { type: 'string' },
+    validated: { type: 'boolean' },
+  },
 });
 
 const db = createDb(requireEnv('DATABASE_URL'));
@@ -34,8 +47,42 @@ switch (positionals[0]) {
     console.log(await reclassify(db, classifier, filter));
     break;
   }
+  case 'calibrate': {
+    const classifier = createSystemOneClassifier({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+    const all = await loadReference(resolve(import.meta.dir, '../eval/reference.jsonl'));
+    const cases = values.validated ? all.filter((c) => c.validated) : all;
+    const answers = await collectAnswers(db, classifier, cases);
+    const current = thresholdsFor(classifier.model);
+    const pct = (n: number) => `${(n * 100).toFixed(1)} %`;
+    console.log(
+      `Jeu de référence : ${cases.length} cas (${answers.size} avec réponse) — modèle ${classifier.model}`,
+    );
+    const acc = labelAccuracy(cases, answers);
+    console.log(
+      `Exactitude sur ${acc.cases} interventions : rôle ${pct(acc.role)}, type ${pct(acc.kind)}`,
+    );
+    if (current) {
+      const ev = evaluate(cases, answers, current);
+      console.log(
+        `Seuils actuels ${JSON.stringify(current)} : précision ${pct(ev.precision)}, rappel ${pct(ev.recall)} (VP ${ev.tp}, FP ${ev.fp}, FN ${ev.fn}, VN ${ev.tn})`,
+      );
+      for (const e of ev.errors)
+        console.log(
+          `  ${e.kind.padEnd(12)} p=${e.intervient.toFixed(2)} ${e.role}(${e.confidence.toFixed(2)})  ${e.title.slice(0, 90)}${e.note ? `  [${e.note}]` : ''}`,
+        );
+    }
+    const best = proposeThresholds(cases, answers);
+    console.log(
+      best
+        ? `Proposition (précision max, rappel ≥ 80 %) : ${JSON.stringify(best.thresholds)} → précision ${pct(best.precision)}, rappel ${pct(best.recall)}`
+        : 'Aucun couple de seuils n’atteint un rappel de 80 %.',
+    );
+    break;
+  }
   default:
-    console.error('Usage : bun run cli <recompute | reclassify [--model M] [--version N]>');
+    console.error(
+      'Usage : bun run cli <recompute | reclassify [--model M] [--version N] | calibrate [--validated]>',
+    );
     process.exit(1);
 }
 process.exit(0);

@@ -34,9 +34,9 @@
 
 ## 5. Calibration
 
-- [ ] 5.1 Constituer `eval/reference.jsonl` : environ 100 contenus réels collectés, tous les cas limites de l'ADR 0006, avec des étiquettes proposées
+- [x] 5.1 Constituer `eval/reference.jsonl` : environ 100 contenus réels collectés, tous les cas limites de l'ADR 0006, avec des étiquettes proposées
 - [ ] 5.2 Faire valider les étiquettes par le porteur du projet
-- [ ] 5.3 Commande `calibrate` : précision et rappel par grille de seuils, proposition de seuils (précision maximale avec un rappel ≥ 80 %)
+- [x] 5.3 Commande `calibrate` : précision et rappel par grille de seuils, proposition de seuils (précision maximale avec un rappel ≥ 80 %)
 - [ ] 5.4 Fixer les seuils de `typesafe/jev-1.13` dans `thresholds.ts` à partir de la calibration, et consigner les résultats dans `docs/architecture/classifier.md`
 
 ## 6. Médias
