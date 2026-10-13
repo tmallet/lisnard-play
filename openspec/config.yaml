@@ -7,8 +7,9 @@ context: |
   David Lisnard ni à Nouvelle Énergie (voir ADR 0001).
 
   Périmètre : toutes ses interventions publiques SAUF celles qui relèvent de la
-  mairie de Cannes. Celles liées à la présidence de l'AMF sont incluses et
-  étiquetées (ADR 0006).
+  mairie de Cannes ou de la présidence de l'AMF : seule la campagne présidentielle
+  compte (ADR 0020). Chaque intervention reçoit zéro, un ou plusieurs thèmes
+  parmi sept (spec intervention-themes).
 
   Stack (ADR 0002, 0011) :
   - Monorepo Bun (gestionnaire de paquets + workspaces ; runtime du worker)
@@ -55,7 +56,7 @@ rules:
     - Citer les ADR existants concernés par leur numéro (ex. « ADR 0004 »).
   specs:
     - Rédiger en français.
-    - Exprimer la pertinence et l'éligibilité d'une intervention conformément au périmètre de l'ADR 0006.
+    - Exprimer la pertinence et l'éligibilité d'une intervention conformément au périmètre de l'ADR 0020.
   design:
     - Rédiger en français.
     - Toute décision d'architecture durable doit faire l'objet d'un ADR dans docs/decisions/ (skill record-decision) ; le design.md renvoie à l'ADR par son numéro au lieu de dupliquer son contenu.

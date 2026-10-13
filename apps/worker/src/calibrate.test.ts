@@ -49,6 +49,13 @@ describe('calibration', () => {
     expect(proposeThresholds(cases, map, 1)?.precision).toBeCloseTo(2 / 3);
   });
 
+  test('chaîne officielle : intervention présumée, comme à la publication', () => {
+    const official = { ...ref('o', true), official: true };
+    const low = new Map([['o', answers(0.4, 'national', 0.9)]]);
+    expect(evaluate([official], low, { intervient: 0.75, role: 0.6 }).tp).toBe(1);
+    expect(evaluate([ref('o', true)], low, { intervient: 0.75, role: 0.6 }).fn).toBe(1);
+  });
+
   test('thèmes : précision et rappel par thème sur les cas étiquetés', () => {
     const withThemes = (id: string, themes: ReferenceCase['expected']['themes']) => ({
       ...ref(id, true),

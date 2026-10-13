@@ -5,7 +5,7 @@ description: Modifier le classifieur Jev du worker (questions, seuils, règle de
 
 # Faire évoluer le classifieur Jev
 
-Décisions : ADR 0004 (Jev via OpenRouter), ADR 0006 (périmètre), ADR 0018
+Décisions : ADR 0004 (Jev via OpenRouter), ADR 0020 (périmètre et thèmes), ADR 0018
 (règle de publication, chaîne officielle). Description complète et calibration
 en cours : `docs/architecture/classifier.md`. Comportement attendu : spec
 `intervention-classification`.
@@ -14,10 +14,11 @@ en cours : `docs/architecture/classifier.md`. Comportement attendu : spec
 
 | Fichier | Rôle |
 |---------|------|
-| `apps/worker/src/classifier/questions.ts` | Questions et `QUESTIONS_VERSION` |
+| `apps/worker/src/classifier/questions.ts` | Questions (dont une question Noul par thème) et `QUESTIONS_VERSION` |
 | `apps/worker/src/classifier/systemone.ts` | Appel OpenRouter, `PINNED_MODEL`, lecture des réponses |
-| `apps/worker/src/classifier/thresholds.ts` | Seuils par identifiant de modèle |
-| `apps/worker/src/classifier/decide.ts` | Règle de publication (pure, testée) |
+| `apps/worker/src/classifier/thresholds.ts` | Seuils par identifiant de modèle : `intervient`, `role`, `theme` |
+| `apps/worker/src/classifier/decide.ts` | Règle de publication et calcul des thèmes (pure, testée) |
+| `packages/db/src/schema.ts` | `THEMES` : liste fermée des thèmes, partagée par le worker et l'API |
 | `apps/worker/src/publish.ts` | Classification, `recompute`, `reclassify` |
 | `apps/worker/eval/reference.jsonl` | Jeu de référence validé par le porteur du projet |
 
@@ -54,6 +55,20 @@ en cours : `docs/architecture/classifier.md`. Comportement attendu : spec
 4. Si le sens d'une question change (nouveau rôle, nouvel ordre de grandeur),
    consigner la décision avec le skill `record-decision`.
 
+## Changer les thèmes
+
+1. Modifier `THEMES` (`packages/db/src/schema.ts`), les définitions de
+   `questions.ts` et `THEME_LABELS` (`apps/app/src/lib/format.ts`). Le typage
+   signale tout oubli.
+2. Incrémenter `QUESTIONS_VERSION` et mettre à jour la spec
+   `intervention-themes`. Ajouter un thème est un changement produit : ADR avec
+   `record-decision`.
+3. Valider un échantillon d'environ 30 contenus publiés avec le porteur du
+   projet (tableau : contenu, thèmes attribués, corrections). Reporter ses
+   réponses dans `expected.themes` du jeu de référence.
+4. `calibrate --validated` affiche la précision et le rappel par thème. Ajuster
+   `τ_theme` si besoin, puis lancer `recompute`.
+
 ## Changer de modèle
 
 1. Vérifier l'instantané sur OpenRouter et son endpoint (`/api/v1/systemone`).
@@ -76,6 +91,9 @@ la spec `intervention-classification` et un test dans `publish.test.ts`.
 
 Une ligne JSON par cas, avec la décision attendue **validée par le porteur du
 projet** : ne jamais étiqueter un cas soi-même puis l'utiliser pour calibrer.
+`expected.themes` est facultatif : seuls les cas validés sur les thèmes le
+portent. `calibrate` repère lui-même les cas de la chaîne officielle et leur
+applique la présomption d'intervention (ADR 0018).
 Présenter les cas douteux au porteur du projet, puis ajouter ses réponses.
 
 ## Conclure

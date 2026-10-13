@@ -17,6 +17,7 @@ import { desc, eq, sql } from 'drizzle-orm';
 import { decide } from './classifier/decide';
 import { QUESTIONS_VERSION } from './classifier/questions';
 import type { Classifier, ClassifierState } from './classifier/types';
+import { isOfficialSource } from './sources.config';
 
 export interface ReferenceCase {
   platformId: string;
@@ -28,6 +29,8 @@ export interface ReferenceCase {
   synthetic?: boolean;
   state?: ClassifierState;
   validated: boolean;
+  /** Contenu de la chaîne officielle, renseigné par collectAnswers (ADR 0018). */
+  official?: boolean;
 }
 
 export async function loadReference(path: string): Promise<ReferenceCase[]> {
@@ -44,6 +47,8 @@ const shouldPublish = (c: ReferenceCase) => c.expected.intervient && c.expected.
 /**
  * Probabilités par cas : dernière décision journalisée avec la version courante des
  * questions, sinon appel au classifieur (cas synthétiques ou non encore classés).
+ * Renseigne aussi `official` sur chaque cas présent en base, pour que l'évaluation
+ * applique la même présomption d'intervention que la publication (ADR 0018).
  */
 export async function collectAnswers(
   db: Db,
@@ -65,6 +70,7 @@ export async function collectAnswers(
             startsAt: item.startsAt,
           },
           version: classification.questionsVersion,
+          sourceId: item.sourceId,
         })
         .from(item)
         .innerJoin(source, eq(item.sourceId, source.id))
@@ -72,6 +78,7 @@ export async function collectAnswers(
         .where(eq(item.platformId, c.platformId))
         .orderBy(desc(classification.createdAt))
         .limit(1);
+      if (row) c.official = isOfficialSource(row.sourceId);
       if (row?.answers && row.version === QUESTIONS_VERSION) {
         answers.set(c.platformId, row.answers);
         continue;
@@ -129,7 +136,8 @@ export function evaluate(
   for (const c of cases) {
     const a = answers.get(c.platformId);
     if (!a) continue;
-    const predicted = decide(a, thresholds).outcome === 'published';
+    const predicted =
+      decide(a, thresholds, { presumeSpeaking: c.official === true }).outcome === 'published';
     const expected = shouldPublish(c);
     if (predicted && expected) e.tp += 1;
     else if (predicted && !expected) e.fp += 1;

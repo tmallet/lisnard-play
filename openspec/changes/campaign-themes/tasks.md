@@ -15,7 +15,7 @@
 
 - [x] 3.1 `eval/reference.jsonl` : les cas attendus `amf` deviennent des cas à écarter ; `calibrate.ts` ne considère publiable que `national` ; tests mis à jour
 - [x] 3.2 Champ facultatif `themes` dans le jeu de référence ; `calibrate` affiche la précision et le rappel par thème quand il est renseigné
-- [ ] 3.3 En local : `recompute`, reclassement v3, puis tableau d'environ 30 contenus publiés avec leurs thèmes, à faire valider par le porteur du projet ; ajout des réponses validées au jeu de référence et ajustement de `τ_theme` si besoin
+- [x] 3.3 En local : `recompute`, reclassement v3, puis tableau d'environ 30 contenus publiés avec leurs thèmes, à faire valider par le porteur du projet ; ajout des réponses validées au jeu de référence et ajustement de `τ_theme` si besoin
 
 ## 4. API
 
@@ -29,17 +29,17 @@
 - [x] 5.3 `InterventionFeed` : filtre par thème transmis aux requêtes des trois sections ; message dédié pour un thème sans intervention
 - [x] 5.4 `InterventionCard` et écran de détail : thèmes à la place du rôle ; suppression de `ROLE_LABELS`
 - [x] 5.5 Tests : `ThemeFilter`, carte avec plusieurs thèmes et sans thème, flux filtré et vide
-- [ ] 5.6 Vérification visuelle sur le web et sur le simulateur iOS (filtre défilable, état actif, détail)
+- [x] 5.6 Vérification visuelle sur le web et sur le simulateur iOS (filtre défilable, état actif, détail)
 
 ## 6. Qualité
 
 - [x] 6.1 Smoke test web : l'intervention de test porte un thème, et `interventions.list` filtré par ce thème la renvoie
-- [ ] 6.2 `bun run check` et `bun run smoke:web` au vert
+- [x] 6.2 `bun run check` et `bun run smoke:web` au vert
 
 ## 7. Documentation
 
-- [ ] 7.1 `docs/architecture/classifier.md` : questions v3, règle de publication (`national` seul), `τ_theme`, calibration des thèmes
-- [ ] 7.2 `docs/architecture/README.md` (schéma : `themes`, contrat tRPC) et `docs/architecture/deploiement.md` (étape `recompute` à la mise en production, D5)
-- [ ] 7.3 `AGENTS.md` racine et `openspec/config.yaml` (périmètre recentré sur la campagne, ADR 0020) ; `apps/app/AGENTS.md`, `apps/worker/AGENTS.md`, `packages/api/AGENTS.md`, `packages/db/AGENTS.md` si leurs exemples citent le rôle ou l'AMF
-- [ ] 7.4 Skill `classifier-jev` : questions de thème, `τ_theme`, validation d'un échantillon de thèmes
-- [ ] 7.5 ADR 0020 (remplace l'ADR 0006) déjà rédigé ; consigner tout écart d'implémentation avec le skill `record-decision`
+- [x] 7.1 `docs/architecture/classifier.md` : questions v3, règle de publication (`national` seul), `τ_theme`, calibration des thèmes
+- [x] 7.2 `docs/architecture/README.md` (schéma : `themes`, contrat tRPC) et `docs/architecture/deploiement.md` (étape `recompute` à la mise en production, D5)
+- [x] 7.3 `AGENTS.md` racine et `openspec/config.yaml` (périmètre recentré sur la campagne, ADR 0020) ; `apps/app/AGENTS.md`, `apps/worker/AGENTS.md`, `packages/api/AGENTS.md`, `packages/db/AGENTS.md` si leurs exemples citent le rôle ou l'AMF
+- [x] 7.4 Skill `classifier-jev` : questions de thème, `τ_theme`, validation d'un échantillon de thèmes
+- [x] 7.5 ADR 0020 (remplace l'ADR 0006) déjà rédigé ; consigner tout écart d'implémentation avec le skill `record-decision`

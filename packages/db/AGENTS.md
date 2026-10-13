@@ -28,7 +28,7 @@ Postgres intégré à Bun (`drizzle-orm/bun-sql`). Vue d'ensemble :
   Drizzle. Avec Bun.sql, celui-ci stocke une chaîne JSON au lieu d'un objet
   (voir la migration `0003`).
 - **Journal `classification`** : en ajout seul, on n'y fait jamais
-  d'`UPDATE`. `item.status`, `role` et `kind` sont dénormalisés à partir de la
+  d'`UPDATE`. `item.status`, `role`, `kind` et `themes` sont dénormalisés à partir de la
   dernière décision (`recordClassification`, en transaction).
 - **Visibilité** : `read` exige `status = 'published'` **et** `media is not null`.
 - **Pool** : un seul client par processus. Côté API route, il est mis en cache
