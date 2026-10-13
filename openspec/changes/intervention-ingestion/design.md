@@ -139,6 +139,9 @@ Modèle, questions et seuils : ADR 0004 et 0005.
   0,85, une matinale BFMTV (0,79) et un discours au congrès de l'AMF (0,74)
   auraient été écartés. Elles seront confirmées ou ajustées par la calibration
   (tâche 5) avant la mise en production.
+  *Résultat de la calibration (2026-10-13)* : `τ_intervient = 0.75`,
+  `τ_role = 0.60` avec les questions v2, soit 98 % de précision et 82,8 % de
+  rappel sur 120 cas validés. Voir `docs/architecture/classifier.md`.
 - **Reprise sur erreur** : 3 tentatives avec attente exponentielle par cycle ;
   au-delà, l'élément reste `pending` (spec « Indisponibilité du classifieur »).
 - **Cache** : `input_hash` (hash de l'état et de la version des questions). Si

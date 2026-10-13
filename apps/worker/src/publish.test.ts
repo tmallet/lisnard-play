@@ -9,18 +9,19 @@ import { eq, sql } from 'drizzle-orm';
 import { decide } from './classifier/decide';
 import { QUESTIONS_VERSION } from './classifier/questions';
 import { createSystemOneClassifier, PINNED_MODEL, parseAnswers } from './classifier/systemone';
+import { thresholdsFor } from './classifier/thresholds';
 import type { Classifier, ClassifierState } from './classifier/types';
 import { classifyPending, reclassify, recompute } from './publish';
 
-/** Réponses typiques observées au spike (2026-10-13). */
+/** Réponses nettes (loin des seuils), pour ne pas dépendre des seuils de production. */
 const ANSWERS: Record<string, ClassifierAnswers> = {
   national: {
-    intervient: 0.79,
+    intervient: 0.95,
     role: { choice: 'national', confidence: 1, probabilities: { national: 1 } },
     kind: { choice: 'tv', confidence: 1, probabilities: { tv: 1 } },
   },
   amf: {
-    intervient: 0.74,
+    intervient: 0.9,
     role: { choice: 'amf', confidence: 1, probabilities: { amf: 1 } },
     kind: { choice: 'discours', confidence: 1, probabilities: { discours: 1 } },
   },
@@ -191,7 +192,7 @@ describe('classification en base', () => {
       .from(classification)
       .where(eq(classification.itemId, ids.national));
     expect(entry).toMatchObject({ model: PINNED_MODEL, questionsVersion: QUESTIONS_VERSION });
-    expect(entry?.thresholds).toEqual({ intervient: 0.5, role: 0.6 });
+    expect(entry?.thresholds).toEqual(thresholdsFor(PINNED_MODEL));
   });
 
   test('cache : pas de nouvel appel si l’entrée n’a pas changé', async () => {
@@ -228,7 +229,7 @@ describe('classification en base', () => {
     const classifier = new FakeClassifier();
     await classifyPending(db, classifier, { sleep: noSleep });
     expect((await statusOf(id))?.status).toBe('published');
-    const result = await recompute(db, () => ({ intervient: 0.8, role: 0.6 }));
+    const result = await recompute(db, () => ({ intervient: 0.99, role: 0.6 }));
     expect(result).toEqual({ changed: 1, total: 1 });
     expect((await statusOf(id))?.status).toBe('rejected');
     expect(classifier.calls).toBe(1);
