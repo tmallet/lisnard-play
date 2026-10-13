@@ -1,11 +1,11 @@
 ---
 id: "0006"
 title: Périmètre des interventions — tout sauf la mairie de Cannes
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [produit, perimetre, classifier]
 supersedes: null
-superseded-by: null
+superseded-by: "0020"
 related-specs: []
 related-changes: []
 ---
