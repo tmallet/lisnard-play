@@ -15,7 +15,13 @@ context: |
   - Expo (dernière version) + Expo Router, web d'abord (pré-rendu en SDK 57, SSR en SDK 58+), iOS et Android
   - tRPC pour la communication front/back, monté dans des API routes Expo
   - Uniwind (Tailwind v4 pour React Native) pour le style
-  - Worker d'ingestion séparé (tâche planifiée) : collecte, classification, publication
+  - Worker d'ingestion séparé (processus Bun avec planification interne) : collecte,
+    classification, publication
+  - PostgreSQL + Drizzle ORM, driver Bun.sql, package partagé packages/db (ADR 0014)
+  - Hébergement : conteneurs Docker sur Coolify (app, worker, postgres), runtime
+    Bun partout (ADR 0015)
+
+  Historique : à partir du 31 mars 2026, date d'annonce de la candidature (ADR 0016).
 
   Classification (ADR 0004, 0005) : décision de pertinence par un modèle
   « System One » (Jev, typesafe/jev-1.13) via OpenRouter, en mode tout

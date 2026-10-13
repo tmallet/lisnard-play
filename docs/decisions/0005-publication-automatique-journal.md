@@ -49,5 +49,4 @@ seuils choisis.
 ## Points ouverts
 
 - Valeurs initiales de τ₁, τ₂, τ₁' et τ₂', à fixer à partir du jeu de référence.
-- Date de début de l'historique (antérieure à la déclaration de candidature
-  du 31 mars 2026, à préciser).
+- ~~Date de début de l'historique.~~ Tranché : 31 mars 2026 (ADR 0016).
