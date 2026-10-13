@@ -26,7 +26,7 @@
 ## 5. API et app
 
 - [x] 5.1 `interventions.byId` : `summary` dans la réponse ; test (présent, `null`, aucune donnée interne)
-- [x] 5.2 Composant `SummaryBlock` sur l'écran de détail, sous le titre et la date et avant le média, mention « Résumé généré automatiquement » (D8, skill `charte-ui`)
+- [x] 5.2 Composant `SummaryBlock` sur l'écran de détail, juste sous le lecteur, mention « Résumé généré automatiquement » (D8, skill `charte-ui`)
 - [x] 5.3 `LinkCard` et écran de détail : lien vers `media.url` quand il existe
 - [x] 5.4 Tests : bloc présent ou absent, lien vers l'éditeur
 

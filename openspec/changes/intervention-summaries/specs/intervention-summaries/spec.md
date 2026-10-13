@@ -1,6 +1,6 @@
 ## Purpose
 
-Offrir, en tête de l'écran de détail d'une intervention vidéo, un résumé court
+Offrir, sous le lecteur de l'écran de détail d'une intervention vidéo, un résumé court
 et factuel de ce que dit David Lisnard, pour qui ne veut pas regarder la vidéo
 en entier (ADR 0021).
 
@@ -69,14 +69,14 @@ publication ni l'affichage d'une intervention.
 - **THEN** le système cesse de le demander, et le contenu reste visible sans résumé
 
 ### Requirement: Affichage du résumé
-L'écran de détail DOIT afficher le résumé, quand il existe, en tête du contenu,
-sous le titre et la date et avant le lecteur, avec ses points clés et la
+L'écran de détail DOIT afficher le résumé, quand il existe, juste sous le
+lecteur vidéo, avant la description, avec ses points clés et la
 mention « Résumé généré automatiquement ». Sans résumé, l'écran s'affiche sans
 bloc vide ni message.
 
 #### Scenario: Vidéo résumée
 - **WHEN** l'utilisateur ouvre une vidéo qui a un résumé
-- **THEN** le résumé, ses points clés et la mention « Résumé généré automatiquement » apparaissent avant le lecteur
+- **THEN** le résumé, ses points clés et la mention « Résumé généré automatiquement » apparaissent juste sous le lecteur
 
 #### Scenario: Vidéo sans résumé
 - **WHEN** l'utilisateur ouvre une vidéo dont le résumé n'est pas encore produit

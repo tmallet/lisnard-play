@@ -19,7 +19,7 @@ une erreur « introuvable ».
 
 ### Requirement: Écran de détail
 Un écran de détail DOIT afficher le titre, le média, la date, le type, les thèmes
-et la description d'une intervention, ainsi que son résumé en tête quand il
+et la description d'une intervention, ainsi que son résumé sous le lecteur quand il
 existe (spec `intervention-summaries`). Pour un rendu `embed`, il affiche le
 lecteur intégré et un lien vers la source. Pour un rendu `link`, il affiche une
 carte qui ouvre la source dans le navigateur, chez l'éditeur quand l'URL de

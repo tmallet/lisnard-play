@@ -1,6 +1,6 @@
 # Résumés des vidéos
 
-Résumé court, en tête de l'écran de détail, de ce que dit David Lisnard dans
+Résumé court, sous le lecteur de l'écran de détail, de ce que dit David Lisnard dans
 une vidéo (ADR 0021, spec `intervention-summaries`). Code :
 `apps/worker/src/summaries/`.
 

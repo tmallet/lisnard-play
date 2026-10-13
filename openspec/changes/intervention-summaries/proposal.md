@@ -19,7 +19,7 @@ pour 0,002 $ par clip et 0,10 $ par débat complet.
   factuel et neutre de ce que dit David Lisnard (3 phrases au plus), ainsi que 2
   à 4 points clés.
   - Le résultat est stocké avec le modèle et la version de la consigne.
-  - Il est affiché en tête de l'écran de détail avec la mention « Résumé généré
+  - Il est affiché sous le lecteur de l'écran de détail avec la mention « Résumé généré
     automatiquement ».
 - **Garde-fous** :
   - modèle épinglé ;
@@ -52,7 +52,7 @@ pour 0,002 $ par clip et 0,10 $ par débat complet.
 - `intervention-media` : résolution de l'URL de l'éditeur pour les liens
   d'agrégateur (Google News) avant la lecture d'Open Graph. Le lien « source »
   pointe vers l'éditeur.
-- `intervention-feed` : l'écran de détail affiche le résumé en tête, et
+- `intervention-feed` : l'écran de détail affiche le résumé sous le lecteur, et
   `interventions.byId` l'expose.
 
 Ces capacités viennent des changes `intervention-ingestion` et `campaign-themes`,

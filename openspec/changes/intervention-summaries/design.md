@@ -136,7 +136,8 @@ neutralité et l'absence d'invention. Une correction de consigne incrémente
 
 ### D8 — Interface
 
-Sur l'écran de détail, sous le titre et la date :
+Sur l'écran de détail, juste sous le lecteur et avant la description (le porteur
+du projet a préféré voir la vidéo d'abord) :
 - un encadré « Résumé », avec le texte, les points clés en liste et la mention
   « Résumé généré automatiquement » en petit ;
 - les tokens de la charte (fond `bg-blanc/5`, bordure, titre de section

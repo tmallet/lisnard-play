@@ -86,7 +86,6 @@ export default function InterventionDetail() {
             <Text className="font-sans text-blanc/70 text-sm">
               {data.status === 'upcoming' ? formatDateTime(data.date) : formatDate(data.date)}
             </Text>
-            {data.summary ? <SummaryBlock {...data.summary} /> : null}
             {data.media.kind === 'embed' ? (
               <MediaEmbed embedUrl={data.media.embedUrl} title={data.title} />
             ) : (
@@ -98,6 +97,7 @@ export default function InterventionDetail() {
                 shownTexts={description ? [data.title, description] : [data.title]}
               />
             )}
+            {data.summary ? <SummaryBlock {...data.summary} /> : null}
             {description ? (
               <Text className="font-sans text-base text-blanc/85 leading-relaxed">
                 {description}
