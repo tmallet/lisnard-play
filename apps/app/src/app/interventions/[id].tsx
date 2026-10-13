@@ -9,7 +9,7 @@ import { MediaEmbed } from '@/components/MediaEmbed';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
 import { WebChrome } from '@/components/WebChrome';
-import { formatDate, formatDateTime, kindLabel, ROLE_LABELS } from '@/lib/format';
+import { formatDate, formatDateTime, kindLabel, ROLE_LABELS, repeatsTitle } from '@/lib/format';
 import { useTRPC } from '@/lib/trpc';
 import { colors } from '@/theme/colors';
 import { fontFamily } from '@/theme/fonts';
@@ -24,6 +24,11 @@ export default function InterventionDetail() {
   const { data, error, isPending, refetch } = useQuery(
     trpc.interventions.byId.queryOptions({ id: String(id) }, { retry: false }),
   );
+  // Les descriptions de Google News ne font souvent que répéter « titre + média ».
+  const description =
+    data?.description && !repeatsTitle(data.description, data.title, data.outlet)
+      ? data.description
+      : null;
 
   return (
     <WebChrome>
@@ -38,10 +43,7 @@ export default function InterventionDetail() {
         }}
       />
       <Screen>
-        <PageHead
-          title={data?.title ?? 'Intervention'}
-          description={data?.description || undefined}
-        />
+        <PageHead title={data?.title ?? 'Intervention'} description={description ?? undefined} />
         {isPending ? (
           <Text className="font-sans text-base text-blanc/70">Chargement…</Text>
         ) : error && !(error instanceof TRPCClientError && error.data?.code === 'NOT_FOUND') ? (
@@ -88,20 +90,23 @@ export default function InterventionDetail() {
               <LinkCard
                 url={data.url}
                 og={data.media.og}
-                fallbackTitle={data.title}
                 outlet={data.outlet}
+                shownTexts={description ? [data.title, description] : [data.title]}
               />
             )}
-            {data.description ? (
+            {description ? (
               <Text className="font-sans text-base text-blanc/85 leading-relaxed">
-                {data.description}
+                {description}
               </Text>
             ) : null}
-            <Pressable accessibilityRole="link" onPress={() => Linking.openURL(data.url)}>
-              <Text className="font-sans-semibold text-base text-chamois underline">
-                Voir la source sur {data.outlet} ↗
-              </Text>
-            </Pressable>
+            {/* Pour un rendu `link`, la carte est déjà le lien vers la source. */}
+            {data.media.kind === 'embed' ? (
+              <Pressable accessibilityRole="link" onPress={() => Linking.openURL(data.url)}>
+                <Text className="font-sans-semibold text-base text-chamois underline">
+                  Voir la source sur {data.outlet} ↗
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         )}
       </Screen>

@@ -41,3 +41,26 @@ export function kindLabel(kind: string | null): string {
 }
 
 export const ROLE_LABELS = { national: 'National', amf: 'AMF' } as const;
+
+/** Texte comparable : minuscules, sans accents, ponctuation ni guillemets. */
+function comparable(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim();
+}
+
+/**
+ * Le texte ne fait que répéter le titre, éventuellement suivi du nom du média
+ * (descriptions Google News, balises Open Graph) : inutile de l'afficher.
+ */
+export function repeatsTitle(text: string | null | undefined, title: string, outlet = ''): boolean {
+  if (!text) return true;
+  let t = comparable(text);
+  const o = comparable(outlet);
+  if (o && t.endsWith(` ${o}`)) t = t.slice(0, -o.length - 1).trim();
+  const ti = comparable(title);
+  return t === '' || t === o || t === ti || ti.includes(t);
+}
