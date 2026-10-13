@@ -1,0 +1,26 @@
+{
+  "kind": "youtube#videoListResponse",
+  "items": [
+    {
+      "id": "z2Y9PwBVeA4",
+      "snippet": {
+        "description": "Description complète depuis l'API.",
+        "liveBroadcastContent": "none"
+      }
+    },
+    {
+      "id": "FQbmJzN2qZg",
+      "snippet": { "description": "Direct programmé.", "liveBroadcastContent": "upcoming" },
+      "liveStreamingDetails": { "scheduledStartTime": "2026-10-14T18:00:00Z" }
+    },
+    {
+      "id": "Dpe_J7T0ztw",
+      "snippet": { "description": "Direct terminé.", "liveBroadcastContent": "none" },
+      "liveStreamingDetails": {
+        "scheduledStartTime": "2026-10-13T06:00:00Z",
+        "actualStartTime": "2026-10-13T06:02:00Z",
+        "actualEndTime": "2026-10-13T06:40:00Z"
+      }
+    }
+  ]
+}

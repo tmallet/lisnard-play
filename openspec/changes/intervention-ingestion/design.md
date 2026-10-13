@@ -94,10 +94,12 @@ Stratégie YouTube : ADR 0017.
   Lisnard », langue `fr`). Un même adaptateur, avec un parseur XML.
 - **Cadences** : YouTube toutes les 3 minutes, RSS toutes les 15 minutes,
   revérification des directs à chaque cycle YouTube.
-- **Sources initiales** : chaîne @davidlisnard, chaînes YouTube de BFMTV,
-  CNEWS, franceinfo, LCI, Public Sénat, LCP, Sud Radio, RTL, Europe 1 et France
-  Inter, plus Google News. Les identifiants de chaîne sont résolus et vérifiés
-  à l'implémentation, puis figés dans `sources.config.ts`.
+- **Sources initiales** (identifiants vérifiés le 2026-10-13) : chaîne
+  **@david_lisnard**, liée depuis le site du parti (`@davidlisnard` est
+  inactive depuis 2017) ; chaînes de BFMTV, CNEWS (`@cnewsofficiel`),
+  franceinfo, LCI, Public Sénat, LCP, Sud Radio, RTL, Europe 1, France Inter,
+  Le Figaro et Le Parisien ; Google News. Première collecte réelle : 14 sources,
+  294 contenus, 110 retenus, 13 unités de quota.
 - **Quota** : environ 13 chaînes × 1 unité × 480 cycles par jour, soit environ
   6 000 unités, sous les 10 000 unités quotidiennes de l'API. Le compteur est
   journalisé.
@@ -238,9 +240,13 @@ Voir ADR 0014 et 0015.
 - **[Quota YouTube]** Environ 6 000 unités par jour sur 10 000. → Cadence
   configurable et compteur journalisé ; on peut réduire la fréquence des
   chaînes peu actives.
-- **[Google News]** Ses URL redirigent vers les articles, et la qualité est
-  variable. → Résolution de la redirection avant le dédoublonnage ; le
-  classifieur filtre les simples citations.
+- **[Google News]** Ses liens (`news.google.com/rss/articles/…`) ne se
+  résolvent pas par simple redirection HTTP : il faut du JavaScript côté
+  navigateur. → *Mise à jour à l'implémentation* : on garde l'URL Google News
+  (elle redirige dans le navigateur), on dédoublonne par `guid` et on lit le
+  média réel dans `<source>` (colonne `item.outlet`). Le rendu est un `link`
+  minimal. Le classifieur filtre les nombreux articles qui ne font que citer
+  David Lisnard.
 - **[Pare-feu du devcontainer et Open Graph]** La lecture d'Open Graph vise
   des domaines arbitraires, bloqués dans le devcontainer. → En développement,
   on s'appuie sur les fixtures, et l'échec donne un `link` minimal (spec). Le

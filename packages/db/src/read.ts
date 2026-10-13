@@ -81,7 +81,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const summaryColumns = {
   id: item.id,
   title: item.title,
-  outlet: source.name,
+  outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
   kind: item.kind,
   role: item.role,
   liveStatus: item.liveStatus,

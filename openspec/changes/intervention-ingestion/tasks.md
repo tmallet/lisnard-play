@@ -15,13 +15,13 @@
 
 ## 3. Worker : collecte
 
-- [ ] 3.1 Créer `apps/worker` (`@lisnard/worker`) : démarrage (migrations, puis boucle), planificateur avec cadences par type et advisory lock (design D1, ADR 0015)
-- [ ] 3.2 Définir l'interface `Source` et `sources.config.ts` ; résoudre et vérifier les identifiants des chaînes initiales (design D3)
-- [ ] 3.3 Adaptateur YouTube : flux RSS, puis `videos.list` (par lots de 50) pour la description, `liveStreamingDetails` et le statut ; revérification des `upcoming` et `live`
-- [ ] 3.4 Adaptateur RSS générique (podcasts, Google News avec résolution des redirections)
-- [ ] 3.5 `collect.ts` : pré-filtre « Lisnard » (exemption de la chaîne officielle), seuil `HISTORY_START` (ADR 0016), dédoublonnage et upsert
-- [ ] 3.6 Isolation des pannes par source, journalisation structurée, compteur de quota YouTube, fichier de pulsation pour le healthcheck
-- [ ] 3.7 Tests sur fixtures : flux RSS, `videos.list` (upcoming, live, ended, none), Google News ; pré-filtre ; seuil d'historique ; source en panne ; verrou à deux instances
+- [x] 3.1 Créer `apps/worker` (`@lisnard/worker`) : démarrage (migrations, puis boucle), planificateur avec cadences par type et advisory lock (design D1, ADR 0015)
+- [x] 3.2 Définir l'interface `Source` et `sources.config.ts` ; résoudre et vérifier les identifiants des chaînes initiales (design D3)
+- [x] 3.3 Adaptateur YouTube : flux RSS, puis `videos.list` (par lots de 50) pour la description, `liveStreamingDetails` et le statut ; revérification des `upcoming` et `live`
+- [x] 3.4 Adaptateur RSS générique (podcasts, Google News avec résolution des redirections)
+- [x] 3.5 `collect.ts` : pré-filtre « Lisnard » (exemption de la chaîne officielle), seuil `HISTORY_START` (ADR 0016), dédoublonnage et upsert
+- [x] 3.6 Isolation des pannes par source, journalisation structurée, compteur de quota YouTube, fichier de pulsation pour le healthcheck
+- [x] 3.7 Tests sur fixtures : flux RSS, `videos.list` (upcoming, live, ended, none), Google News ; pré-filtre ; seuil d'historique ; source en panne ; verrou à deux instances
 
 ## 4. Worker : classification et publication
 

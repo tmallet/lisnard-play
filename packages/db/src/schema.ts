@@ -81,6 +81,8 @@ export const item = pgTable(
     /** Identité du contenu : identifiant plateforme (« yt:<id> ») ou hash de l'URL canonique. */
     platformId: text('platform_id').notNull().unique(),
     url: text('url').notNull(),
+    /** Média réel quand il diffère de la source (ex. éditeur d'un article relayé par Google News). */
+    outlet: text('outlet'),
     title: text('title').notNull(),
     description: text('description').notNull().default(''),
     publishedAt: timestamp('published_at', { withTimezone: true }).notNull(),

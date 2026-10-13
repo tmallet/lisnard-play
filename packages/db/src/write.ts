@@ -37,6 +37,7 @@ export interface CandidateInput {
   sourceId: string;
   platformId: string;
   url: string;
+  outlet?: string | null;
   title: string;
   description: string;
   publishedAt: Date;
@@ -63,11 +64,13 @@ export async function upsertItem(
       endsAt: input.endsAt ?? null,
       liveStatus: input.liveStatus ?? 'none',
       thumbnailUrl: input.thumbnailUrl ?? null,
+      outlet: input.outlet ?? null,
     })
     .onConflictDoUpdate({
       target: item.platformId,
       set: {
         url: sql`excluded.url`,
+        outlet: sql`coalesce(excluded.outlet, ${item.outlet})`,
         title: sql`excluded.title`,
         description: sql`excluded.description`,
         startsAt: sql`coalesce(excluded.starts_at, ${item.startsAt})`,
@@ -147,7 +150,7 @@ export async function listClassificationTargets(
     .select({
       id: item.id,
       sourceId: item.sourceId,
-      outlet: source.name,
+      outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
       url: item.url,
       title: item.title,
       description: item.description,
@@ -227,7 +230,12 @@ export async function setMedia(db: Db, itemId: string, media: MediaRender): Prom
 /** Contenus publiés sans rendu média calculé. */
 export async function listPublishedWithoutMedia(db: Db, limit: number) {
   return db
-    .select({ id: item.id, url: item.url, title: item.title, outlet: source.name })
+    .select({
+      id: item.id,
+      url: item.url,
+      title: item.title,
+      outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+    })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
     .where(and(eq(item.status, 'published'), sql`${item.media} is null`))
