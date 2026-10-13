@@ -7,11 +7,11 @@
 
 ## 2. Base de données
 
-- [ ] 2.1 Ajouter un service Postgres au devcontainer (passage à docker compose) et à la CI, même version majeure qu'en production ; `DATABASE_URL` dans `.env.example`
-- [ ] 2.2 Créer `packages/db` (`@lisnard/db`) : Drizzle, driver `drizzle-orm/bun-sql`, configuration drizzle-kit
-- [ ] 2.3 Écrire le schéma (`source`, `item`, `classification`) et ses index (design D2), générer la première migration SQL
-- [ ] 2.4 Exposer les points d'entrée `read` (contenus publiés uniquement) et `write` (upsert d'élément, ajout au journal, mise à jour du statut) (ADR 0017)
-- [ ] 2.5 Tests d'intégration sur Postgres : dédoublonnage par `platform_id`, journal en ajout seul, `read` n'expose jamais un contenu non publié
+- [x] 2.1 Ajouter un service Postgres au devcontainer (passage à docker compose) et à la CI, même version majeure qu'en production ; `DATABASE_URL` dans `.env.example`
+- [x] 2.2 Créer `packages/db` (`@lisnard/db`) : Drizzle, driver `drizzle-orm/bun-sql`, configuration drizzle-kit
+- [x] 2.3 Écrire le schéma (`source`, `item`, `classification`) et ses index (design D2), générer la première migration SQL
+- [x] 2.4 Exposer les points d'entrée `read` (contenus publiés uniquement) et `write` (upsert d'élément, ajout au journal, mise à jour du statut) (ADR 0017)
+- [x] 2.5 Tests d'intégration sur Postgres : dédoublonnage par `platform_id`, journal en ajout seul, `read` n'expose jamais un contenu non publié
 
 ## 3. Worker : collecte
 

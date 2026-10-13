@@ -1,23 +1,11 @@
 {
   // Devcontainer lisnard-play : voir docs/architecture/devcontainer.md et ADR 0010.
   "name": "lisnard-play",
-  "build": {
-    "dockerfile": "Dockerfile",
-    "context": "..",
-    "args": { "TZ": "${localEnv:TZ:Europe/Paris}" }
-  },
-  "runArgs": ["--cap-add=NET_ADMIN", "--cap-add=NET_RAW"],
+  "dockerComposeFile": "compose.yaml",
+  "service": "dev",
+  "runServices": ["dev", "postgres"],
   "remoteUser": "dev",
-  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=delegated",
   "workspaceFolder": "/workspace",
-  "mounts": [
-    // node_modules hors du montage macOS (performance de Metro).
-    "source=lisnard-play-node-modules-${devcontainerId},target=/workspace/node_modules,type=volume",
-    "source=lisnard-play-bun-cache,target=/home/dev/.bun/install/cache,type=volume",
-    // Configuration des agents persistée entre reconstructions.
-    "source=lisnard-play-claude-${devcontainerId},target=/home/dev/.claude,type=volume",
-    "source=lisnard-play-codex-${devcontainerId},target=/home/dev/.codex,type=volume"
-  ],
   "containerEnv": {
     // Metro annonce localhost : le simulateur et le navigateur de l'hôte passent par le port redirigé.
     // Pour un téléphone physique : REACT_NATIVE_PACKAGER_HOSTNAME=<IP LAN de l'hôte> côté hôte.
@@ -29,6 +17,7 @@
     "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
     "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
     "OPENROUTER_API_KEY": "${localEnv:OPENROUTER_API_KEY}",
+    "YOUTUBE_API_KEY": "${localEnv:YOUTUBE_API_KEY}",
     "EXPO_PUBLIC_API_URL": "${localEnv:EXPO_PUBLIC_API_URL}"
   },
   "forwardPorts": [8081, 8082],
