@@ -32,8 +32,8 @@
 
 ## 6. Validation
 
-- [ ] 6.1 En local : `media --refresh` sur Google News, puis `summarize --budget 2` ; vérifier le web et le simulateur iOS
-- [ ] 6.2 Échantillon d'environ 10 résumés présenté au porteur du projet ; ajuster la consigne si besoin (D7)
+- [x] 6.1 En local : `media --refresh` sur Google News, puis `summarize --budget 2` ; vérifier le web et le simulateur iOS
+- [x] 6.2 Échantillon d'environ 10 résumés présenté au porteur du projet ; ajuster la consigne si besoin (D7)
 - [x] 6.3 Smoke test : `byId` renvoie un résumé sur l'intervention de test ; `bun run check` et `bun run smoke:web` au vert
 
 ## 7. Documentation
