@@ -1,9 +1,9 @@
 ## 1. Spike classifieur (point de décision)
 
-- [ ] 1.1 Obtenir l'accès : clé OpenRouter de test fournie par le porteur du projet dans l'environnement (`OPENROUTER_API_KEY`), jamais commitée
-- [ ] 1.2 Lire le Quick Start TypeSafe et la page Jev d'OpenRouter ; écrire un script jetable qui envoie un état et les trois questions (Noul + 2 Choice) à `typesafe/jev-1.13` via OpenRouter
-- [ ] 1.3 Tester sur 20 cas réels variés (interview nationale, AMF, mairie, simple citation, hors sujet) et noter le format de réponse, la latence et la cohérence des probabilités
-- [ ] 1.4 Consigner le résultat dans le design (format exact de l'appel). Si Jev est inutilisable, s'arrêter et proposer un ADR de remplacement de l'ADR 0004 avant de continuer
+- [x] 1.1 Obtenir l'accès : clé OpenRouter de test fournie par le porteur du projet dans l'environnement (`OPENROUTER_API_KEY`), jamais commitée
+- [x] 1.2 Lire le Quick Start TypeSafe et la page Jev d'OpenRouter ; écrire un script jetable qui envoie un état et les trois questions (Noul + 2 Choice) à `typesafe/jev-1.13` via OpenRouter
+- [x] 1.3 Tester sur 20 cas réels variés (interview nationale, AMF, mairie, simple citation, hors sujet) et noter le format de réponse, la latence et la cohérence des probabilités
+- [x] 1.4 Consigner le résultat dans le design (format exact de l'appel). Si Jev est inutilisable, s'arrêter et proposer un ADR de remplacement de l'ADR 0004 avant de continuer
 
 ## 2. Base de données
 

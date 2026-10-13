@@ -105,11 +105,25 @@ Stratégie YouTube : ADR 0017.
 ### D4 — Classifieur
 Modèle, questions et seuils : ADR 0004 et 0005.
 
-- **Client** : le SDK TypeSafe JS pointé sur `https://openrouter.ai/api/v1`,
-  modèle `typesafe/jev-1.13` (ADR 0004). Le format exact de l'appel est
-  confirmé par le **spike** (tâche 1). Si le SDK ne convient pas, on écrit un
-  client REST minimal sur `POST /api/v1/systemone`. Dans les deux cas, le reste
-  du worker ne voit que l'interface `Classifier`.
+- **Client** : client REST minimal, sans SDK, sur
+  `POST https://openrouter.ai/api/v1/systemone` (`Authorization: Bearer`). Le
+  reste du worker ne voit que l'interface `Classifier`.
+- **Résultat du spike (tâche 1)** :
+  - Requête : `{ model, state (chaîne), questions: { <clé>: { type: "noul" | "choice",
+    instructions, criteria? } } }`.
+  - Réponse : `answers.<clé>` vaut `{ type: "noul", noul }` ou
+    `{ type: "choice", choice, probabilities, confidence }`, avec en plus
+    `model` (instantané servi, ex. `typesafe/jev-1.13-20260917`) et
+    `usage.cost`.
+  - 20 cas en français, couvrant tous les cas limites de l'ADR 0006 :
+    **20/20 décisions de publication correctes**. Rôle correct dans tous les
+    cas, et séparation nette de la probabilité « intervient » : les vraies
+    interventions nationales ou AMF sont à 0,57 ou plus, les simples citations
+    à 0,17 ou moins.
+  - Latence de 230 à 510 ms, environ 0,00003 $ par appel (3 questions).
+- **Modèle épinglé sur l'instantané daté** `typesafe/jev-1.13-20260917`.
+  L'identifiant `typesafe/jev-1.13` pointe sur le dernier instantané 1.13, ce
+  qui pourrait décaler la calibration. Le `model` renvoyé est journalisé.
 - **État envoyé** : JSON `{ title, description (tronquée à 2 000 caractères),
   outlet, sourceKind, publishedAt, startsAt }`.
 - **Questions** (`QUESTIONS_VERSION = 1`) :
@@ -119,8 +133,10 @@ Modèle, questions et seuils : ADR 0004 et 0005.
     descriptions qui tranchent les cas limites de l'ADR 0006 ;
   - Choice `kind` : les 8 types de la spec.
 - **Seuils** : `thresholds.ts`, indexés par identifiant de modèle. Valeurs
-  initiales prudentes (`τ_intervient = 0.85`, `τ_role = 0.80`), remplacées par
-  celles qu'obtient la calibration (tâche dédiée) avant la mise en production.
+  initiales tirées du spike (`τ_intervient = 0.50`, `τ_role = 0.60`). Avec
+  0,85, une matinale BFMTV (0,79) et un discours au congrès de l'AMF (0,74)
+  auraient été écartés. Elles seront confirmées ou ajustées par la calibration
+  (tâche 5) avant la mise en production.
 - **Reprise sur erreur** : 3 tentatives avec attente exponentielle par cycle ;
   au-delà, l'élément reste `pending` (spec « Indisponibilité du classifieur »).
 - **Cache** : `input_hash` (hash de l'état et de la version des questions). Si

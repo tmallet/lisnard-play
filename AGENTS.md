@@ -54,7 +54,7 @@ Pour travailler en bac à sable (agents en autonomie) :
 - **Expo (SDK 57)** : consulter la doc versionnée avant toute API Expo ou React
   Native, et ajouter les dépendances avec `bunx expo install` (voir
   `apps/app/AGENTS.md`).
-- **Classifieur (ADR 0004)** : modèle épinglé (`typesafe/jev-1.13`), jamais
+- **Classifieur (ADR 0004)** : modèle épinglé sur un instantané daté (`typesafe/jev-1.13-20260917`), jamais
   d'alias `latest`. Toute modification des questions incrémente `questionsVersion`.
 - **Secrets** : jamais dans le code, l'image ni un fichier commité.
   `OPENROUTER_API_KEY` et les clés des sources ne résident que dans le worker.
