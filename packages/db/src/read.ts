@@ -5,7 +5,7 @@
 import { and, eq, type SQL, sql } from 'drizzle-orm';
 
 import type { Db } from './client';
-import { item, type MediaRender, source, THEMES, type Theme } from './schema';
+import { item, type MediaRender, type SummaryRecord, source, THEMES, type Theme } from './schema';
 
 export { THEMES, type Theme } from './schema';
 
@@ -24,10 +24,21 @@ export interface InterventionSummary {
   thumbnailUrl: string | null;
 }
 
+/** Résumé affichable (spec intervention-summaries) : ni modèle ni consigne exposés. */
+export interface PublicSummary {
+  text: string;
+  points: string[];
+}
+
 export interface InterventionDetail extends InterventionSummary {
   description: string;
   url: string;
   media: MediaRender;
+  summary: PublicSummary | null;
+}
+
+function toPublicSummary(summary: SummaryRecord | null): PublicSummary | null {
+  return summary?.kind === 'ok' ? { text: summary.text, points: summary.points } : null;
 }
 
 export interface ListOptions {
@@ -171,6 +182,7 @@ export async function getPublishedById(
       description: item.description,
       url: item.url,
       media: item.media,
+      summary: item.summary,
     })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
@@ -182,5 +194,6 @@ export async function getPublishedById(
     description: row.description,
     url: row.url,
     media: row.media as MediaRender,
+    summary: toPublicSummary(row.summary),
   };
 }

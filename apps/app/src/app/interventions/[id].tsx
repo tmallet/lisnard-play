@@ -8,6 +8,7 @@ import { LiveBadge } from '@/components/LiveBadge';
 import { MediaEmbed } from '@/components/MediaEmbed';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
+import { SummaryBlock } from '@/components/SummaryBlock';
 import { WebChrome } from '@/components/WebChrome';
 import { formatDate, formatDateTime, kindLabel, repeatsTitle, themesLabel } from '@/lib/format';
 import { useTRPC } from '@/lib/trpc';
@@ -85,11 +86,13 @@ export default function InterventionDetail() {
             <Text className="font-sans text-blanc/70 text-sm">
               {data.status === 'upcoming' ? formatDateTime(data.date) : formatDate(data.date)}
             </Text>
+            {data.summary ? <SummaryBlock {...data.summary} /> : null}
             {data.media.kind === 'embed' ? (
               <MediaEmbed embedUrl={data.media.embedUrl} title={data.title} />
             ) : (
               <LinkCard
-                url={data.url}
+                // URL de l'éditeur pour un article relayé par Google News (ADR 0021).
+                url={data.media.url ?? data.url}
                 og={data.media.og}
                 outlet={data.outlet}
                 shownTexts={description ? [data.title, description] : [data.title]}

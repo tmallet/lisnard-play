@@ -75,7 +75,22 @@ export type MediaRender =
   | {
       kind: 'link';
       og: { title?: string; image?: string; siteName?: string; description?: string };
+      /** URL de l'article chez l'éditeur, pour un lien d'agrégateur (ADR 0021). */
+      url?: string;
     };
+
+/** Résumé d'une vidéo (spec intervention-summaries, ADR 0021) : seul le dernier fait foi. */
+export type SummaryRecord = {
+  model: string;
+  promptVersion: number;
+  /** ISO 8601. */
+  generatedAt: string;
+  /** Coût en dollars, pour le plafond quotidien. */
+  cost: number;
+} & (
+  | { kind: 'ok'; text: string; points: string[] }
+  | { kind: 'none'; reason: 'not_speaking' | 'failed' | 'too_long' }
+);
 
 /** Réponses brutes du classifieur, telles que journalisées (ADR 0005). */
 export interface ClassifierAnswers {
@@ -127,6 +142,11 @@ export const item = pgTable(
     /** Thèmes dénormalisés depuis la dernière décision (spec intervention-themes). */
     themes: text('themes').array().notNull().default(sql`'{}'::text[]`),
     media: jsonb<MediaRender>('media'),
+    /** Durée de la vidéo en secondes (videos.list), quand elle est connue. */
+    durationS: integer('duration_s'),
+    summary: jsonb<SummaryRecord>('summary'),
+    /** Échecs consécutifs de production du résumé (plafond de tentatives). */
+    summaryAttempts: integer('summary_attempts').notNull().default(0),
     firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

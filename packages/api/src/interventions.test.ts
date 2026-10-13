@@ -2,7 +2,13 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import type { Db } from '@lisnard/db/client';
 import { createTestDb } from '@lisnard/db/testing';
 // Seuls les tests de l'API peuvent importer `write`, pour préparer les données (ADR 0017).
-import { recordClassification, setMedia, upsertItem, upsertSources } from '@lisnard/db/write';
+import {
+  recordClassification,
+  recordSummary,
+  setMedia,
+  upsertItem,
+  upsertSources,
+} from '@lisnard/db/write';
 import { TRPCError } from '@trpc/server';
 
 import { createContext } from './context';
@@ -175,6 +181,33 @@ describe('interventions.byId', () => {
       provider: 'youtube',
       embedUrl: 'https://www.youtube.com/embed/p1',
     });
+  });
+
+  test('résumé : texte et points seulement, null sans résumé affichable', async () => {
+    await recordSummary(db, id('p1'), {
+      kind: 'ok',
+      text: 'Il estime que…',
+      points: ['école'],
+      model: 'google/gemini-3.5-flash-lite',
+      promptVersion: 1,
+      generatedAt: new Date().toISOString(),
+      cost: 0.002,
+    });
+    await recordSummary(db, id('p3'), {
+      kind: 'none',
+      reason: 'not_speaking',
+      model: 'google/gemini-3.5-flash-lite',
+      promptVersion: 1,
+      generatedAt: new Date().toISOString(),
+      cost: 0.002,
+    });
+    const c = caller();
+    expect((await c.interventions.byId({ id: id('p1') })).summary).toEqual({
+      text: 'Il estime que…',
+      points: ['école'],
+    });
+    expect((await c.interventions.byId({ id: id('p3') })).summary).toBeNull();
+    expect((await c.interventions.byId({ id: id('p2') })).summary).toBeNull();
   });
 
   test('inconnu, écarté ou identifiant invalide : NOT_FOUND', async () => {

@@ -1,5 +1,9 @@
 import type { Db } from '@lisnard/db/client';
-import { listPublishedWithoutMedia, setMedia } from '@lisnard/db/write';
+import {
+  listPublishedForMediaRefresh,
+  listPublishedWithoutMedia,
+  setMedia,
+} from '@lisnard/db/write';
 
 import { type MediaContext, resolveMedia } from './resolve';
 
@@ -13,4 +17,17 @@ export async function resolvePendingMedia(db: Db, ctx: MediaContext = {}, limit 
     counts[media.kind] += 1;
   }
   return counts;
+}
+
+/** Recalcule le rendu des contenus déjà publiés (spec « Mise à jour des rendus existants »). */
+export async function refreshMedia(db: Db, ctx: MediaContext = {}, sourceId?: string) {
+  const targets = await listPublishedForMediaRefresh(db, sourceId);
+  const counts = { embed: 0, link: 0, publisherUrl: 0 };
+  for (const target of targets) {
+    const media = await resolveMedia(target, ctx);
+    await setMedia(db, target.id, media);
+    counts[media.kind] += 1;
+    if (media.kind === 'link' && media.url) counts.publisherUrl += 1;
+  }
+  return { total: targets.length, ...counts };
 }

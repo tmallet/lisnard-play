@@ -12,6 +12,7 @@ import { resolve } from 'node:path';
 import { createTestDb } from '../packages/db/src/testing';
 import {
   recordClassification,
+  recordSummary,
   setMedia,
   upsertItem,
   upsertSources,
@@ -107,6 +108,15 @@ await setMedia(db, id, {
   provider: 'youtube',
   embedUrl: 'https://www.youtube.com/embed/smoke-1',
 });
+await recordSummary(db, id, {
+  kind: 'ok',
+  text: 'Résumé de test.',
+  points: ['point de test'],
+  model: 'smoke',
+  promptVersion: 0,
+  generatedAt: new Date().toISOString(),
+  cost: 0,
+});
 
 const server = Bun.spawn(['bun', 'server.ts'], {
   cwd: APP_DIR,
@@ -168,9 +178,14 @@ try {
   );
 
   const byId = (await (await fetch(trpcUrl('interventions.byId', { id }))).json()) as {
-    result?: { data?: { media?: { kind?: string } } };
+    result?: { data?: { media?: { kind?: string }; summary?: { text?: string } | null } };
   };
   check('interventions.byId : rendu média intégré', byId.result?.data?.media?.kind === 'embed');
+  check(
+    'interventions.byId : résumé exposé, sans donnée interne',
+    byId.result?.data?.summary?.text === 'Résumé de test.' &&
+      !JSON.stringify(byId.result?.data?.summary).includes('smoke'),
+  );
 
   const malformed = await fetch(`${BASE}/%E0%A4%A`);
   check('URL mal encodée : pas d’erreur serveur', malformed.status < 500);
