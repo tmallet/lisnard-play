@@ -300,3 +300,13 @@ describe('résumés', () => {
     expect(row?.durationS).toBe(600);
   });
 });
+
+describe('image des cartes', () => {
+  test('article sans miniature : image Open Graph de l’éditeur', async () => {
+    const { id } = await candidate('rss:img');
+    await recordClassification(db, decision(id));
+    await setMedia(db, id, { kind: 'link', og: { image: 'https://static.lejdd.fr/a.jpeg' } });
+    const { items } = await listPublished(db, { status: 'past', limit: 50 });
+    expect(items[0]?.thumbnailUrl).toBe('https://static.lejdd.fr/a.jpeg');
+  });
+});

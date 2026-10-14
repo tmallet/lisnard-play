@@ -100,7 +100,8 @@ const summaryColumns = {
   liveStatus: item.liveStatus,
   startsAt: item.startsAt,
   date: sortDate,
-  thumbnailUrl: item.thumbnailUrl,
+  // Articles : image de l'éditeur (Open Graph) quand la collecte n'en fournit pas.
+  thumbnailUrl: sql<string | null>`coalesce(${item.thumbnailUrl}, ${item.media}->'og'->>'image')`,
 };
 
 type SummaryRow = {

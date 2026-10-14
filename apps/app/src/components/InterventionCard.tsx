@@ -1,7 +1,15 @@
 import { Link } from 'expo-router';
+import { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 
-import { formatDate, formatDateTime, kindLabel, type Theme, themesLabel } from '@/lib/format';
+import {
+  formatDate,
+  formatDateTime,
+  kindLabel,
+  largeThumbnail,
+  type Theme,
+  themesLabel,
+} from '@/lib/format';
 
 import { LiveBadge } from './LiveBadge';
 
@@ -16,30 +24,46 @@ export interface InterventionCardData {
   thumbnailUrl: string | null;
 }
 
-/** Carte d'une intervention dans les listes ; ouvre l'écran de détail. */
+/** Image à la une : version haute définition, repli sur l'image d'origine si elle manque. */
+function CardImage({ url }: { url: string }) {
+  const [uri, setUri] = useState(() => largeThumbnail(url));
+  return (
+    <Image
+      source={{ uri }}
+      onError={() => setUri(url)}
+      accessibilityIgnoresInvertColors
+      className="aspect-video w-full bg-bleu"
+      resizeMode="cover"
+    />
+  );
+}
+
+/**
+ * Carte d'une intervention dans les listes ; ouvre l'écran de détail. Avec une image,
+ * celle-ci occupe toute la largeur en tête de carte, badge « en direct » par-dessus.
+ */
 export function InterventionCard({ item }: { item: InterventionCardData }) {
   const when = item.status === 'upcoming' ? formatDateTime(item.date) : formatDate(item.date);
+  const live = item.status === 'live' ? <LiveBadge /> : null;
   return (
     <Link href={`/interventions/${item.id}`} asChild>
       <Pressable
         accessibilityRole="link"
-        className="flex-row gap-4 rounded-xl border border-blanc/15 bg-blanc/5 p-3 active:bg-blanc/10"
+        className="overflow-hidden rounded-xl border border-blanc/15 bg-blanc/5 active:bg-blanc/10"
       >
         {item.thumbnailUrl ? (
-          <Image
-            source={{ uri: item.thumbnailUrl }}
-            accessibilityIgnoresInvertColors
-            className="aspect-video w-28 rounded-lg bg-bleu"
-            resizeMode="cover"
-          />
+          <View>
+            <CardImage url={item.thumbnailUrl} />
+            {live ? <View className="absolute top-3 left-3">{live}</View> : null}
+          </View>
         ) : null}
-        <View className="flex-1 gap-1.5">
-          {item.status === 'live' ? <LiveBadge /> : null}
+        <View className="gap-1.5 p-4">
+          {item.thumbnailUrl ? null : live}
           <Text className="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
             {item.outlet} · {kindLabel(item.kind)}
             {item.themes.length > 0 ? ` · ${themesLabel(item.themes, 2)}` : ''}
           </Text>
-          <Text className="font-sans-bold text-base text-blanc leading-snug" numberOfLines={3}>
+          <Text className="font-sans-bold text-lg text-blanc leading-snug" numberOfLines={3}>
             {item.title}
           </Text>
           <Text className="font-sans text-blanc/70 text-sm">{when}</Text>

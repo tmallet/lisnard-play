@@ -73,6 +73,8 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   `useOnEndReached(cb)` (`components/ScrollEnd.tsx`) plutôt qu'ajouter un bouton
   ou une `FlatList` imbriquée. Le rappel doit se protéger lui-même (`hasNextPage`,
   `isFetchingNextPage`), car il est appelé à chaque défilement près du bas.
+- **Cartes** : image à la une en 16:9 sur toute la largeur. `largeThumbnail` passe les
+  miniatures YouTube en `hq720`, avec repli sur l'image d'origine (`onError`).
 - **Médias** : `MediaEmbed` affiche le lecteur de l'URL fournie par le worker
   (iframe sur le web, `react-native-webview` sur mobile), sinon `LinkCard`. Jamais
   de téléchargement ni de réhébergement (ADR 0007).

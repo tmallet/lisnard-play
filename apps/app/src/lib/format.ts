@@ -88,3 +88,11 @@ export function repeatsTitle(text: string | null | undefined, title: string, out
   const ti = comparable(title);
   return t === '' || t === o || t === ti || ti.includes(t);
 }
+
+/**
+ * Miniature YouTube en 16:9 haute définition (hq720, 1280×720) au lieu de hqdefault
+ * (480×360, bandes noires) ; les autres images sont renvoyées telles quelles.
+ */
+export function largeThumbnail(url: string): string {
+  return url.replace(/^(https:\/\/i\d?\.ytimg\.com\/vi\/[^/]+\/)hqdefault\.jpg$/, '$1hq720.jpg');
+}

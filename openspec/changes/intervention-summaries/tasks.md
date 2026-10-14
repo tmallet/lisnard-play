@@ -29,6 +29,7 @@
 - [x] 5.2 Composant `SummaryBlock` sur l'écran de détail, juste sous le lecteur, mention « Résumé généré automatiquement » (D8, skill `charte-ui`)
 - [x] 5.3 `LinkCard` et écran de détail : lien vers `media.url` quand il existe
 - [x] 5.4 Tests : bloc présent ou absent, lien vers l'éditeur
+- [x] 5.5 Cartes de la liste : image en pleine largeur (16:9) en tête de carte, miniature YouTube en haute définition (`hq720`, repli sur `hqdefault`), image Open Graph de l'éditeur pour les articles (demande du porteur du projet)
 
 ## 6. Validation
 
