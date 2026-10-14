@@ -33,3 +33,4 @@ Règles :
 | [0019](0019-runtime-bun-metro-et-connexion-partagee.md) | Serveur de développement sous le runtime Bun, shim Metro `bun` et connexion Postgres partagée | accepted | architecture, outillage, donnees, api |
 | [0020](0020-perimetre-campagne-et-thematiques.md) | Périmètre recentré sur la campagne présidentielle et classement par thématiques | accepted | produit, perimetre, classifier, ui |
 | [0021](0021-resumes-gemini-et-presse.md) | Résumés des vidéos par Gemini via OpenRouter, sans résumé des articles de presse | accepted | ia, ingestion, media, juridique |
+| [0022](0022-consentement-lecteurs-tiers.md) | Lecteurs tiers chargés au clic, YouTube sans cookie, éditeur anonyme | accepted | juridique, media, ui, confidentialite |

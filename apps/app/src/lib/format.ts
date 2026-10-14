@@ -116,3 +116,22 @@ export function whenLabel(status: 'live' | 'upcoming' | 'past', iso: string, now
 export function kindLabelFor(status: 'live' | 'upcoming' | 'past', kind: string | null): string {
   return status === 'live' ? 'Direct' : kindLabel(kind);
 }
+
+/**
+ * URL du lecteur chargé après le clic de consentement (ADR 0022) : YouTube en mode de
+ * confidentialité renforcée (youtube-nocookie.com) et lecture automatique, le clic
+ * tenant lieu d'action de lecture.
+ */
+export function playerUrl(embedUrl: string): string {
+  const url = new URL(embedUrl);
+  if (url.hostname === 'www.youtube.com' && url.pathname.startsWith('/embed/'))
+    url.hostname = 'www.youtube-nocookie.com';
+  url.searchParams.set('autoplay', '1');
+  return url.toString();
+}
+
+const PROVIDER_LABELS: Record<string, string> = { youtube: 'YouTube', dailymotion: 'Dailymotion' };
+
+export function providerLabel(provider: string): string {
+  return PROVIDER_LABELS[provider] ?? provider;
+}

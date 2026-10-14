@@ -77,6 +77,11 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   téléphone, 2 dès 768 px, 3 dès 1024 px ; l'accueil utilise `<Screen wide>` (max-w-6xl),
   les autres écrans gardent la colonne de lecture (max-w-3xl). `largeThumbnail` passe les
   miniatures YouTube en `hq720`, avec repli sur l'image d'origine (`onError`).
+- **Lecteurs tiers** : toujours via `PlayerConsent` (clic pour charger, ADR 0022), jamais
+  `MediaEmbed` directement dans un écran. `playerUrl()` passe YouTube sur
+  `youtube-nocookie.com` et active la lecture automatique après le clic.
+- **Mentions légales** : contact et hébergeur dans `config/legal.ts`, page
+  `mentions-legales`, lien `LegalLink` dans le pied de page.
 - **Médias** : `MediaEmbed` affiche le lecteur de l'URL fournie par le worker
   (iframe sur le web, `react-native-webview` sur mobile), sinon `LinkCard`. Jamais
   de téléchargement ni de réhébergement (ADR 0007).
