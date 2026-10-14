@@ -224,6 +224,23 @@ describe('production des résumés', () => {
     expect(row).toEqual({ attempts: 0, summary: null });
   });
 
+  test('cycle borné dans le temps : la suite attend le cycle suivant', async () => {
+    for (const key of ['t1', 't2', 't3']) await published(key);
+    let t = Date.parse('2026-10-14T10:00:00Z');
+    const summarizer = new FakeSummarizer();
+    const original = summarizer.summarize.bind(summarizer);
+    summarizer.summarize = async (target) => {
+      t += 60_000;
+      return original(target);
+    };
+    const stats = await summarizePending(db, summarizer, {
+      dailyBudget: 10,
+      budgetMs: 90_000,
+      now: () => new Date(t),
+    });
+    expect(stats.summarized).toBe(2);
+  });
+
   test('plafond quotidien : arrêt dès que la dépense du jour l’atteint', async () => {
     for (const key of ['a', 'b', 'c']) await published(key);
     const summarizer = new FakeSummarizer(0.6);

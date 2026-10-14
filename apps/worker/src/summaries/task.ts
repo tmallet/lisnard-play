@@ -23,6 +23,11 @@ export interface SummarizeOptions {
   maxAttempts?: number;
   /** Au-delà, la vidéo est ignorée (coût d'un meeting de plusieurs heures). */
   maxDurationS?: number;
+  /**
+   * Durée maximale d'un cycle, en millisecondes : les tâches tournent en série et une
+   * vidéo longue prend jusqu'à une minute (collecte et pulsation ne doivent pas attendre).
+   */
+  budgetMs?: number;
   now?: () => Date;
 }
 
@@ -66,6 +71,7 @@ export async function summarizePending(
     limit = 5,
     maxAttempts = 3,
     maxDurationS = 3 * 3600,
+    budgetMs = 150_000,
     now = () => new Date(),
   }: SummarizeOptions,
 ): Promise<SummarizeStats> {
@@ -86,7 +92,9 @@ export async function summarizePending(
       ...over,
     }) as SummaryRecord;
 
+  const deadline = now().getTime() + budgetMs;
   for (const target of await listSummaryTargets(db, limit, PROMPT_VERSION)) {
+    if (now().getTime() >= deadline) break;
     if (spent >= dailyBudget) {
       stats.budgetReached = true;
       break;
