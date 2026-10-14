@@ -128,6 +128,13 @@ describe('interventions.list', () => {
     expect(items.find((i) => i.id === id('p1'))?.themes).toEqual([]);
   });
 
+  test('ancien filtre par rôle : paramètre ignoré (ADR 0020)', async () => {
+    const all = await caller().interventions.list({ status: 'past' });
+    // @ts-expect-error le filtre par rôle ne fait plus partie du contrat
+    const withRole = await caller().interventions.list({ status: 'past', role: 'amf' });
+    expect(withRole.items.map((i) => i.id)).toEqual(all.items.map((i) => i.id));
+  });
+
   test('thème inconnu : requête invalide', async () => {
     const error = await caller()
       // @ts-expect-error valeur hors de la liste des thèmes
