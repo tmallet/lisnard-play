@@ -35,3 +35,4 @@ Règles :
 | [0021](0021-resumes-gemini-et-presse.md) | Résumés des vidéos par Gemini via OpenRouter, sans résumé des articles de presse | accepted | ia, ingestion, media, juridique |
 | [0022](0022-consentement-lecteurs-tiers.md) | Lecteurs tiers chargés au clic, YouTube sans cookie, éditeur anonyme | accepted | juridique, media, ui, confidentialite |
 | [0023](0023-websub-worker-expose.md) | Détection des directs par WebSub, avec un point d'entrée public du worker | accepted | ingestion, architecture, securite, deploiement |
+| [0024](0024-notifications-push.md) | Notifications par Web Push et Expo Push, abonnements écrits par l'API | accepted | notifications, architecture, securite, confidentialite |
