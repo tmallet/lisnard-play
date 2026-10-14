@@ -5,7 +5,7 @@ import { writeFile } from 'node:fs/promises';
 
 import { createDb } from '@lisnard/db/client';
 import { runMigrations } from '@lisnard/db/migrate';
-import { upsertSources } from '@lisnard/db/write';
+import { purgeStaleSubscriptions, upsertSources } from '@lisnard/db/write';
 
 import { createSystemOneClassifier } from './classifier/systemone';
 import { recheckLive, recheckSoon, runBackfill, runCollection } from './collect';
@@ -13,6 +13,7 @@ import {
   CADENCE_MS,
   HEARTBEAT_FILE,
   LEADER_LOCK_KEY,
+  parseNotify,
   parseWebSub,
   requireEnv,
   SUMMARY_DAILY_BUDGET_USD,
@@ -20,6 +21,7 @@ import {
 } from './config';
 import { log } from './log';
 import { resolvePendingMedia } from './media/task';
+import { notifyPending } from './notifications/task';
 import { classifyPending } from './publish';
 import { Scheduler, type Task, tryAcquireLeaderLock } from './scheduler';
 import type { SourceContext } from './sources/types';
@@ -33,6 +35,8 @@ import { subscribeAll } from './websub/subscribe';
 const databaseUrl = requireEnv('DATABASE_URL');
 // Lu avant le verrou : une configuration WebSub invalide arrête le worker tout de suite.
 const websub = parseWebSub(process.env);
+const notify = parseNotify(process.env);
+if (!notify.vapid) log.warn('notifications web désactivées : VAPID_PUBLIC_KEY absente');
 const db = createDb(databaseUrl);
 
 // Verrou d'abord : pendant un déploiement progressif, une seule instance migre. L'instance
@@ -109,6 +113,18 @@ const tasks: Task[] = [
     run: () => resolvePendingMedia(db),
   },
   {
+    // Après classify et media : une publication de ce tour est notifiée aussitôt.
+    name: 'notify',
+    everyMs: TICK_MS,
+    run: () => notifyPending(db, notify),
+    quiet: (r) => (r as { events: number }).events === 0,
+  },
+  {
+    name: 'notify:purge',
+    everyMs: CADENCE_MS.purgeSubscriptions,
+    run: async () => ({ purged: await purgeStaleSubscriptions(db) }),
+  },
+  {
     name: 'summarize',
     everyMs: CADENCE_MS.summarize,
     run: () => summarizePending(db, summarizer, { dailyBudget: SUMMARY_DAILY_BUDGET_USD }),
@@ -125,6 +141,11 @@ if (websub) {
   const enqueue = serialQueue(async (n: Parameters<typeof handleNotification>[1]) => {
     const stats = await handleNotification({ db, ctx, classifier, sources: SOURCES }, n);
     log.info('websub : notification traitée', { ...stats });
+    // Un direct détecté par la voie rapide est notifié sans attendre la boucle.
+    if (stats.kept > 0) {
+      const sent = await notifyPending(db, notify);
+      if (sent.events > 0) log.info('notifications envoyées', { ...sent });
+    }
   });
   const isTracked = (channelId: string) =>
     SOURCES.some((s) => s.kind === 'youtube' && s.active && s.channelId === channelId);

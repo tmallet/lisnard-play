@@ -126,6 +126,7 @@ const server = Bun.spawn(['bun', 'server.ts'], {
     DATABASE_URL: url,
     NODE_ENV: 'production',
     ALLOW_INDEXING: '',
+    VAPID_PUBLIC_KEY: 'BSmokeVapidKey',
   },
   stdout: 'ignore',
   stderr: 'inherit',
@@ -207,6 +208,67 @@ try {
     'interventions.byId : résumé exposé, sans donnée interne',
     byId.result?.data?.summary?.text === 'Résumé de test.' &&
       !JSON.stringify(byId.result?.data?.summary).includes('smoke'),
+  );
+
+  // Notifications (spec push-notifications, ADR 0024).
+  const sw = await fetch(`${BASE}/sw.js`);
+  check(
+    '/sw.js : service worker servi en JavaScript',
+    sw.status === 200 && (sw.headers.get('content-type') ?? '').includes('javascript'),
+  );
+  const manifest = await fetch(`${BASE}/manifest`);
+  const manifestJson = (await manifest.json().catch(() => ({}))) as {
+    name?: string;
+    display?: string;
+  };
+  const { APP_NAME } = await import('../apps/app/src/config/app');
+  check(
+    '/manifest : manifeste web (nom, affichage autonome)',
+    manifest.status === 200 &&
+      manifestJson.name === APP_NAME &&
+      manifestJson.display === 'standalone',
+  );
+  check(
+    'pages : lien vers le manifeste',
+    (await (await fetch(`${BASE}/`)).text()).includes('rel="manifest"'),
+  );
+  const notifications = await fetch(`${BASE}/notifications`);
+  check('/notifications : HTTP 200', notifications.status === 200);
+  checkPage(
+    '/notifications',
+    await notifications.text(),
+    pageTitle('Notifications'),
+    INDEPENDENCE_NOTICE,
+  );
+  const config = (await (await fetch(`${BASE}/api/trpc/notifications.config`)).json()) as {
+    result?: { data?: { vapidPublicKey?: string } };
+  };
+  check(
+    'notifications.config : clé publique VAPID servie',
+    config.result?.data?.vapidPublicKey === 'BSmokeVapidKey',
+  );
+  const subscribe = (body: unknown) =>
+    fetch(`${BASE}/api/trpc/notifications.subscribe`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  const keys = { p256dh: 'B'.repeat(87), auth: 'a'.repeat(22) };
+  check(
+    'notifications.subscribe : adresse hors liste blanche refusée (400)',
+    (await subscribe({ kind: 'web', endpoint: 'https://exemple.com/push', keys })).status === 400,
+  );
+  const endpoint = 'https://fcm.googleapis.com/fcm/send/smoke';
+  check(
+    'notifications.subscribe puis unsubscribe : abonnement enregistré et supprimé',
+    (await subscribe({ kind: 'web', endpoint, keys })).status === 200 &&
+      (
+        await fetch(`${BASE}/api/trpc/notifications.unsubscribe`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ endpoint }),
+        })
+      ).status === 200,
   );
 
   const malformed = await fetch(`${BASE}/%E0%A4%A`);

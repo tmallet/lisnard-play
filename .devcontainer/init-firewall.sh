@@ -33,6 +33,11 @@ ALLOWED_DOMAINS=(
   "www.dailymotion.com"
   # Hub WebSub de YouTube : abonnements aux notifications push (ADR 0023)
   "pubsubhubbub.appspot.com"
+  # Notifications (ADR 0024) : Expo Push et services Web Push des navigateurs
+  "exp.host"
+  "fcm.googleapis.com"
+  "updates.push.services.mozilla.com"
+  "web.push.apple.com"
   # Expo (CLI, manifestes, tunnel exclu)
   "api.expo.dev"
   "exp.host"

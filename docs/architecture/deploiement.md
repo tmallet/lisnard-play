@@ -53,6 +53,10 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | `YOUTUBE_API_KEY` | — | ✅ | API YouTube Data v3, restreinte à cette API (environ 6 000 unités par jour sur 10 000) |
 | `WEBSUB_CALLBACK_URL` | — | facultatif | Adresse publique de rappel WebSub, en HTTPS (ex. `https://hooks.lisnardplay.thimal.fr/websub/youtube`). Avec `WEBSUB_SECRET`, active la détection des directs en quelques secondes (ADR 0023) |
 | `WEBSUB_SECRET` | — | facultatif | Secret partagé avec le hub (32 à 199 caractères, `openssl rand -hex 32`), en secret. Définir les deux variables ou aucune : sinon le worker s'arrête au démarrage |
+| `VAPID_PUBLIC_KEY` | ✅ | ✅ | Clé publique des notifications web (ADR 0024). Même valeur dans les deux services. Absente de l'app : l'écran indique que les notifications sont indisponibles |
+| `VAPID_PRIVATE_KEY` | — | ✅ | Clé privée associée, en secret. **Ne jamais la changer** : tous les abonnements web deviendraient invalides. Définir les deux clés ou aucune, sinon le worker s'arrête au démarrage |
+| `VAPID_SUBJECT` | — | facultatif | Contact transmis aux services push (`mailto:lisnardplay@tmallet.fr` par défaut) |
+| `EXPO_ACCESS_TOKEN` | — | facultatif | Jeton d'accès Expo Push, quand les notifications mobiles seront activées |
 | `WEBSUB_PORT` | — | 8080 par défaut | Port du serveur WebSub, exposé au proxy Coolify |
 | `ALLOW_INDEXING` | absente | — | Indexation par les moteurs de recherche. **Absente ou autre que `true` : bloquée** (en-tête `X-Robots-Tag: noindex, nofollow` et `robots.txt` qui interdit tout). Ne la passer à `true` qu'au lancement public, puis redémarrer le service : aucune reconstruction n'est nécessaire |
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
@@ -140,6 +144,18 @@ dépense sur la clé OpenRouter.
      revérifié ;
    - retour arrière : retirer les deux variables. Les abonnements expirent d'eux-mêmes
      au bout de 5 jours.
+
+9. **Notifications web** (ADR 0024) :
+   - générer une fois la paire de clés en local avec `bunx web-push generate-vapid-keys`,
+     et la sauvegarder (gestionnaire de mots de passe) : la perdre ou la changer oblige
+     chaque appareil à se réabonner ;
+   - worker : `VAPID_PUBLIC_KEY` et `VAPID_PRIVATE_KEY` (en secret) ;
+   - app : `VAPID_PUBLIC_KEY` seulement ;
+   - redéployer les deux services, ouvrir `https://<domaine>/notifications` dans
+     Chrome ou Firefox, activer les notifications ;
+   - au prochain direct ou à la prochaine intervention publiée (si l'option est
+     cochée), les logs du worker montrent `tâche terminée` pour `notify` avec
+     `events` et `sent`. La tâche n'écrit rien quand il n'y a rien à envoyer.
 
 Sur une base neuve, ni `recompute` ni `media --refresh` ne sont nécessaires :
 chaque contenu est traité directement avec les règles en vigueur.

@@ -50,6 +50,13 @@
       "when": 1791979896552,
       "tag": "0006_summary_spend",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792008828739,
+      "tag": "0007_push_notifications",
+      "breakpoints": true
     }
   ]
 }

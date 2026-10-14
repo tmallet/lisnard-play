@@ -8,6 +8,7 @@ import {
   integer,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uuid,
@@ -200,6 +201,52 @@ export const classification = pgTable(
   },
   (t) => [index('classification_item_created_idx').on(t.itemId, t.createdAt)],
 );
+
+/** Service d'envoi d'un abonnement aux notifications (ADR 0024). */
+export const pushKind = pgEnum('push_kind', ['web', 'expo']);
+
+/** Types de notification (spec push-notifications). */
+export const notificationKind = pgEnum('notification_kind', ['live', 'reminder', 'new_item']);
+
+/** Clés de chiffrement d'un abonnement Web Push (RFC 8291). */
+export interface WebPushKeys {
+  p256dh: string;
+  auth: string;
+}
+
+/**
+ * Abonnement d'un appareil aux notifications (ADR 0024). Seule table que l'API écrit,
+ * par `@lisnard/db/subscriptions`. `endpoint` : adresse Web Push ou jeton Expo.
+ */
+export const pushSubscription = pgTable('push_subscription', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  kind: pushKind('kind').notNull(),
+  endpoint: text('endpoint').notNull().unique(),
+  keys: jsonb<WebPushKeys>('keys'),
+  live: boolean('live').notNull().default(true),
+  reminder: boolean('reminder').notNull().default(true),
+  newItem: boolean('new_item').notNull().default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  /** Dernière confirmation par l'appareil : purge après 13 mois sans confirmation. */
+  confirmedAt: timestamp('confirmed_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** Journal des envois : un événement par intervention et par type, au plus (design D5). */
+export const notificationSent = pgTable(
+  'notification_sent',
+  {
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => item.id, { onDelete: 'cascade' }),
+    kind: notificationKind('kind').notNull(),
+    recipients: integer('recipients').notNull().default(0),
+    sentAt: timestamp('sent_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.itemId, t.kind] })],
+);
+
+export type PushSubscription = typeof pushSubscription.$inferSelect;
+export type NotificationKind = (typeof notificationKind.enumValues)[number];
 
 export type Source = typeof source.$inferSelect;
 export type Item = typeof item.$inferSelect;

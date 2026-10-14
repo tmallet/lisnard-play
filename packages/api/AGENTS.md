@@ -10,7 +10,7 @@ Le client n'importe que le **type** `AppRouter`.
 | `src/trpc.ts` | `initTRPC` : `router`, `publicProcedure`, `createCallerFactory`, `errorFormatter` |
 | `src/context.ts` | `createContext({ req?, version, isDev, db? })` : `db` est la connexion en lecture (absente si `DATABASE_URL` n'est pas défini) |
 | `src/root.ts` | `appRouter` (assemblage des procédures), `AppRouter`, `createCaller` |
-| `src/routers/*.ts` | Une procédure ou un sous-routeur par domaine : `health`, `interventions` (`list`, `byId`) |
+| `src/routers/*.ts` | Une procédure ou un sous-routeur par domaine : `health`, `interventions` (`list`, `byId`), `notifications` (`config`, `subscribe`, `update`, `unsubscribe`) |
 | `src/index.ts` | API publique du package |
 
 ## Conventions
@@ -24,8 +24,13 @@ Le client n'importe que le **type** `AppRouter`.
 - Pas de dépendance à Expo ni à React : le package doit rester exécutable par
   Bun seul.
 - **Base de données en lecture seule** : n'importer que `@lisnard/db/read`
-  (ADR 0017). Seuls les tests importent `@lisnard/db/write`, pour préparer leurs
-  données. Ne jamais renvoyer de donnée interne (probabilités, seuils, journal).
+  (ADR 0017), et `@lisnard/db/subscriptions` pour les seuls abonnements aux
+  notifications (ADR 0024). Seuls les tests importent `@lisnard/db/write`, pour
+  préparer leurs données ; un test l'impose (`notifications.test.ts`). Ne jamais
+  renvoyer de donnée interne (probabilités, seuils, journal).
+- **Abonnements** : l'appareil prouve qu'il détient l'abonnement en fournissant
+  son `endpoint`. Une adresse Web Push hors de la liste blanche
+  (`isPushServiceUrl`) est refusée : le worker ne doit jamais appeler d'autre hôte.
 - Pas de secret dans ce package tant qu'il est servi par l'app. Les secrets
   d'ingestion restent dans le worker (ADR 0011).
 

@@ -1,4 +1,5 @@
 /** Configuration du worker (ADR 0015) : variables d'environnement et constantes. */
+import type { VapidConfig } from './notifications/send';
 import type { WebSubConfig } from './websub/subscribe';
 
 /** Début de l'historique : 31 mars 2026 00:00, heure de Paris (ADR 0016). */
@@ -14,6 +15,8 @@ export const CADENCE_MS = {
   summarize: 2 * 60_000,
   /** Renouvellement des abonnements WebSub (bail de 5 jours, ADR 0023). */
   subscribe: 24 * 60 * 60_000,
+  /** Purge des abonnements aux notifications sans confirmation depuis 13 mois. */
+  purgeSubscriptions: 24 * 60 * 60_000,
 } as const;
 
 /**
@@ -52,6 +55,28 @@ export function parseWebSub(env: Record<string, string | undefined>): WebSubConf
   const port = Number(env.WEBSUB_PORT ?? 8080);
   if (!Number.isInteger(port) || port <= 0) throw new Error('WEBSUB_PORT invalide');
   return { callbackUrl, secret, port };
+}
+
+/**
+ * Notifications (ADR 0024) : Web Push désactivé sans clés VAPID ; une configuration
+ * incomplète arrête le worker au démarrage. Le jeton Expo est facultatif.
+ */
+export function parseNotify(env: Record<string, string | undefined>): {
+  vapid: VapidConfig | null;
+  expoAccessToken?: string;
+} {
+  const publicKey = env.VAPID_PUBLIC_KEY?.trim() ?? '';
+  const privateKey = env.VAPID_PRIVATE_KEY?.trim() ?? '';
+  const subject = env.VAPID_SUBJECT?.trim() || 'mailto:lisnardplay@tmallet.fr';
+  const expoAccessToken = env.EXPO_ACCESS_TOKEN?.trim() || undefined;
+  if (!publicKey && !privateKey) return { vapid: null, expoAccessToken };
+  if (!publicKey || !privateKey)
+    throw new Error(
+      'VAPID_PUBLIC_KEY et VAPID_PRIVATE_KEY vont ensemble : définir les deux ou aucune',
+    );
+  if (!/^(mailto:|https:\/\/)/.test(subject))
+    throw new Error('VAPID_SUBJECT doit commencer par mailto: ou https://');
+  return { vapid: { publicKey, privateKey, subject }, expoAccessToken };
 }
 
 /** Intervalle de la boucle de planification. */

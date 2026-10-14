@@ -9,6 +9,8 @@ export interface CreateContextOptions {
   isDev: boolean;
   /** Base de données en lecture (ADR 0017) ; absente si DATABASE_URL n'est pas configuré. */
   db?: Db | null;
+  /** Clé publique VAPID des notifications web (ADR 0024) ; absente : web désactivé. */
+  vapidPublicKey?: string | null;
 }
 
 export type Context = CreateContextOptions;

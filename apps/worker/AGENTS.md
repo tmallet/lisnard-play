@@ -21,6 +21,7 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 | `src/media/` | `safe-fetch.ts` (anti-SSRF, POST, lecture limitée à l'en-tête), `resolve.ts` (oEmbed, Open Graph), `google-news.ts` (décodage vers l'éditeur), `task.ts` (rendus, `refreshMedia`) |
 | `src/summaries/` | `prompt.ts` (consigne, `PROMPT_VERSION`, `SUMMARY_MODEL`), `openrouter.ts` (client Gemini, validation), `task.ts` (sélection, budget, échecs). Voir `docs/architecture/resumes.md` |
 | `src/websub/` | `server.ts` (vérification du hub, signature HMAC, corps borné, file sérielle), `subscribe.ts` (abonnements), `handle.ts` (voie rapide : enregistrement, classement, rendu) |
+| `src/notifications/` | `send.ts` (messages, Web Push chiffré par `web-push`, Expo Push), `task.ts` (`notifyPending` : réservation puis envoi, abonnements expirés supprimés) |
 | `src/calibrate.ts`, `eval/reference.jsonl` | Calibration sur le jeu de référence validé |
 | `src/cli.ts` | `backfill`, `calibrate`, `recompute`, `reclassify` |
 
@@ -40,6 +41,9 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 - **WebSub** : ne rien lire d'une notification avant d'avoir vérifié sa signature, et
   n'en tirer que des identifiants de vidéo et de chaîne : les données viennent ensuite
   de l'API YouTube. Une chaîne non suivie n'a aucun effet (ADR 0023).
+- **Notifications** : réserver l'événement (`claimNotification`) avant d'envoyer,
+  jamais l'inverse : une panne perd une notification plutôt que de la doubler.
+  `VAPID_PRIVATE_KEY` et `EXPO_ACCESS_TOKEN` n'existent que dans ce service.
 - **Ajouter une source** : skill `add-intervention-source`.
 - **Logs** : `log.info|warn|error` (JSON par ligne), jamais de secret dans les
   données journalisées. Une tâche fréquente qui n'a souvent rien à faire déclare
