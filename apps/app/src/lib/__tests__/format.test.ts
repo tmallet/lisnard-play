@@ -1,4 +1,12 @@
-import { kindLabelFor, largeThumbnail, liveSince, repeatsTitle, whenLabel } from '../format';
+import {
+  kindLabelFor,
+  largeThumbnail,
+  liveSince,
+  playerUrl,
+  providerLabel,
+  repeatsTitle,
+  whenLabel,
+} from '../format';
 
 const title =
   '“Revoir l’excuse de minorité”: David Lisnard, candidat “Nouvelle Énergie” à la présidentielle';
@@ -55,5 +63,20 @@ describe('libellés de direct', () => {
     expect(kindLabelFor('past', 'tv')).toBe('Télévision');
     expect(whenLabel('live', start, at(12))).toBe('Commencé il y a 12 min');
     expect(whenLabel('past', start)).toBe('14 octobre 2026');
+  });
+});
+
+describe('lecteur après consentement', () => {
+  it('YouTube en mode de confidentialité renforcée, lecture automatique', () => {
+    expect(playerUrl('https://www.youtube.com/embed/abc?feature=oembed')).toBe(
+      'https://www.youtube-nocookie.com/embed/abc?feature=oembed&autoplay=1',
+    );
+  });
+
+  it('autres fournisseurs : hôte inchangé', () => {
+    expect(playerUrl('https://geo.dailymotion.com/player.html?video=x1')).toBe(
+      'https://geo.dailymotion.com/player.html?video=x1&autoplay=1',
+    );
+    expect(providerLabel('youtube')).toBe('YouTube');
   });
 });

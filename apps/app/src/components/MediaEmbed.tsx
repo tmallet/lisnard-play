@@ -37,7 +37,8 @@ referrerpolicy="strict-origin-when-cross-origin"></iframe></body></html>`;
         originWhitelist={['*']}
         allowsInlineMediaPlayback
         allowsFullscreenVideo
-        mediaPlaybackRequiresUserAction
+        // Le clic de consentement (PlayerConsent) tient lieu d'action de lecture (ADR 0022).
+        mediaPlaybackRequiresUserAction={false}
         style={{ backgroundColor: colors.bleuSombre }}
         onShouldStartLoadWithRequest={(request) => {
           if (allowsInWebView(request, embedUrl)) return true;

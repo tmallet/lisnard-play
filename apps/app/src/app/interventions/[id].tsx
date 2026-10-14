@@ -5,8 +5,8 @@ import { Linking, Platform, Pressable, Text, View } from 'react-native';
 
 import { LinkCard } from '@/components/LinkCard';
 import { LiveBadge } from '@/components/LiveBadge';
-import { MediaEmbed } from '@/components/MediaEmbed';
 import { PageHead } from '@/components/PageHead';
+import { PlayerConsent } from '@/components/PlayerConsent';
 import { Screen } from '@/components/Screen';
 import { SummaryBlock } from '@/components/SummaryBlock';
 import { WebChrome } from '@/components/WebChrome';
@@ -89,7 +89,12 @@ export default function InterventionDetail() {
               {whenLabel(data.status, data.date, now)}
             </Text>
             {data.media.kind === 'embed' ? (
-              <MediaEmbed embedUrl={data.media.embedUrl} title={data.title} />
+              <PlayerConsent
+                embedUrl={data.media.embedUrl}
+                provider={data.media.provider}
+                title={data.title}
+                posterUrl={data.thumbnailUrl}
+              />
             ) : (
               <LinkCard
                 // URL de l'éditeur pour un article relayé par Google News (ADR 0021).

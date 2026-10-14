@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { Text } from 'react-native';
 
+import { LegalLink } from '@/components/LegalLink';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
 import { Title } from '@/components/Title';
@@ -21,6 +22,7 @@ export default function About() {
       <Link href={CONTACT.url} className="font-sans-semibold text-base text-chamois underline">
         {CONTACT.label}
       </Link>
+      <LegalLink />
     </Screen>
   );
 }

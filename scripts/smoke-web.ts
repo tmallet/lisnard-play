@@ -143,6 +143,22 @@ try {
     INDEPENDENCE_NOTICE,
   );
 
+  // Mentions légales (spec app-shell, ADR 0022) : page pré-rendue, liée depuis le pied de page.
+  const { LEGAL } = await import('../apps/app/src/config/legal');
+  const legal = await (await fetch(`${BASE}/mentions-legales`)).text();
+  checkPage(
+    '/mentions-legales',
+    legal,
+    pageTitle('Mentions légales et confidentialité'),
+    INDEPENDENCE_NOTICE,
+  );
+  check('/mentions-legales : adresse de contact', legal.includes(LEGAL.contactEmail));
+  check('/mentions-legales : hébergeur', legal.includes(LEGAL.host.name));
+  check(
+    'pied de page : lien vers les mentions légales',
+    (await (await fetch(`${BASE}/`)).text()).includes('href="/mentions-legales"'),
+  );
+
   const detail = await fetch(`${BASE}/interventions/${id}`);
   check('/interventions/<id> : HTTP 200 (URL partageable)', detail.status === 200);
   checkPage('/interventions/<id>', await detail.text(), null, INDEPENDENCE_NOTICE);

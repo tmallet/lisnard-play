@@ -22,6 +22,12 @@ interne.
 | `worker` | `apps/worker/Dockerfile`, contexte = racine du dépôt | prend le verrou de leader (une instance en attente continue de battre), applique les migrations, puis lance la boucle | fichier de pulsation de moins de 5 min (`HEALTHCHECK` de l'image), écrit avant chaque tâche |
 | `app` | `apps/app/Dockerfile`, contexte = racine du dépôt | `bun server.ts` (export Expo servi par l'adaptateur Bun) | `GET /api/trpc/health` (`HEALTHCHECK` de l'image) |
 
+**Journaux et confidentialité** : les mentions légales annoncent des journaux
+techniques (adresses IP) conservés au plus 30 jours. Garder les journaux d'accès du
+proxy Coolify désactivés (réglage par défaut), ou limiter leur rétention à 30 jours.
+Le serveur de l'app ne journalise pas les requêtes. Changer d'hébergeur impose de
+mettre à jour `apps/app/src/config/legal.ts`.
+
 **Réseau du worker** : il lit des URL venues de contenus externes (articles,
 Open Graph). La lecture sécurisée refuse les adresses privées, mais Bun ne permet
 pas d'imposer à `fetch` l'adresse vérifiée : un domaine dont le DNS change entre
