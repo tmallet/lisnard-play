@@ -33,17 +33,17 @@ async function run(cmd: string[]) {
   if ((await proc.exited) !== 0) throw new Error(`Échec : ${cmd.join(' ')}`);
 }
 
-async function waitForServer(timeoutMs = 30_000) {
+async function waitForServer(base = BASE, timeoutMs = 30_000) {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
     try {
-      await fetch(`${BASE}/api/trpc/health`);
+      await fetch(`${base}/api/trpc/health`);
       return;
     } catch {
       await Bun.sleep(300);
     }
   }
-  throw new Error(`Le serveur ne répond pas sur ${BASE}`);
+  throw new Error(`Le serveur ne répond pas sur ${base}`);
 }
 
 function checkPage(path: string, html: string, expectedTitle: string | null, notice: string) {
@@ -120,7 +120,13 @@ await recordSummary(db, id, {
 
 const server = Bun.spawn(['bun', 'server.ts'], {
   cwd: APP_DIR,
-  env: { ...process.env, PORT: String(PORT), DATABASE_URL: url, NODE_ENV: 'production' },
+  env: {
+    ...process.env,
+    PORT: String(PORT),
+    DATABASE_URL: url,
+    NODE_ENV: 'production',
+    ALLOW_INDEXING: '',
+  },
   stdout: 'ignore',
   stderr: 'inherit',
 });
@@ -194,6 +200,39 @@ try {
     trpcUrl('interventions.byId', { id: '00000000-0000-0000-0000-000000000000' }),
   );
   check('interventions.byId inconnu : HTTP 404', missing.status === 404);
+
+  // Indexation bloquée par défaut (spec app-shell) : pages, fichiers, API et robots.txt.
+  const noindex = (res: Response) => res.headers.get('x-robots-tag') === 'noindex, nofollow';
+  check('indexation bloquée : en-tête sur une page', noindex(await fetch(`${BASE}/`)));
+  check('indexation bloquée : en-tête sur un fichier', noindex(await fetch(`${BASE}/favicon.ico`)));
+  check('indexation bloquée : en-tête sur l’API', noindex(await fetch(`${BASE}/api/trpc/health`)));
+  const robots = await (await fetch(`${BASE}/robots.txt`)).text();
+  check('indexation bloquée : robots.txt interdit tout', robots.includes('Disallow: /'));
+
+  // ALLOW_INDEXING=true : ni en-tête ni interdiction, sans reconstruction.
+  const openBase = `http://localhost:${PORT + 1}`;
+  const open = Bun.spawn(['bun', 'server.ts'], {
+    cwd: APP_DIR,
+    env: {
+      ...process.env,
+      PORT: String(PORT + 1),
+      DATABASE_URL: url,
+      NODE_ENV: 'production',
+      ALLOW_INDEXING: 'true',
+    },
+    stdout: 'ignore',
+    stderr: 'inherit',
+  });
+  try {
+    await waitForServer(openBase);
+    const page = await fetch(`${openBase}/`);
+    check('indexation activée : pas d’en-tête X-Robots-Tag', !page.headers.has('x-robots-tag'));
+    const allowed = await (await fetch(`${openBase}/robots.txt`)).text();
+    check('indexation activée : robots.txt autorise', !allowed.includes('Disallow'));
+  } finally {
+    open.kill();
+    await open.exited;
+  }
 } finally {
   server.kill();
   await server.exited;

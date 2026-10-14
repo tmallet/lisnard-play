@@ -45,6 +45,7 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | `OPENROUTER_API_KEY` | — | ✅ | Classifieur Jev (ADR 0004) et résumés Gemini (ADR 0021). Clé dédiée, avec une limite de dépense |
 | `SUMMARY_DAILY_BUDGET_USD` | — | facultatif | Plafond quotidien des résumés (1 $ par défaut). Nombre avec un point (`1.5`) : une valeur illisible arrête le worker au démarrage |
 | `YOUTUBE_API_KEY` | — | ✅ | API YouTube Data v3, restreinte à cette API (environ 6 000 unités par jour sur 10 000) |
+| `ALLOW_INDEXING` | absente | — | Indexation par les moteurs de recherche. **Absente ou autre que `true` : bloquée** (en-tête `X-Robots-Tag: noindex, nofollow` et `robots.txt` qui interdit tout). Ne la passer à `true` qu'au lancement public, puis redémarrer le service : aucune reconstruction n'est nécessaire |
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
 | `NODE_ENV` | `production` (image) | `production` (image) | Masque les détails d'erreur de l'API |
 | `MIGRATIONS_DIR`, `HEARTBEAT_FILE` | — | fixés par l'image | Ne pas modifier |
