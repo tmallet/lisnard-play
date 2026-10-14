@@ -7,6 +7,8 @@ import { ScrollEndProvider } from '../ScrollEnd';
 
 // L'invitation aux notifications a ses propres tests (usePushAvailability).
 jest.mock('../NotifyInvite', () => ({ NotifyInvite: () => null }));
+// L'invitation à adhérer est testée à part (JoinCta.test.tsx).
+jest.mock('../JoinCta', () => ({ JoinCta: () => null }));
 jest.mock('expo-router', () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));

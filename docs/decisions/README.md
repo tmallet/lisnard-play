@@ -36,3 +36,4 @@ Règles :
 | [0022](0022-consentement-lecteurs-tiers.md) | Lecteurs tiers chargés au clic, YouTube sans cookie, éditeur anonyme | accepted | juridique, media, ui, confidentialite |
 | [0023](0023-websub-worker-expose.md) | Détection des directs par WebSub, avec un point d'entrée public du worker | accepted | ingestion, architecture, securite, deploiement |
 | [0024](0024-notifications-push.md) | Notifications par Web Push et Expo Push, abonnements écrits par l'API | accepted | notifications, architecture, securite, confidentialite |
+| [0025](0025-invitation-adhesion.md) | Invitation à adhérer à Nouvelle Énergie par le lien de parrainage de l'éditeur | accepted | produit, ui, independance, juridique |

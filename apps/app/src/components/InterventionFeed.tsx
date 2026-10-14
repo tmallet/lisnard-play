@@ -6,6 +6,7 @@ import { useTRPC } from '@/lib/trpc';
 
 import { CardGrid } from './CardGrid';
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
+import { JoinCta } from './JoinCta';
 import { NotifyInvite } from './NotifyInvite';
 import { useOnEndReached } from './ScrollEnd';
 import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
@@ -115,6 +116,8 @@ export function InterventionFeed() {
             !theme && <NotifyInvite />
           )}
           {upcomingItems.length > 0 && <Section title="À venir" items={upcomingItems} />}
+          {/* Avant les passées : plus bas, le chargement continu le rendrait inaccessible. */}
+          <JoinCta />
           <View className="gap-3">
             <SectionTitle>Passées</SectionTitle>
             {pastItems.length === 0 ? (

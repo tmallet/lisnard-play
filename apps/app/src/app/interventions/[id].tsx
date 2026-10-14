@@ -3,6 +3,7 @@ import { TRPCClientError } from '@trpc/client';
 import { Link, Stack, useLocalSearchParams } from 'expo-router';
 import { Linking, Platform, Pressable, Text, View } from 'react-native';
 
+import { JoinCta } from '@/components/JoinCta';
 import { LinkCard } from '@/components/LinkCard';
 import { LiveBadge } from '@/components/LiveBadge';
 import { PageHead } from '@/components/PageHead';
@@ -118,6 +119,7 @@ export default function InterventionDetail() {
                 </Text>
               </Pressable>
             ) : null}
+            <JoinCta />
           </View>
         )}
       </Screen>

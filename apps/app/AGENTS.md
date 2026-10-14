@@ -39,6 +39,7 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 | `src/lib/trpc.tsx` | `ApiProvider`, `useTRPC` |
 | `src/lib/push(.web).ts`, `push-types.ts`, `useNotifications.ts` | Notifications (ADR 0024) : Web Push (service worker `public/sw.js`, clé VAPID servie par `notifications.config`) ou `expo-notifications` (masqué sans projet EAS) ; état de l'écran `/notifications` |
 | `src/components/NotifyInvite.tsx`, `NotificationsEntry(.web).tsx`, `src/lib/usePushAvailability.ts` | Entrées vers `/notifications` : invitation sur l'accueil sans direct, lien mobile ; la cloche web est dans `WebChrome.web.tsx`. Affichées seulement si l'appareil peut s'abonner |
+| `src/config/join.ts`, `src/components/JoinCta.tsx` | Invitation à adhérer (ADR 0025) : lien de parrainage de l'éditeur, signalé sous le bouton ; accueil et détail |
 | `src/components/PushLifecycle(.web).tsx` | Reconfirme l'abonnement au démarrage ; sur mobile, ouvre l'intervention touchée dans une notification |
 | `src/app/manifest+api.ts`, `public/` | Manifeste web (installation sur l'écran d'accueil, condition des notifications sur iPhone), icônes, service worker |
 | `src/global.css` | Tailwind + Uniwind + tokens de la charte |
