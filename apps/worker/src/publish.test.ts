@@ -19,7 +19,7 @@ const ANSWERS: Record<string, ClassifierAnswers> = {
     intervient: 0.95,
     role: { choice: 'national', confidence: 1, probabilities: { national: 1 } },
     kind: { choice: 'tv', confidence: 1, probabilities: { tv: 1 } },
-    themes: { economie: 0.92, securite: 0.81, campagne: 0.1, immigration: 0.02 },
+    themes: { economy: 0.92, security: 0.81, campaign: 0.1, immigration: 0.02 },
   },
   amf: {
     intervient: 0.9,
@@ -66,7 +66,7 @@ describe('règle de publication', () => {
       outcome: 'published',
       role: 'national',
       kind: 'tv',
-      themes: ['economie', 'securite'],
+      themes: ['economy', 'security'],
     });
     expect(decide(ANSWERS.amf as ClassifierAnswers, t).outcome).toBe('rejected');
     expect(decide(ANSWERS.mairie as ClassifierAnswers, t).outcome).toBe('rejected');
@@ -83,7 +83,7 @@ describe('règle de publication', () => {
 
   test('thèmes : seuil du modèle, aucun thème sans empêcher la publication', () => {
     const national = ANSWERS.national as ClassifierAnswers;
-    expect(decide(national, { ...t, theme: 0.9 }).themes).toEqual(['economie']);
+    expect(decide(national, { ...t, theme: 0.9 }).themes).toEqual(['economy']);
     const sansTheme = decide({ ...national, themes: undefined }, t);
     expect(sansTheme).toMatchObject({ outcome: 'published', themes: [] });
   });
@@ -114,8 +114,8 @@ describe('client System One', () => {
             confidence: 0.99,
           },
           kind: { type: 'choice', choice: 'radio', probabilities: { radio: 1 }, confidence: 1 },
-          theme_economie: { type: 'noul', noul: 0.7 },
-          theme_securite: { type: 'noul', noul: 1.4 },
+          theme_economy: { type: 'noul', noul: 0.7 },
+          theme_security: { type: 'noul', noul: 1.4 },
         },
         usage: { cost: 0.00003 },
       });
@@ -138,17 +138,17 @@ describe('client System One', () => {
       'intervient',
       'role',
       'kind',
-      'theme_economie',
-      'theme_securite',
+      'theme_economy',
+      'theme_security',
       'theme_immigration',
       'theme_education',
       'theme_institutions',
       'theme_international',
-      'theme_campagne',
+      'theme_campaign',
     ]);
     expect(result.answers.role.choice).toBe('national');
     // Réponse de thème hors de [0, 1] ignorée, sans faire échouer la décision.
-    expect(result.answers.themes).toEqual({ economie: 0.7 });
+    expect(result.answers.themes).toEqual({ economy: 0.7 });
     expect(result.model).toBe('typesafe/jev-1.13-20260917');
   });
 
@@ -206,7 +206,7 @@ describe('classification en base', () => {
       status: 'published',
       role: 'national',
       kind: 'tv',
-      themes: ['economie', 'securite'],
+      themes: ['economy', 'security'],
     });
     expect(await statusOf(ids.amf)).toMatchObject({ status: 'rejected', role: 'amf' });
     expect((await statusOf(ids.mairie))?.status).toBe('rejected');
@@ -326,7 +326,7 @@ describe('classification en base', () => {
     await classifyPending(db, new FakeClassifier(), { sleep: noSleep });
     const result = await recompute(db, () => ({ intervient: 0.5, role: 0.6, theme: 0.9 }));
     expect(result.changed).toBe(1);
-    expect(await statusOf(id)).toMatchObject({ status: 'published', themes: ['economie'] });
+    expect(await statusOf(id)).toMatchObject({ status: 'published', themes: ['economy'] });
     expect((await recompute(db, () => ({ intervient: 0.5, role: 0.6, theme: 0.9 }))).changed).toBe(
       0,
     );

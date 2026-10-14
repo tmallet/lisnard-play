@@ -22,7 +22,7 @@ dans le périmètre de l'application, la campagne présidentielle (ADR 0004, 001
 | `intervient` | Noul (probabilité 0 à 1) | Le contenu rapporte-t-il une prise de parole de David Lisnard lui-même ? Les déclarations rapportées (« déclare », « affirme »…) comptent ; les analyses, portraits, sondages ou anecdotes ne comptent pas |
 | `role` | Choice | `national` (par défaut, y compris quand il parle des communes ou de la décentralisation dans son programme), `amf` (seulement s'il parle au nom des maires, en tant que président de l'AMF), `mairie` (uniquement si le sujet porte explicitement sur Cannes), `hors_sujet` |
 | `kind` | Choice | `tv`, `radio`, `presse`, `podcast`, `meeting`, `discours`, `stream`, `reseau_social` |
-| `theme_<id>` (×7) | Noul | David Lisnard aborde-t-il ce thème, même parmi d'autres ? Thèmes et définitions : spec `intervention-themes` (`economie`, `securite`, `immigration`, `education`, `institutions`, `international`, `campagne`) |
+| `theme_<id>` (×7) | Noul | David Lisnard aborde-t-il ce thème, même parmi d'autres ? Thèmes et définitions : spec `intervention-themes` (`economy`, `security`, `immigration`, `education`, `institutions`, `international`, `campaign`) |
 
 **État envoyé** : titre, description (2 000 caractères au plus), média, type de
 source, dates. Jev ne produit pas de texte : il ne fait que décider.

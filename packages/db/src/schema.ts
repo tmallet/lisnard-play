@@ -57,15 +57,19 @@ export const interventionKind = pgEnum('intervention_kind', [
  * avec les questions du classifieur ; stockée en `text[]` (design D3).
  */
 export const THEMES = [
-  'economie',
-  'securite',
+  'economy',
+  'security',
   'immigration',
   'education',
   'institutions',
   'international',
-  'campagne',
+  'campaign',
 ] as const;
 export type Theme = (typeof THEMES)[number];
+
+export function isTheme(value: string): value is Theme {
+  return (THEMES as readonly string[]).includes(value);
+}
 
 export const classificationOutcome = pgEnum('classification_outcome', ['published', 'rejected']);
 
@@ -132,10 +136,11 @@ export const item = pgTable(
   },
   (t) => [
     index('item_status_live_idx').on(t.status, t.liveStatus, t.startsAt),
-    index('item_status_role_date_idx').on(
+    // Sert le tri et le curseur du flux (listPublished) : statut, date d'affichage, id.
+    index('item_status_date_idx').on(
       t.status,
-      t.role,
       sql`coalesce(${t.startsAt}, ${t.publishedAt})`,
+      t.id,
     ),
     index('item_themes_idx').using('gin', t.themes),
   ],

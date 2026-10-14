@@ -3,7 +3,7 @@ id: "0013"
 title: Conventions de l'API (sérialisation, erreurs) et polices embarquées
 status: accepted
 date: 2026-10-13
-tags: [architecture, api, securite, charte]
+tags: [architecture, api, security, charte]
 supersedes: null
 superseded-by: null
 related-specs: [api-transport, app-shell]

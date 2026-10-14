@@ -37,7 +37,7 @@ test('carte en direct : thèmes (deux au plus, puis +N) et badge', async () => {
         ...base,
         status: 'live',
         kind: 'discours',
-        themes: ['economie', 'securite', 'campagne'],
+        themes: ['economy', 'security', 'campaign'],
       }}
     />,
   );

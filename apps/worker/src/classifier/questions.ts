@@ -25,16 +25,16 @@ export type Kind = (typeof KINDS)[number];
 
 /** Définition de chaque thème, reprise de la spec intervention-themes. */
 const THEME_DEFINITIONS: Record<Theme, string> = {
-  economie:
+  economy:
     "l'économie : fiscalité, impôts, dépenses et dette publiques, entreprises, emploi, travail, retraites, pouvoir d'achat",
-  securite: 'la sécurité : délinquance, criminalité, justice, police, prisons, ordre public',
+  security: 'la sécurité : délinquance, criminalité, justice, police, prisons, ordre public',
   immigration: "l'immigration : flux migratoires, asile, intégration, nationalité, frontières",
   education: "l'éducation : école, enseignants, jeunesse, enseignement supérieur, formation",
   institutions:
     "les institutions : fonctionnement de l'État, réforme institutionnelle, Constitution, décentralisation, libertés locales, vie démocratique, bureaucratie",
   international:
     "l'international : Union européenne, diplomatie, guerres et conflits, défense, armées, relations avec d'autres pays",
-  campagne:
+  campaign:
     "la vie de sa campagne elle-même : meeting, déplacement de campagne, soutiens et ralliements, organisation de Nouvelle Énergie, parrainages, stratégie électorale, sondages qu'il commente. Pas une prise de position sur un sujet de fond",
 };
 

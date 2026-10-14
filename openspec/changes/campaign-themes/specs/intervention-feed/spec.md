@@ -11,8 +11,8 @@ l'identifiant, le titre, le nom du média, le type, les thèmes (liste
 publication) et une image quand elle existe.
 
 #### Scenario: Filtre par thème
-- **WHEN** un client demande les interventions passées du thème `economie`
-- **THEN** seules les interventions publiées portant le thème `economie` et de statut `past` sont renvoyées, de la plus récente à la plus ancienne
+- **WHEN** un client demande les interventions passées du thème `economy`
+- **THEN** seules les interventions publiées portant le thème `economy` et de statut `past` sont renvoyées, de la plus récente à la plus ancienne
 
 #### Scenario: Taille de page invalide
 - **WHEN** un client demande une page de 500 éléments
@@ -43,9 +43,13 @@ lignes. La section « En direct » DOIT se signaler visuellement par la couleur
 - **WHEN** l'utilisateur fait défiler l'accueil jusqu'à la fin des interventions passées déjà chargées, et qu'il en reste d'autres
 - **THEN** la page suivante est chargée et ajoutée à la liste sans action supplémentaire
 
+#### Scenario: Page suivante en échec
+- **WHEN** le chargement de la page suivante des interventions passées échoue
+- **THEN** les interventions déjà affichées restent visibles et un bouton permet de réessayer
+
 #### Scenario: Filtrer par thème sur l'accueil
 - **WHEN** l'utilisateur choisit le filtre « Sécurité »
-- **THEN** les trois sections n'affichent que les interventions portant le thème `securite`, et le filtre choisi est signalé comme actif
+- **THEN** les trois sections n'affichent que les interventions portant le thème `security`, et le filtre choisi est signalé comme actif
 
 #### Scenario: Thème sans intervention
 - **WHEN** l'utilisateur choisit un thème qui ne compte aucune intervention
@@ -71,7 +75,7 @@ média (description, titre ou description Open Graph de la carte), NE DOIT PAS
 - **THEN** le titre n'apparaît qu'une fois, la description n'est pas affichée, et la carte n'affiche que le média et le lien vers la source
 
 #### Scenario: Thèmes affichés
-- **WHEN** l'utilisateur ouvre une intervention portant les thèmes `economie` et `institutions`
+- **WHEN** l'utilisateur ouvre une intervention portant les thèmes `economy` et `institutions`
 - **THEN** l'écran affiche les libellés « Économie » et « Institutions »
 
 #### Scenario: URL partagée

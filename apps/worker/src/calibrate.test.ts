@@ -50,10 +50,10 @@ describe('calibration', () => {
   });
 
   test('chaîne officielle : intervention présumée, comme à la publication', () => {
-    const official = { ...ref('o', true), official: true };
     const low = new Map([['o', answers(0.4, 'national', 0.9)]]);
-    expect(evaluate([official], low, { intervient: 0.75, role: 0.6 }).tp).toBe(1);
-    expect(evaluate([ref('o', true)], low, { intervient: 0.75, role: 0.6 }).fn).toBe(1);
+    const t = { intervient: 0.75, role: 0.6 };
+    expect(evaluate([ref('o', true)], low, t, new Set(['o'])).tp).toBe(1);
+    expect(evaluate([ref('o', true)], low, t).fn).toBe(1);
   });
 
   test('thèmes : précision et rappel par thème sur les cas étiquetés', () => {
@@ -61,24 +61,20 @@ describe('calibration', () => {
       ...ref(id, true),
       expected: { intervient: true, role: 'national', kind: 'tv', themes },
     });
-    const themed = [
-      withThemes('t1', ['economie']),
-      withThemes('t2', ['securite']),
-      ref('t3', true),
-    ];
+    const themed = [withThemes('t1', ['economy']), withThemes('t2', ['security']), ref('t3', true)];
     const probs = (themes: ClassifierAnswers['themes']) => ({
       ...answers(0.9, 'national', 0.9),
       themes,
     });
     const answersMap = new Map([
-      ['t1', probs({ economie: 0.8, securite: 0.6 })],
-      ['t2', probs({ securite: 0.3 })],
-      ['t3', probs({ economie: 0.9 })], // non étiqueté : ignoré
+      ['t1', probs({ economy: 0.8, security: 0.6 })],
+      ['t2', probs({ security: 0.3 })],
+      ['t3', probs({ economy: 0.9 })], // non étiqueté : ignoré
     ]);
     const { cases: n, scores } = themeScores(themed, answersMap, 0.5);
     expect(n).toBe(2);
     const by = Object.fromEntries(scores.map((s) => [s.theme, s]));
-    expect(by.economie).toMatchObject({ tp: 1, fp: 0, fn: 0 });
-    expect(by.securite).toMatchObject({ tp: 0, fp: 1, fn: 1, precision: 0, recall: 0 });
+    expect(by.economy).toMatchObject({ tp: 1, fp: 0, fn: 0 });
+    expect(by.security).toMatchObject({ tp: 0, fp: 1, fn: 1, precision: 0, recall: 0 });
   });
 });

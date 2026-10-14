@@ -48,13 +48,13 @@ export function kindLabel(kind: string | null): string {
 
 /** Libellés des thèmes, dans l'ordre de la spec ; le typage impose une liste complète. */
 export const THEME_LABELS: Record<Theme, string> = {
-  economie: 'Économie',
-  securite: 'Sécurité',
+  economy: 'Économie',
+  security: 'Sécurité',
   immigration: 'Immigration',
   education: 'Éducation',
   institutions: 'Institutions',
   international: 'International',
-  campagne: 'Vie de campagne',
+  campaign: 'Vie de campagne',
 };
 
 export const THEME_ORDER = Object.keys(THEME_LABELS) as Theme[];

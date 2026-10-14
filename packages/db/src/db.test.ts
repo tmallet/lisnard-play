@@ -201,15 +201,15 @@ describe('lecture publique', () => {
     const eco = await candidate('yt:eco');
     const both = await candidate('yt:both');
     const none = await candidate('yt:none');
-    await publish(eco.id, { themes: ['economie'] });
-    await publish(both.id, { themes: ['economie', 'securite'] });
+    await publish(eco.id, { themes: ['economy'] });
+    await publish(both.id, { themes: ['economy', 'security'] });
     await publish(none.id);
-    const securite = await listPublished(db, { status: 'past', theme: 'securite', limit: 50 });
-    expect(securite.items.map((i) => [i.id, i.themes])).toEqual([
-      [both.id, ['economie', 'securite']],
+    const security = await listPublished(db, { status: 'past', theme: 'security', limit: 50 });
+    expect(security.items.map((i) => [i.id, i.themes])).toEqual([
+      [both.id, ['economy', 'security']],
     ]);
-    const economie = await listPublished(db, { status: 'past', theme: 'economie', limit: 50 });
-    expect(economie.items.map((i) => i.id).sort()).toEqual([eco.id, both.id].sort());
+    const economy = await listPublished(db, { status: 'past', theme: 'economy', limit: 50 });
+    expect(economy.items.map((i) => i.id).sort()).toEqual([eco.id, both.id].sort());
     const all = await listPublished(db, { status: 'past', limit: 50 });
     expect(all.items.find((i) => i.id === none.id)?.themes).toEqual([]);
   });
