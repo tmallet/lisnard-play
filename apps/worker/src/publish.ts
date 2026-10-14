@@ -23,6 +23,9 @@ export interface ClassifyOptions {
   limit?: number;
   attempts?: number;
   sleep?: (ms: number) => Promise<void>;
+  /** Durée maximale d'un cycle de classification, en millisecondes. */
+  budgetMs?: number;
+  now?: () => number;
 }
 
 export interface ClassifyStats {
@@ -105,11 +108,22 @@ async function classifyOne(
 export async function classifyPending(
   db: Db,
   classifier: Classifier,
-  { limit = 50, attempts = 3, sleep = Bun.sleep }: ClassifyOptions = {},
+  {
+    limit = 50,
+    attempts = 3,
+    sleep = Bun.sleep,
+    budgetMs = 120_000,
+    now = Date.now,
+  }: ClassifyOptions = {},
 ): Promise<ClassifyStats> {
   const stats: ClassifyStats = { classified: 0, published: 0, rejected: 0, failed: 0, cost: 0 };
   const targets = await listClassificationTargets(db, limit, QUESTIONS_VERSION);
-  for (const target of targets) await classifyOne(db, classifier, target, stats, attempts, sleep);
+  // Durée bornée : un classifieur lent ne bloque pas la collecte (tâches en série).
+  const deadline = now() + budgetMs;
+  for (const target of targets) {
+    if (now() >= deadline) break;
+    await classifyOne(db, classifier, target, stats, attempts, sleep);
+  }
   return stats;
 }
 

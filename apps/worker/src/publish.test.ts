@@ -257,6 +257,36 @@ describe('classification en base', () => {
     expect((await statusOf(id))?.status).toBe('published');
   });
 
+  test('cycle borné dans le temps : on s’arrête après le budget, le reste attend', async () => {
+    for (const key of ['national', 'national-2', 'national-3']) await add(key);
+    let t = 0;
+    const classifier = new FakeClassifier();
+    const original = classifier.classify.bind(classifier);
+    classifier.classify = async (state) => {
+      t += 1_000;
+      return original(state);
+    };
+    const stats = await classifyPending(db, classifier, {
+      sleep: noSleep,
+      budgetMs: 1_500,
+      now: () => t,
+    });
+    expect(stats.classified).toBe(2);
+    expect((await db.select().from(item).where(eq(item.status, 'pending'))).length).toBe(1);
+  });
+
+  test('les contenus les plus récents passent en premier', async () => {
+    const old = await add('national-ancien');
+    await db.execute(
+      sql`update item set first_seen_at = now() - interval '1 day' where id = ${old.id}`,
+    );
+    const recent = await add('national-recent');
+    const classifier = new FakeClassifier();
+    await classifyPending(db, classifier, { sleep: noSleep, limit: 1 });
+    expect((await statusOf(recent.id))?.status).toBe('published');
+    expect((await statusOf(old.id))?.status).toBe('pending');
+  });
+
   test('recalcul avec de nouveaux seuils, sans appel au classifieur', async () => {
     const { id } = await add('amf');
     const classifier = new FakeClassifier();

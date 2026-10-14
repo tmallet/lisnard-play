@@ -117,6 +117,10 @@ describe('journal des décisions', () => {
     // Un changement de statut de diffusion ne modifie pas l’entrée : pas de nouvel appel.
     await candidate('yt:t1', { liveStatus: 'ended' });
     expect(await listClassificationTargets(db, 10, 1)).toHaveLength(0);
+    // Ni le démarrage d'un direct (heure de début réelle) : Jev n'étant pas déterministe,
+    // un nouveau classement pourrait le dépublier au moment où il commence.
+    await candidate('yt:t1', { liveStatus: 'live', startsAt: new Date('2026-05-01T18:02:00Z') });
+    expect(await listClassificationTargets(db, 10, 1)).toHaveLength(0);
     // Un nouveau titre, ou une nouvelle version des questions, en fait une cible.
     await candidate('yt:t1', { title: 'Nouveau titre' });
     expect((await listClassificationTargets(db, 10, 1)).map((t) => t.id)).toEqual([id]);

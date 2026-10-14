@@ -13,7 +13,14 @@ const handle = createRequestHandler({ build: join(DIST, 'server') });
 
 async function staticFile(pathname: string): Promise<Response | null> {
   if (pathname === '/' || pathname.endsWith('/')) return null;
-  const filePath = normalize(join(CLIENT, decodeURIComponent(pathname)));
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(pathname);
+  } catch {
+    // Encodage invalide (« %E0%A4%A ») : pas un fichier, la suite répondra 404.
+    return null;
+  }
+  const filePath = normalize(join(CLIENT, decoded));
   // Refuse toute sortie du dossier client (traversée de répertoires).
   if (!filePath.startsWith(`${CLIENT}/`)) return null;
   const file = Bun.file(filePath);

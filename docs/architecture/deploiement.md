@@ -19,8 +19,15 @@ interne.
 | Service | Source | Démarrage | Santé |
 |---------|--------|-----------|-------|
 | `postgres` | service Coolify « PostgreSQL », **version 18** (identique au local et à la CI) | géré par Coolify | géré par Coolify |
-| `worker` | `apps/worker/Dockerfile`, contexte = racine du dépôt | applique les migrations, puis prend le verrou de leader et lance la boucle | fichier de pulsation de moins de 5 min (`HEALTHCHECK` de l'image) |
+| `worker` | `apps/worker/Dockerfile`, contexte = racine du dépôt | prend le verrou de leader (une instance en attente continue de battre), applique les migrations, puis lance la boucle | fichier de pulsation de moins de 5 min (`HEALTHCHECK` de l'image), écrit avant chaque tâche |
 | `app` | `apps/app/Dockerfile`, contexte = racine du dépôt | `bun server.ts` (export Expo servi par l'adaptateur Bun) | `GET /api/trpc/health` (`HEALTHCHECK` de l'image) |
+
+**Réseau du worker** : il lit des URL venues de contenus externes (articles,
+Open Graph). La lecture sécurisée refuse les adresses privées, mais Bun ne permet
+pas d'imposer à `fetch` l'adresse vérifiée : un domaine dont le DNS change entre
+la vérification et la connexion pourrait viser le réseau interne. Placer donc le
+worker sur un réseau Coolify qui n'atteint que Postgres et Internet, sans accès
+aux autres services internes ni au réseau de l'hôte.
 
 Les images n'embarquent aucun secret. La version de Bun (`ARG BUN_VERSION`)
 doit suivre `.tool-versions`, ce que vérifie `docs:check`.

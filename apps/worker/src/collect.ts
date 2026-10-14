@@ -86,20 +86,29 @@ export async function runBackfill(
   return stats;
 }
 
-/** Revérifie les directs programmés ou en cours jusqu'à leur fin (spec intervention-collection). */
+/**
+ * Revérifie les directs programmés ou en cours jusqu'à leur fin (spec intervention-collection).
+ * Une vidéo absente de la réponse (supprimée, passée en privé, direct annulé) n'est plus
+ * diffusée : un direct est clos, un direct programmé redevient une vidéo ordinaire.
+ */
 export async function recheckLive(db: Db, ctx: SourceContext): Promise<number> {
-  const pending = await listLiveToRecheck(db);
-  const ids = pending
-    .filter((p) => p.platformId.startsWith('yt:'))
-    .map((p) => p.platformId.slice(3));
-  if (ids.length === 0) return 0;
-  const details = await fetchVideoDetails(ids, ctx);
-  for (const [id, d] of details) {
-    await updateLiveStatus(db, `yt:${id}`, {
-      liveStatus: d.liveStatus,
-      startsAt: d.startsAt,
-      endsAt: d.endsAt,
-    });
+  const pending = (await listLiveToRecheck(db)).filter((p) => p.platformId.startsWith('yt:'));
+  if (pending.length === 0) return 0;
+  const details = await fetchVideoDetails(
+    pending.map((p) => p.platformId.slice(3)),
+    ctx,
+  );
+  for (const p of pending) {
+    const d = details.get(p.platformId.slice(3));
+    await updateLiveStatus(
+      db,
+      p.platformId,
+      d
+        ? { liveStatus: d.liveStatus, startsAt: d.startsAt, endsAt: d.endsAt }
+        : p.liveStatus === 'live'
+          ? { liveStatus: 'ended', endsAt: new Date() }
+          : { liveStatus: 'none' },
+    );
   }
-  return details.size;
+  return pending.length;
 }

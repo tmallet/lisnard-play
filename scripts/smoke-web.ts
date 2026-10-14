@@ -154,6 +154,9 @@ try {
   };
   check('interventions.byId : rendu média intégré', byId.result?.data?.media?.kind === 'embed');
 
+  const malformed = await fetch(`${BASE}/%E0%A4%A`);
+  check('URL mal encodée : pas d’erreur serveur', malformed.status < 500);
+
   const missing = await fetch(
     trpcUrl('interventions.byId', { id: '00000000-0000-0000-0000-000000000000' }),
   );

@@ -25,7 +25,16 @@ export class Scheduler {
     private readonly heartbeatFile?: string,
   ) {}
 
-  /** Exécute les tâches dues ; l'échec d'une tâche n'empêche pas les suivantes. */
+  /** Pulsation lue par le healthcheck : la boucle est vivante. */
+  async beat(): Promise<void> {
+    if (this.heartbeatFile) await writeFile(this.heartbeatFile, new Date().toISOString());
+  }
+
+  /**
+   * Exécute les tâches dues ; l'échec d'une tâche n'empêche pas les suivantes. La
+   * pulsation est écrite avant chaque tâche : une tâche longue mais bornée ne fait pas
+   * passer le worker pour mort.
+   */
   async tick(now = Date.now()): Promise<string[]> {
     if (this.running) return [];
     this.running = true;
@@ -36,6 +45,7 @@ export class Scheduler {
         if (last !== undefined && now - last < task.everyMs) continue;
         this.lastRun.set(task.name, now);
         ran.push(task.name);
+        await this.beat();
         const start = Date.now();
         try {
           const result = await task.run();
@@ -44,7 +54,7 @@ export class Scheduler {
           log.error('tâche en échec', { task: task.name, error: errorMessage(error) });
         }
       }
-      if (this.heartbeatFile) await writeFile(this.heartbeatFile, new Date().toISOString());
+      await this.beat();
     } finally {
       this.running = false;
     }

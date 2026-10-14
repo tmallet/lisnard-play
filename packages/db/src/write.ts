@@ -107,9 +107,14 @@ export async function updateLiveStatus(
 }
 
 /** Contenus dont le direct est programmé ou en cours, à revérifier à chaque cycle. */
-export async function listLiveToRecheck(db: Db): Promise<{ platformId: string }[]> {
+export async function listLiveToRecheck(
+  db: Db,
+): Promise<{ platformId: string; liveStatus: 'upcoming' | 'live' }[]> {
   return db
-    .select({ platformId: item.platformId })
+    .select({
+      platformId: item.platformId,
+      liveStatus: sql<'upcoming' | 'live'>`${item.liveStatus}`,
+    })
     .from(item)
     .where(inArray(item.liveStatus, ['upcoming', 'live']));
 }
@@ -131,11 +136,13 @@ export interface ClassificationTarget {
 /**
  * Empreinte des champs envoyés au classifieur et de la version des questions.
  * Un contenu ne redevient une cible que si elle change (cache, design D4).
+ * L'heure de début n'en fait pas partie : elle change quand un direct programmé
+ * démarre, et Jev n'étant pas strictement déterministe, un nouveau classement pourrait
+ * dépublier le direct au moment même où il commence.
  */
 export function inputHashSql(questionsVersion: number) {
   return sql<string>`md5(concat_ws('|', ${questionsVersion}::text, ${item.title}, ${item.description},
-    coalesce(${item.outlet}, ${source.name}), ${source.kind}::text,
-    ${item.publishedAt}::text, coalesce(${item.startsAt}::text, '')))`;
+    coalesce(${item.outlet}, ${source.name}), ${source.kind}::text, ${item.publishedAt}::text))`;
 }
 
 /**
@@ -147,41 +154,33 @@ export async function listClassificationTargets(
   limit: number,
   questionsVersion: number,
 ): Promise<ClassificationTarget[]> {
-  const last = db
-    .select({
-      itemId: classification.itemId,
-      inputHash:
-        sql<string>`(array_agg(${classification.inputHash} order by ${classification.createdAt} desc))[1]`.as(
-          'last_hash',
-        ),
-    })
-    .from(classification)
-    .groupBy(classification.itemId)
-    .as('last');
-  return db
-    .select({
-      id: item.id,
-      sourceId: item.sourceId,
-      sourceKind: source.kind,
-      outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
-      url: item.url,
-      title: item.title,
-      description: item.description,
-      publishedAt: item.publishedAt,
-      startsAt: item.startsAt,
-      inputHash: inputHashSql(questionsVersion),
-    })
-    .from(item)
-    .innerJoin(source, eq(item.sourceId, source.id))
-    .leftJoin(last, eq(last.itemId, item.id))
-    .where(
-      or(
-        eq(item.status, 'pending'),
-        sql`${last.inputHash} is distinct from ${inputHashSql(questionsVersion)}`,
-      ),
-    )
-    .orderBy(item.firstSeenAt)
-    .limit(limit);
+  // Dernière empreinte par sous-requête corrélée (index classification_item_created_idx) :
+  // pas d'agrégation de tout le journal à chaque cycle.
+  const lastHash = sql<string | null>`(select c.input_hash from ${classification} c
+    where c.item_id = ${item.id} order by c.created_at desc limit 1)`;
+  const hash = inputHashSql(questionsVersion);
+  return (
+    db
+      .select({
+        id: item.id,
+        sourceId: item.sourceId,
+        sourceKind: source.kind,
+        outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+        url: item.url,
+        title: item.title,
+        description: item.description,
+        publishedAt: item.publishedAt,
+        startsAt: item.startsAt,
+        inputHash: hash,
+      })
+      .from(item)
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(or(eq(item.status, 'pending'), sql`${lastHash} is distinct from ${hash}`))
+      // Les plus récents d'abord : un direct qui vient d'arriver n'attend pas derrière des
+      // contenus anciens dont le classement échoue à chaque cycle.
+      .orderBy(desc(item.firstSeenAt))
+      .limit(limit)
+  );
 }
 
 export interface ClassificationRecord {

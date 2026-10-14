@@ -1,6 +1,8 @@
 /**
  * Démarrage du worker (ADR 0015) : migrations, sources, verrou de leader, puis boucle.
  */
+import { writeFile } from 'node:fs/promises';
+
 import { createDb } from '@lisnard/db/client';
 import { runMigrations } from '@lisnard/db/migrate';
 import { upsertSources } from '@lisnard/db/write';
@@ -18,18 +20,21 @@ import { SOURCES } from './sources.config';
 const databaseUrl = requireEnv('DATABASE_URL');
 const db = createDb(databaseUrl);
 
+// Verrou d'abord : pendant un déploiement progressif, une seule instance migre. L'instance
+// en attente bat quand même, pour ne pas être redémarrée par le healthcheck.
+let lock = await tryAcquireLeaderLock(databaseUrl, LEADER_LOCK_KEY);
+while (!lock.acquired) {
+  log.info('autre instance active : attente du verrou');
+  await writeFile(HEARTBEAT_FILE, new Date().toISOString());
+  await Bun.sleep(TICK_MS);
+  lock = await tryAcquireLeaderLock(databaseUrl, LEADER_LOCK_KEY);
+}
+
 await runMigrations(db);
 await upsertSources(
   db,
   SOURCES.map(({ id, kind, name, active }) => ({ id, kind, name, active })),
 );
-
-let lock = await tryAcquireLeaderLock(databaseUrl, LEADER_LOCK_KEY);
-while (!lock.acquired) {
-  log.info('autre instance active : attente du verrou');
-  await Bun.sleep(TICK_MS);
-  lock = await tryAcquireLeaderLock(databaseUrl, LEADER_LOCK_KEY);
-}
 
 const ctx: SourceContext = {
   fetch,

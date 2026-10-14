@@ -239,6 +239,27 @@ describe('collecte en base', () => {
     expect(done?.endsAt?.toISOString()).toBe('2026-10-14T19:00:00.000Z');
   });
 
+  test('revérification : une vidéo disparue clôt le direct ou annule la programmation', async () => {
+    await runCollection(db, [official], ctx());
+    const live = {
+      items: [
+        {
+          id: 'FQbmJzN2qZg',
+          snippet: { liveBroadcastContent: 'live' },
+          liveStreamingDetails: { actualStartTime: '2026-10-14T18:01:00Z' },
+        },
+      ],
+    };
+    await recheckLive(db, ctx(fakeFetch({ videos: live })));
+    // Vidéo supprimée ou passée en privé : absente de la réponse de l'API.
+    await recheckLive(db, ctx(fakeFetch({ videos: { items: [] } })));
+    const [gone] = await db.select().from(item).where(sql`${item.platformId} = 'yt:FQbmJzN2qZg'`);
+    expect(gone?.liveStatus).toBe('ended');
+    expect(gone?.endsAt).not.toBeNull();
+    // Plus rien à revérifier ensuite.
+    expect(await recheckLive(db, ctx(fakeFetch({ videos: { items: [] } })))).toBe(0);
+  });
+
   test('verrou : une seule instance obtient le droit de collecter', async () => {
     const a = await tryAcquireLeaderLock(url, LEADER_LOCK_KEY);
     const b = await tryAcquireLeaderLock(url, LEADER_LOCK_KEY);
