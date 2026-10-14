@@ -85,6 +85,8 @@ const tasks: Task[] = [
     name: 'recheck:soon',
     everyMs: TICK_MS,
     run: async () => ({ rechecked: await recheckSoon(db, ctx) }),
+    // Toutes les 30 s : une ligne seulement quand un direct imminent a été revérifié.
+    quiet: (r) => (r as { rechecked: number }).rechecked === 0,
   },
   {
     name: 'collect:rss',
