@@ -14,6 +14,10 @@ publication) et une image quand elle existe.
 - **WHEN** un client demande les interventions passées du thème `economy`
 - **THEN** seules les interventions publiées portant le thème `economy` et de statut `past` sont renvoyées, de la plus récente à la plus ancienne
 
+#### Scenario: Filtre par rôle
+- **WHEN** un client transmet encore un paramètre `role` (ancien filtre `national` / `amf`)
+- **THEN** le paramètre est ignoré et la liste renvoie les interventions publiées du statut demandé : le filtre par rôle n'existe plus, seul le rôle `national` étant publiable (ADR 0020)
+
 #### Scenario: Taille de page invalide
 - **WHEN** un client demande une page de 500 éléments
 - **THEN** l'API rejette la requête par une erreur de requête invalide
