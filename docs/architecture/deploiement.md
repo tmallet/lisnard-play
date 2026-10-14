@@ -1,8 +1,8 @@
 # Déploiement (Coolify)
 
-Trois services Docker sur un même hôte Coolify (ADR 0014, ADR 0015). Seul
-`app` est exposé publiquement ; Postgres et le worker restent sur le réseau
-interne.
+Trois services Docker sur un même hôte Coolify (ADR 0014, ADR 0015). `app` est
+exposé publiquement ; du worker, seule l'adresse de rappel WebSub l'est (ADR 0023) ;
+Postgres reste sur le réseau interne.
 
 ```
  Internet ── HTTPS (proxy Coolify) ──▶ app      apps/app/Dockerfile      port 3000
@@ -10,8 +10,8 @@ interne.
                                         ▼
                                       postgres  service Coolify (PostgreSQL 18)
                                         ▲
-                                      worker   apps/worker/Dockerfile    non exposé
-                                           collecte → classification → médias
+                                      worker   apps/worker/Dockerfile    port 8080
+ Hub WebSub ── HTTPS /websub/youtube ──▶   collecte → classification → médias
 ```
 
 ## Services
@@ -51,6 +51,9 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | `OPENROUTER_API_KEY` | — | ✅ | Classifieur Jev (ADR 0004) et résumés Gemini (ADR 0021). Clé dédiée, avec une limite de dépense |
 | `SUMMARY_DAILY_BUDGET_USD` | — | facultatif | Plafond quotidien des résumés (1 $ par défaut). Nombre avec un point (`1.5`) : une valeur illisible arrête le worker au démarrage |
 | `YOUTUBE_API_KEY` | — | ✅ | API YouTube Data v3, restreinte à cette API (environ 6 000 unités par jour sur 10 000) |
+| `WEBSUB_CALLBACK_URL` | — | facultatif | Adresse publique de rappel WebSub, en HTTPS (ex. `https://hooks.lisnardplay.thimal.fr/websub/youtube`). Avec `WEBSUB_SECRET`, active la détection des directs en quelques secondes (ADR 0023) |
+| `WEBSUB_SECRET` | — | facultatif | Secret partagé avec le hub (32 à 199 caractères, `openssl rand -hex 32`), en secret. Définir les deux variables ou aucune : sinon le worker s'arrête au démarrage |
+| `WEBSUB_PORT` | — | 8080 par défaut | Port du serveur WebSub, exposé au proxy Coolify |
 | `ALLOW_INDEXING` | absente | — | Indexation par les moteurs de recherche. **Absente ou autre que `true` : bloquée** (en-tête `X-Robots-Tag: noindex, nofollow` et `robots.txt` qui interdit tout). Ne la passer à `true` qu'au lancement public, puis redémarrer le service : aucune reconstruction n'est nécessaire |
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
 | `NODE_ENV` | `production` (image) | `production` (image) | Masque les détails d'erreur de l'API |
@@ -87,7 +90,7 @@ dépense sur la clé OpenRouter.
 4. **Worker** : nouvelle application depuis le dépôt GitHub, branche `main`.
    - Build Pack « Dockerfile », Base Directory `/`, Dockerfile
      `apps/worker/Dockerfile`.
-   - Aucun domaine.
+   - Aucun domaine pour commencer (voir l'étape 8 pour la détection des directs).
    - Désactiver le healthcheck HTTP de Coolify : l'image a son propre
      `HEALTHCHECK` (fichier de pulsation).
    - Variables : `DATABASE_URL` (URL interne), `OPENROUTER_API_KEY` et
@@ -120,6 +123,17 @@ dépense sur la clé OpenRouter.
    arrivent en quelques jours. Pour les obtenir d'un coup (environ 5 $), ouvrir
    le terminal du worker dans Coolify et lancer
    `bun cli.js summarize --budget 6`.
+
+8. **Détection des directs** (facultatif, ADR 0023) :
+   - DNS : enregistrement `hooks.lisnardplay.thimal.fr` vers le serveur ;
+   - worker dans Coolify : domaine `https://hooks.lisnardplay.thimal.fr`, port
+     exposé `8080`, variables `WEBSUB_CALLBACK_URL`
+     (`https://hooks.lisnardplay.thimal.fr/websub/youtube`) et `WEBSUB_SECRET` ;
+   - redéployer, puis vérifier dans les logs `websub : réception active`, puis
+     `websub:subscribe` avec `subscribed` égal au nombre de chaînes YouTube actives ;
+   - au premier direct ou à la première vidéo publiée, `websub : notification traitée` ;
+   - retour arrière : retirer les deux variables. Les abonnements expirent d'eux-mêmes
+     au bout de 5 jours.
 
 Sur une base neuve, ni `recompute` ni `media --refresh` ne sont nécessaires :
 chaque contenu est traité directement avec les règles en vigueur.

@@ -47,7 +47,9 @@ réel figure dans chaque élément (Google News).
   début de l'historique et son intervention est présumée (ADR 0018).
 - **Désactiver** plutôt que supprimer (`active: false`) : les contenus déjà
   collectés restent rattachés à la source.
-- Au démarrage, le worker recopie la configuration dans la table `source`.
+- Au démarrage, le worker recopie la configuration dans la table `source` et,
+  si WebSub est configuré, abonne chaque chaîne YouTube active aux notifications
+  push (ADR 0023) : rien d'autre à faire pour la détection des directs.
 
 ## 3. Nouveau type de source
 

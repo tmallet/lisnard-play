@@ -7,9 +7,17 @@ import {
 
 import { isMinimalLink, type MediaContext, resolveMedia } from './resolve';
 
-/** Calcule le rendu des contenus publiés qui n'en ont pas encore : ils deviennent alors visibles. */
-export async function resolvePendingMedia(db: Db, ctx: MediaContext = {}, limit = 20) {
-  const pending = await listPublishedWithoutMedia(db, limit);
+/**
+ * Calcule le rendu des contenus publiés qui n'en ont pas encore : ils deviennent alors
+ * visibles. `itemId` restreint au contenu d'une notification (ADR 0023).
+ */
+export async function resolvePendingMedia(
+  db: Db,
+  ctx: MediaContext = {},
+  limit = 20,
+  itemId?: string,
+) {
+  const pending = await listPublishedWithoutMedia(db, limit, itemId);
   const counts = { embed: 0, link: 0 };
   for (const target of pending) {
     const media = await resolveMedia(target, ctx);

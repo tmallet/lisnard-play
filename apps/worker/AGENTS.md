@@ -1,7 +1,8 @@
 # apps/worker — @lisnard/worker
 
-Ingestion (ADR 0004, 0007, 0015 à 0018) : collecte, classification par Jev,
-résolution des médias. Processus Bun long, non exposé. Vue d'ensemble et cycle
+Ingestion (ADR 0004, 0007, 0015 à 0018, 0023) : collecte, classification par Jev,
+résolution des médias, notifications push YouTube. Processus Bun long ; seule
+l'adresse de rappel WebSub est exposée, si elle est configurée. Vue d'ensemble et cycle
 des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 
 ## Structure
@@ -19,6 +20,7 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 | `src/publish.ts` | `classifyPending`, `recompute`, `reclassify` |
 | `src/media/` | `safe-fetch.ts` (anti-SSRF, POST, lecture limitée à l'en-tête), `resolve.ts` (oEmbed, Open Graph), `google-news.ts` (décodage vers l'éditeur), `task.ts` (rendus, `refreshMedia`) |
 | `src/summaries/` | `prompt.ts` (consigne, `PROMPT_VERSION`, `SUMMARY_MODEL`), `openrouter.ts` (client Gemini, validation), `task.ts` (sélection, budget, échecs). Voir `docs/architecture/resumes.md` |
+| `src/websub/` | `server.ts` (vérification du hub, signature HMAC, corps borné, file sérielle), `subscribe.ts` (abonnements), `handle.ts` (voie rapide : enregistrement, classement, rendu) |
 | `src/calibrate.ts`, `eval/reference.jsonl` | Calibration sur le jeu de référence validé |
 | `src/cli.ts` | `backfill`, `calibrate`, `recompute`, `reclassify` |
 
@@ -35,6 +37,9 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
   `PROMPT_VERSION` et de faire relire un échantillon. Jamais de résumé d'un article
   de presse ni de lecture de son texte : pour un éditeur, `safeFetchText` avec
   `headOnly` (ADR 0021).
+- **WebSub** : ne rien lire d'une notification avant d'avoir vérifié sa signature, et
+  n'en tirer que des identifiants de vidéo et de chaîne : les données viennent ensuite
+  de l'API YouTube. Une chaîne non suivie n'a aucun effet (ADR 0023).
 - **Ajouter une source** : skill `add-intervention-source`.
 - **Logs** : `log.info|warn|error` (JSON par ligne), jamais de secret dans les
   données journalisées.

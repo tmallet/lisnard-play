@@ -26,6 +26,8 @@ export interface ClassifyOptions {
   /** Durée maximale d'un cycle de classification, en millisecondes. */
   budgetMs?: number;
   now?: () => number;
+  /** Ne classe que ce contenu (voie rapide d'une notification, ADR 0023). */
+  itemId?: string;
 }
 
 export interface ClassifyStats {
@@ -118,10 +120,11 @@ export async function classifyPending(
     sleep = Bun.sleep,
     budgetMs = 120_000,
     now = Date.now,
+    itemId,
   }: ClassifyOptions = {},
 ): Promise<ClassifyStats> {
   const stats: ClassifyStats = { classified: 0, published: 0, rejected: 0, failed: 0, cost: 0 };
-  const targets = await listClassificationTargets(db, limit, QUESTIONS_VERSION);
+  const targets = await listClassificationTargets(db, limit, QUESTIONS_VERSION, itemId);
   // Durée bornée : un classifieur lent ne bloque pas la collecte (tâches en série).
   const deadline = now() + budgetMs;
   for (const target of targets) {

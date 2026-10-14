@@ -1,0 +1,14 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"><link rel="hub" href="https://pubsubhubbub.appspot.com"/><link rel="self" href="https://www.youtube.com/xml/feeds/videos.xml?channel_id=UC2XZY-bjIEmyLZ9MPJQytZg"/><title>YouTube video feed</title><updated>2026-10-14T18:00:05.123456789+00:00</updated><entry>
+  <id>yt:video:LiveNow0001</id>
+  <yt:videoId>LiveNow0001</yt:videoId>
+  <yt:channelId>UC2XZY-bjIEmyLZ9MPJQytZg</yt:channelId>
+  <title>EN DIRECT | Meeting à Lyon</title>
+  <link rel="alternate" href="https://www.youtube.com/watch?v=LiveNow0001"/>
+  <author>
+   <name>David Lisnard</name>
+   <uri>https://www.youtube.com/channel/UC2XZY-bjIEmyLZ9MPJQytZg</uri>
+  </author>
+  <published>2026-10-14T17:59:58+00:00</published>
+  <updated>2026-10-14T18:00:05.123456789+00:00</updated>
+ </entry></feed>

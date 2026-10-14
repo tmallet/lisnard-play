@@ -9,8 +9,11 @@ import { InterventionCard, type InterventionCardData } from './InterventionCard'
 import { useOnEndReached } from './ScrollEnd';
 import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
 
-/** Rafraîchissement des directs et des interventions à venir (spec intervention-feed). */
-const REFRESH_MS = 60_000;
+/**
+ * Rafraîchissement des directs et des interventions à venir (spec intervention-feed),
+ * en plus du retour au premier plan (lib/focus.ts).
+ */
+const REFRESH_MS = 30_000;
 
 function SectionTitle({ children, live = false }: { children: string; live?: boolean }) {
   return (
@@ -66,7 +69,12 @@ export function InterventionFeed() {
   const past = useInfiniteQuery(
     trpc.interventions.list.infiniteQueryOptions(
       { status: 'past', theme, limit: 20 },
-      { getNextPageParam: (last) => last.nextCursor ?? undefined },
+      {
+        getNextPageParam: (last) => last.nextCursor ?? undefined,
+        // Au retour au premier plan, seules les sections « En direct » et « À venir » se
+        // rafraîchissent : relire toutes les pages chargées des passées serait inutile.
+        refetchOnWindowFocus: false,
+      },
     ),
   );
 

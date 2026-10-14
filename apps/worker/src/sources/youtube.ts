@@ -61,7 +61,10 @@ export function parseChannelFeed(body: string): FeedEntry[] {
 }
 
 export interface VideoDetails {
+  title: string;
   description: string;
+  publishedAt: Date | null;
+  thumbnailUrl: string | null;
   liveStatus: 'none' | 'upcoming' | 'live' | 'ended';
   startsAt: Date | null;
   endsAt: Date | null;
@@ -71,7 +74,13 @@ export interface VideoDetails {
 
 interface ApiVideo {
   id: string;
-  snippet?: { description?: string; liveBroadcastContent?: string };
+  snippet?: {
+    title?: string;
+    description?: string;
+    publishedAt?: string;
+    liveBroadcastContent?: string;
+    thumbnails?: Record<string, { url?: string } | undefined>;
+  };
   contentDetails?: { duration?: string };
   liveStreamingDetails?: {
     scheduledStartTime?: string;
@@ -108,8 +117,12 @@ export function toVideoDetails(v: ApiVideo): VideoDetails {
         : live?.actualEndTime
           ? 'ended'
           : 'none';
+  const thumbs = v.snippet?.thumbnails ?? {};
   return {
+    title: v.snippet?.title ?? '',
     description: v.snippet?.description ?? '',
+    publishedAt: toDate(v.snippet?.publishedAt),
+    thumbnailUrl: thumbs.high?.url ?? thumbs.medium?.url ?? thumbs.default?.url ?? null,
     liveStatus,
     startsAt: toDate(live?.actualStartTime ?? live?.scheduledStartTime),
     endsAt: toDate(live?.actualEndTime),
@@ -228,4 +241,64 @@ export async function backfillYoutube(
   ctx: SourceContext,
 ): Promise<Candidate[]> {
   return toCandidates(await listUploadsSince(source.channelId, since, ctx), ctx);
+}
+
+/** Candidat construit à partir de videos.list seul (notification push, ADR 0023). */
+export function candidateFromDetails(videoId: string, d: VideoDetails): Candidate | null {
+  if (!d.publishedAt) return null;
+  return {
+    platformId: `yt:${videoId}`,
+    url: `https://www.youtube.com/watch?v=${videoId}`,
+    title: d.title,
+    description: d.description,
+    publishedAt: d.publishedAt,
+    startsAt: d.startsAt,
+    endsAt: d.endsAt,
+    liveStatus: d.liveStatus,
+    thumbnailUrl: d.thumbnailUrl,
+    durationS: d.durationS,
+  };
+}
+
+const TOPIC_URL = 'https://www.youtube.com/xml/feeds/videos.xml?channel_id=';
+
+/** Sujet WebSub d'une chaîne (distinct de l'URL du flux RSS lu par la collecte). */
+export const channelTopic = (channelId: string) => TOPIC_URL + channelId;
+
+/** Identifiant de chaîne d'un sujet WebSub ; null si l'URL n'est pas un flux de chaîne. */
+export function channelOfTopic(topic: string): string | null {
+  try {
+    const url = new URL(topic);
+    if (url.hostname !== 'www.youtube.com' || url.pathname !== '/xml/feeds/videos.xml') return null;
+    return url.searchParams.get('channel_id');
+  } catch {
+    return null;
+  }
+}
+
+export interface PushNotification {
+  /** Vidéos créées ou modifiées. */
+  videos: { videoId: string; channelId: string }[];
+  /** Vidéos supprimées (`at:deleted-entry`). */
+  deleted: { videoId: string; channelId: string | null }[];
+}
+
+/** Analyse le corps Atom d'une notification push YouTube (ADR 0023). */
+export function parseNotification(body: string): PushNotification {
+  const doc = xml.parse(body) as { feed?: Record<string, unknown> };
+  const feed = doc.feed ?? {};
+  const videos = asArray(feed.entry as Record<string, unknown>[] | undefined).flatMap((e) => {
+    const videoId = text(e['yt:videoId']);
+    const channelId = text(e['yt:channelId']);
+    return videoId && channelId ? [{ videoId, channelId }] : [];
+  });
+  const deleted = asArray(
+    feed['at:deleted-entry'] as Record<string, unknown>[] | undefined,
+  ).flatMap((e) => {
+    const videoId = String(e['@ref'] ?? '').replace(/^yt:video:/, '');
+    const by = (e['at:by'] ?? {}) as Record<string, unknown>;
+    const channelId = text(by.uri).match(/\/channel\/([\w-]+)/)?.[1] ?? null;
+    return videoId ? [{ videoId, channelId }] : [];
+  });
+  return { videos, deleted };
 }

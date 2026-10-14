@@ -5,6 +5,9 @@ import { createTRPCContext } from '@trpc/tanstack-react-query';
 import { type ReactNode, useState } from 'react';
 
 import { getApiBaseUrl } from './api-url';
+import { bindAppStateFocus } from './focus';
+
+bindAppStateFocus();
 
 export const { TRPCProvider, useTRPC } = createTRPCContext<AppRouter>();
 
