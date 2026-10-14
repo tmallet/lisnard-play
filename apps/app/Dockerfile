@@ -22,6 +22,7 @@ ENV NODE_ENV=production PORT=3000
 COPY --from=build /repo/node_modules/expo-server ./node_modules/expo-server
 COPY --from=build /repo/apps/app/dist ./dist
 COPY --from=build /repo/apps/app/server.ts ./server.ts
+COPY --from=build /repo/apps/app/src/server/indexing.ts ./src/server/indexing.ts
 USER bun
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

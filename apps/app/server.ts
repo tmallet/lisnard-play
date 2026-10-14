@@ -2,14 +2,18 @@
  * Serveur de production (ADR 0015) : sert l'export Expo (`dist/`) avec Bun.
  * Fichiers statiques depuis dist/client, pages pré-rendues et API routes via
  * l'adaptateur Bun d'expo-server. Usage : bun server.ts (PORT, défaut 3000).
+ * Indexation bloquée sauf ALLOW_INDEXING=true (spec app-shell).
  */
 import { join, normalize, resolve } from 'node:path';
 
 import { createRequestHandler } from 'expo-server/adapter/bun';
 
+import { indexingAllowed, robotsTxt, withIndexingPolicy } from './src/server/indexing';
+
 const DIST = resolve(import.meta.dir, process.env.DIST_DIR ?? 'dist');
 const CLIENT = join(DIST, 'client');
 const handle = createRequestHandler({ build: join(DIST, 'server') });
+const ALLOW_INDEXING = indexingAllowed(process.env.ALLOW_INDEXING);
 
 async function staticFile(pathname: string): Promise<Response | null> {
   if (pathname === '/' || pathname.endsWith('/')) return null;
@@ -35,8 +39,15 @@ const server = Bun.serve({
   port: Number(process.env.PORT ?? 3000),
   async fetch(req) {
     const { pathname } = new URL(req.url);
-    return (await staticFile(pathname)) ?? handle(req);
+    if (pathname === '/robots.txt')
+      return withIndexingPolicy(
+        new Response(robotsTxt(ALLOW_INDEXING), { headers: { 'Content-Type': 'text/plain' } }),
+        ALLOW_INDEXING,
+      );
+    return withIndexingPolicy((await staticFile(pathname)) ?? (await handle(req)), ALLOW_INDEXING);
   },
 });
 
-console.log(JSON.stringify({ msg: 'serveur démarré', url: server.url.toString() }));
+console.log(
+  JSON.stringify({ msg: 'serveur démarré', url: server.url.toString(), indexing: ALLOW_INDEXING }),
+);

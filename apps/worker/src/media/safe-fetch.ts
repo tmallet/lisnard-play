@@ -10,7 +10,7 @@ import { isIP } from 'node:net';
 export const MAX_BYTES = 1_000_000;
 const TIMEOUT_MS = 5_000;
 const MAX_REDIRECTS = 3;
-const USER_AGENT = 'Mozilla/5.0 (compatible; LisnardPlay/1.0; +https://lisnard-play.app)';
+const USER_AGENT = 'Mozilla/5.0 (compatible; LisnardPlay/1.0; +https://lisnardplay.thimal.fr)';
 
 export type Resolver = (host: string) => Promise<string[]>;
 
