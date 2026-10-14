@@ -9,7 +9,7 @@ import { sql } from 'drizzle-orm';
 
 import { keepCandidate, recheckLive, runCollection } from './collect';
 import { HISTORY_START, LEADER_LOCK_KEY } from './config';
-import { Scheduler, tryAcquireLeaderLock } from './scheduler';
+import { Scheduler, tryAcquireLeaderLock, withoutEmptyFailures } from './scheduler';
 import { parseRss } from './sources/rss';
 import type {
   RssSourceConfig,
@@ -268,6 +268,19 @@ describe('collecte en base', () => {
     expect(gone?.endsAt).not.toBeNull();
     // Plus rien à revérifier ensuite.
     expect(await recheckLive(db, ctx(fakeFetch({ videos: { items: [] } })))).toBe(0);
+  });
+
+  test('journal : un compteur d’échecs vide n’est pas écrit (Coolify le classerait en erreur)', () => {
+    expect(withoutEmptyFailures({ sources: 13, failed: [], inserted: 2 })).toEqual({
+      sources: 13,
+      inserted: 2,
+    });
+    expect(withoutEmptyFailures({ classified: 5, failed: 0 })).toEqual({ classified: 5 });
+    expect(withoutEmptyFailures({ failed: ['rss:google-news'] })).toEqual({
+      failed: ['rss:google-news'],
+    });
+    expect(withoutEmptyFailures({ failed: 2 })).toEqual({ failed: 2 });
+    expect(withoutEmptyFailures(42)).toBe(42);
   });
 
   test('verrou : une seule instance obtient le droit de collecter', async () => {
