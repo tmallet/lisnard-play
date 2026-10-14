@@ -3,6 +3,7 @@ import { type ReactNode, useState } from 'react';
 import { Platform, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { refreshActiveQueries } from '@/lib/refresh';
 import { colors } from '@/theme/colors';
 
 import { Footer } from './Footer';
@@ -34,7 +35,7 @@ export function Screen({ children, footer = true, wide = false }: ScreenProps) {
   const onRefresh = async () => {
     setRefreshing(true);
     try {
-      await queryClient.refetchQueries({ type: 'active' });
+      await refreshActiveQueries(queryClient);
     } finally {
       setRefreshing(false);
     }

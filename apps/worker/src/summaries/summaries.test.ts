@@ -1,20 +1,27 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 
 import type { Db } from '@lisnard/db/client';
-import { classification, item } from '@lisnard/db/schema';
+import { classification, item, summarySpend } from '@lisnard/db/schema';
 import { createTestDb } from '@lisnard/db/testing';
-import { recordClassification, setMedia, upsertItem, upsertSources } from '@lisnard/db/write';
+import {
+  recordClassification,
+  setMedia,
+  summarySpentOn,
+  upsertItem,
+  upsertSources,
+} from '@lisnard/db/write';
 import { eq, sql } from 'drizzle-orm';
-
+import { parseBudget } from '../config';
 import {
   createOpenRouterSummarizer,
+  InvalidSummaryResponse,
   parseSummaryOutput,
   type Summarizer,
   type SummaryOutput,
   SummaryServiceUnavailable,
 } from './openrouter';
 import { PROMPT_VERSION, SUMMARY_MODEL, SUMMARY_MODEL_LONG, summaryModelFor } from './prompt';
-import { parisMidnight, summarizePending } from './task';
+import { parisDay, summarizePending } from './task';
 
 const SPEAKS: SummaryOutput = {
   speaks: true,
@@ -96,12 +103,18 @@ describe('sortie du modèle', () => {
   });
 
   test('minuit à Paris, en heure d’été comme d’hiver', () => {
-    expect(parisMidnight(new Date('2026-10-13T15:20:00Z')).toISOString()).toBe(
-      '2026-10-12T22:00:00.000Z',
-    );
-    expect(parisMidnight(new Date('2026-12-01T00:30:00Z')).toISOString()).toBe(
-      '2026-11-30T23:00:00.000Z',
-    );
+    expect(parisDay(new Date('2026-10-13T21:59:00Z'))).toBe('2026-10-13');
+    expect(parisDay(new Date('2026-10-13T22:01:00Z'))).toBe('2026-10-14');
+    expect(parisDay(new Date('2026-12-01T00:30:00Z'))).toBe('2026-12-01');
+  });
+
+  test('plafond : défaut 1 $, valeur illisible refusée plutôt qu’ignorée', () => {
+    expect(parseBudget(undefined)).toBe(1);
+    expect(parseBudget('  ')).toBe(1);
+    expect(parseBudget('2.5')).toBe(2.5);
+    expect(() => parseBudget('1$')).toThrow();
+    expect(() => parseBudget('1,5')).toThrow();
+    expect(() => parseBudget('-1')).toThrow();
   });
 });
 
@@ -115,7 +128,7 @@ describe('production des résumés', () => {
   });
   afterAll(() => drop());
   beforeEach(async () => {
-    await db.execute(sql`truncate ${classification}, ${item} cascade`);
+    await db.execute(sql`truncate ${classification}, ${item}, ${summarySpend} cascade`);
   });
 
   /** Contenu publié, avec son rendu (vidéo YouTube par défaut). */
@@ -199,14 +212,35 @@ describe('production des résumés', () => {
     expect(summarizer.calls).toBe(0);
   });
 
-  test('trois échecs : abandon, le contenu reste sans résumé', async () => {
+  test('échecs : attente croissante entre les essais, abandon au troisième', async () => {
     const id = await published('panne');
     const summarizer = new FakeSummarizer();
     summarizer.failing = true;
-    for (let i = 0; i < 3; i++) await summarizePending(db, summarizer, { dailyBudget: 1 });
+    await summarizePending(db, summarizer, { dailyBudget: 1 });
+    // Pas de nouvel essai au cycle suivant : la rediffusion peut être en préparation.
+    await summarizePending(db, summarizer, { dailyBudget: 1 });
+    expect(summarizer.calls).toBe(1);
+    const elapse = () =>
+      db.execute(sql`update item set summary_retry_at = now() - interval '1 second'`);
+    await elapse();
+    await summarizePending(db, summarizer, { dailyBudget: 1 });
+    await elapse();
+    await summarizePending(db, summarizer, { dailyBudget: 1 });
     expect(await summaryOf(id)).toMatchObject({ kind: 'none', reason: 'failed' });
+    await elapse();
     await summarizePending(db, summarizer, { dailyBudget: 1 });
     expect(summarizer.calls).toBe(3);
+  });
+
+  test('réponse payée mais invalide : son coût compte dans le plafond', async () => {
+    await published('invalide');
+    const summarizer = new FakeSummarizer();
+    summarizer.summarize = async () => {
+      throw new InvalidSummaryResponse('réponse invalide : points', 0.7);
+    };
+    const stats = await summarizePending(db, summarizer, { dailyBudget: 1 });
+    expect(stats).toMatchObject({ failed: 1, cost: 0.7 });
+    expect(await summarySpentOn(db, parisDay(new Date()))).toBeCloseTo(0.7);
   });
 
   test('service indisponible : cycle interrompu, aucune tentative consommée', async () => {

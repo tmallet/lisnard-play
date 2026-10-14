@@ -5,7 +5,7 @@ import {
   setMedia,
 } from '@lisnard/db/write';
 
-import { type MediaContext, resolveMedia } from './resolve';
+import { isMinimalLink, type MediaContext, resolveMedia } from './resolve';
 
 /** Calcule le rendu des contenus publiés qui n'en ont pas encore : ils deviennent alors visibles. */
 export async function resolvePendingMedia(db: Db, ctx: MediaContext = {}, limit = 20) {
@@ -22,9 +22,15 @@ export async function resolvePendingMedia(db: Db, ctx: MediaContext = {}, limit 
 /** Recalcule le rendu des contenus déjà publiés (spec « Mise à jour des rendus existants »). */
 export async function refreshMedia(db: Db, ctx: MediaContext = {}, sourceId?: string) {
   const targets = await listPublishedForMediaRefresh(db, sourceId);
-  const counts = { embed: 0, link: 0, publisherUrl: 0 };
+  const counts = { embed: 0, link: 0, publisherUrl: 0, kept: 0 };
   for (const target of targets) {
     const media = await resolveMedia(target, ctx);
+    // Échec passager (Google, éditeur) : on garde le rendu existant plutôt que de le
+    // remplacer par le lien minimal.
+    if (isMinimalLink(media) && target.media && !isMinimalLink(target.media)) {
+      counts.kept += 1;
+      continue;
+    }
     await setMedia(db, target.id, media);
     counts[media.kind] += 1;
     if (media.kind === 'link' && media.url) counts.publisherUrl += 1;

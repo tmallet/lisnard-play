@@ -31,6 +31,7 @@
 - [x] 5.4 Tests : bloc présent ou absent, lien vers l'éditeur
 - [x] 5.5 Cartes de la liste : image en pleine largeur (16:9) en tête de carte, miniature YouTube en haute définition (`hq720`, repli sur `hqdefault`), image Open Graph de l'éditeur pour les articles (demande du porteur du projet)
 - [x] 5.6 Accueil en grille responsive (`CardGrid` : 1, 2 puis 3 colonnes ; `Screen wide`) ; cartes en direct : « Direct » et durée écoulée (demandes du porteur du projet)
+- [x] 5.7 Corrections de revue : plafond validé au démarrage, registre des dépenses par jour (`summary_spend`, migration 0006), attente croissante entre les essais (`summary_retry_at`), `media --refresh` qui garde une carte complète en cas d'échec passager, actualisation repartant de la première page, clés du résumé
 
 ## 6. Validation
 

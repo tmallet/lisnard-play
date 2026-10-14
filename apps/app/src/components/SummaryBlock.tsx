@@ -17,14 +17,17 @@ export function SummaryBlock({ text, points }: { text: string; points: string[] 
       {text
         .split(/\n\s*\n/)
         .filter((paragraph) => paragraph.trim())
-        .map((paragraph) => (
-          <Text key={paragraph} className="font-sans text-base text-blanc leading-relaxed">
+        .map((paragraph, index) => (
+          // Liste statique : l'index suffit, et deux paragraphes peuvent être identiques.
+          // biome-ignore lint/suspicious/noArrayIndexKey: liste statique
+          <Text key={index} className="font-sans text-base text-blanc leading-relaxed">
             {paragraph.trim()}
           </Text>
         ))}
       <View className="gap-1.5">
-        {points.map((point) => (
-          <View key={point} className="flex-row gap-2">
+        {points.map((point, index) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: liste statique, points parfois identiques
+          <View key={index} className="flex-row gap-2">
             <Text aria-hidden className="font-sans-bold text-chamois">
               ·
             </Text>

@@ -67,7 +67,10 @@ version de la consigne change, les résumés existants DOIVENT être régénér�
 Le système DOIT plafonner la dépense quotidienne consacrée aux résumés et le
 nombre de résumés produits par cycle. Un échec (réseau, réponse invalide) DOIT
 laisser le contenu sans résumé, retenté lors d'un cycle ultérieur, dans la
-limite de trois tentatives. Une indisponibilité du service (crédit épuisé, limite de
+limite de trois tentatives, espacées d'un délai croissant (un direct tout juste
+terminé n'est souvent pas encore lisible). La dépense comptée DOIT inclure tout
+appel payé, même si sa réponse est inexploitable ou si le résumé est remplacé
+ensuite. Une indisponibilité du service (crédit épuisé, limite de
 débit, panne) NE DOIT PAS compter comme une tentative : elle interrompt le cycle,
 qui reprend plus tard. Un résumé absent NE DOIT jamais empêcher la
 publication ni l'affichage d'une intervention.

@@ -202,6 +202,7 @@ describe('recalcul des rendus existants', () => {
   test('refreshMedia ne reprend que les contenus publiés de la source demandée', async () => {
     const { createTestDb } = await import('@lisnard/db/testing');
     const { item } = await import('@lisnard/db/schema');
+    const { eq } = await import('drizzle-orm');
     const { recordClassification, setMedia, upsertItem, upsertSources } = await import(
       '@lisnard/db/write'
     );
@@ -247,13 +248,31 @@ describe('recalcul des rendus existants', () => {
         'rss:google-news',
       );
       expect(result).toMatchObject({ total: 1, link: 1 });
-      const rows = await db.select({ url: item.url, media: item.media }).from(item);
+      const rows = await db.select({ id: item.id, url: item.url, media: item.media }).from(item);
       const refreshed = rows.find((r) => r.url.endsWith('article'));
       expect(refreshed?.media).toEqual({
         kind: 'link',
         og: { title: 'Titre', siteName: 'Google News' },
       });
       expect(rows.find((r) => r.url.endsWith('video'))?.media).toEqual({ kind: 'link', og: {} });
+      // Échec passager sur un article qui avait déjà une carte complète : rendu conservé.
+      const good = {
+        kind: 'link' as const,
+        og: { title: 'Titre', image: 'https://img.example/a.jpg' },
+        url: 'https://www.lejdd.fr/a',
+      };
+      await setMedia(db, refreshed?.id ?? '', good);
+      const again = await refreshMedia(
+        db,
+        { fetch: routes({}), resolve: publicDns },
+        'rss:google-news',
+      );
+      expect(again).toMatchObject({ kept: 1 });
+      const [kept] = await db
+        .select({ media: item.media })
+        .from(item)
+        .where(eq(item.id, refreshed?.id ?? ''));
+      expect(kept?.media).toEqual(good);
     } finally {
       await drop();
     }

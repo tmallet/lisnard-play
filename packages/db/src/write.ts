@@ -13,6 +13,7 @@ import {
   type MediaRender,
   type SummaryRecord,
   source,
+  summarySpend,
   type Theme,
 } from './schema';
 
@@ -270,6 +271,7 @@ export async function listPublishedForMediaRefresh(db: Db, sourceId?: string) {
       url: item.url,
       title: item.title,
       outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+      media: item.media,
     })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
@@ -282,6 +284,8 @@ export interface SummaryTarget {
   title: string;
   outlet: string;
   durationS: number | null;
+  /** Échecs déjà comptés : fixe l'attente avant l'essai suivant. */
+  summaryAttempts: number;
 }
 
 /**
@@ -301,6 +305,7 @@ export async function listSummaryTargets(
       title: item.title,
       outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
       durationS: item.durationS,
+      summaryAttempts: item.summaryAttempts,
     })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
@@ -310,6 +315,7 @@ export async function listSummaryTargets(
         sql`${item.media}->>'provider' = 'youtube'`,
         inArray(item.liveStatus, ['none', 'ended']),
         sql`(${item.summary} is null or (${item.summary}->>'promptVersion')::int <> ${promptVersion})`,
+        sql`(${item.summaryRetryAt} is null or ${item.summaryRetryAt} <= now())`,
       ),
     )
     .orderBy(desc(sql`coalesce(${item.startsAt}, ${item.publishedAt})`))
@@ -318,22 +324,30 @@ export async function listSummaryTargets(
 
 /** Enregistre un résumé (ou son absence motivée) et remet le compteur d'échecs à zéro. */
 export async function recordSummary(db: Db, itemId: string, summary: SummaryRecord) {
-  await db.update(item).set({ summary, summaryAttempts: 0 }).where(eq(item.id, itemId));
+  await db
+    .update(item)
+    .set({ summary, summaryAttempts: 0, summaryRetryAt: null })
+    .where(eq(item.id, itemId));
 }
 
 /**
- * Compte un échec. Au plafond, enregistre l'abandon pour la version courante de la
- * consigne (design D5) : une nouvelle version relancera la production.
+ * Compte un échec et reporte le prochain essai (`retryAfterMs`). Au plafond, enregistre
+ * l'abandon pour la version courante de la consigne (design D5) : une nouvelle version
+ * relancera la production.
  */
 export async function recordSummaryFailure(
   db: Db,
   itemId: string,
   maxAttempts: number,
   abandoned: SummaryRecord,
+  retryAfterMs = 0,
 ): Promise<{ abandoned: boolean }> {
   const [row] = await db
     .update(item)
-    .set({ summaryAttempts: sql`${item.summaryAttempts} + 1` })
+    .set({
+      summaryAttempts: sql`${item.summaryAttempts} + 1`,
+      summaryRetryAt: sql`now() + ${`${retryAfterMs} milliseconds`}::interval`,
+    })
     .where(eq(item.id, itemId))
     .returning({ attempts: item.summaryAttempts });
   if ((row?.attempts ?? 0) < maxAttempts) return { abandoned: false };
@@ -341,22 +355,32 @@ export async function recordSummaryFailure(
   return { abandoned: true };
 }
 
-/** Dépense en résumés depuis une date (plafond quotidien, design D4). */
-export async function summaryCostSince(db: Db, since: Date): Promise<number> {
+/** Ajoute le coût d'un appel à la dépense du jour (« AAAA-MM-JJ », heure de Paris). */
+export async function addSummarySpend(db: Db, day: string, cost: number): Promise<void> {
+  if (cost <= 0) return;
+  await db
+    .insert(summarySpend)
+    .values({ day, cost })
+    .onConflictDoUpdate({
+      target: summarySpend.day,
+      set: { cost: sql`${summarySpend.cost} + excluded.cost` },
+    });
+}
+
+/** Dépense en résumés d'un jour (plafond quotidien, design D4). */
+export async function summarySpentOn(db: Db, day: string): Promise<number> {
   const [row] = await db
-    .select({
-      total: sql<number>`coalesce(sum((${item.summary}->>'cost')::float8), 0)::float8`,
-    })
-    .from(item)
-    .where(sql`(${item.summary}->>'generatedAt')::timestamptz >= ${since}`);
-  return Number(row?.total ?? 0);
+    .select({ cost: summarySpend.cost })
+    .from(summarySpend)
+    .where(eq(summarySpend.day, day));
+  return row?.cost ?? 0;
 }
 
 /** Relance les résumés abandonnés après des échecs (commande summarize --retry). */
 export async function resetFailedSummaries(db: Db): Promise<number> {
   const rows = await db
     .update(item)
-    .set({ summary: null, summaryAttempts: 0 })
+    .set({ summary: null, summaryAttempts: 0, summaryRetryAt: null })
     .where(sql`${item.summary}->>'reason' = 'failed'`)
     .returning({ id: item.id });
   return rows.length;

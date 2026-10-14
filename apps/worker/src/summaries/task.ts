@@ -5,14 +5,15 @@
 import type { Db } from '@lisnard/db/client';
 import type { SummaryRecord } from '@lisnard/db/schema';
 import {
+  addSummarySpend,
   listSummaryTargets,
   recordSummary,
   recordSummaryFailure,
-  summaryCostSince,
+  summarySpentOn,
 } from '@lisnard/db/write';
 
 import { errorMessage, log } from '../log';
-import { type Summarizer, SummaryServiceUnavailable } from './openrouter';
+import { InvalidSummaryResponse, type Summarizer, SummaryServiceUnavailable } from './openrouter';
 import { PROMPT_VERSION } from './prompt';
 
 export interface SummarizeOptions {
@@ -42,26 +43,16 @@ export interface SummarizeStats {
   unavailable?: string;
 }
 
-/** Minuit à Paris pour la date donnée : début de la période du plafond quotidien. */
-export function parisMidnight(now: Date): Date {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Paris',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hourCycle: 'h23',
-    })
-      .formatToParts(now)
-      .map((p) => [p.type, p.value]),
-  );
-  const elapsed =
-    (Number(parts.hour) * 3600 + Number(parts.minute) * 60 + Number(parts.second)) * 1000;
-  return new Date(Math.floor(now.getTime() / 1000) * 1000 - elapsed);
+/** Jour à Paris (« AAAA-MM-JJ ») : période du plafond quotidien. */
+export function parisDay(now: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(now);
 }
+
+/**
+ * Attente avant l'essai suivant : 15 min, puis 1 h. Un direct qui vient de se terminer
+ * n'est souvent pas encore lisible (rediffusion en préparation chez YouTube).
+ */
+export const RETRY_DELAYS_MS = [15 * 60_000, 60 * 60_000];
 
 export async function summarizePending(
   db: Db,
@@ -83,7 +74,13 @@ export async function summarizePending(
     cost: 0,
     budgetReached: false,
   };
-  let spent = await summaryCostSince(db, parisMidnight(now()));
+  const day = parisDay(now());
+  let spent = await summarySpentOn(db, day);
+  const pay = async (cost: number) => {
+    spent += cost;
+    stats.cost += cost;
+    await addSummarySpend(db, day, cost);
+  };
   const record = (over: Pick<SummaryRecord, 'cost'> & Partial<SummaryRecord>) =>
     ({
       model: summarizer.model,
@@ -106,8 +103,7 @@ export async function summarizePending(
     }
     try {
       const { model, output, cost } = await summarizer.summarize(target);
-      spent += cost;
-      stats.cost += cost;
+      await pay(cost);
       await recordSummary(
         db,
         target.id,
@@ -124,13 +120,15 @@ export async function summarizePending(
         log.error('résumés interrompus : service indisponible', { error: error.message });
         break;
       }
-      // Le contenu reste sans résumé ; abandon au plafond de tentatives (spec).
+      if (error instanceof InvalidSummaryResponse) await pay(error.cost);
+      // Le contenu reste sans résumé ; nouvel essai plus tard, abandon au plafond (spec).
       stats.failed += 1;
       const { abandoned } = await recordSummaryFailure(
         db,
         target.id,
         maxAttempts,
         record({ kind: 'none', reason: 'failed', cost: 0 }),
+        RETRY_DELAYS_MS[Math.min(target.summaryAttempts, RETRY_DELAYS_MS.length - 1)],
       );
       log.warn('résumé en échec', { item: target.id, abandoned, error: errorMessage(error) });
     }

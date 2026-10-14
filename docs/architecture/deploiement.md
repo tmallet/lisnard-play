@@ -43,7 +43,7 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 |----------|:---:|:------:|----------|
 | `DATABASE_URL` | ✅ | ✅ | URL interne Coolify du service Postgres |
 | `OPENROUTER_API_KEY` | — | ✅ | Classifieur Jev (ADR 0004) et résumés Gemini (ADR 0021). Clé dédiée, avec une limite de dépense |
-| `SUMMARY_DAILY_BUDGET_USD` | — | facultatif | Plafond quotidien des résumés (1 $ par défaut) |
+| `SUMMARY_DAILY_BUDGET_USD` | — | facultatif | Plafond quotidien des résumés (1 $ par défaut). Nombre avec un point (`1.5`) : une valeur illisible arrête le worker au démarrage |
 | `YOUTUBE_API_KEY` | — | ✅ | API YouTube Data v3, restreinte à cette API (environ 6 000 unités par jour sur 10 000) |
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
 | `NODE_ENV` | `production` (image) | `production` (image) | Masque les détails d'erreur de l'API |

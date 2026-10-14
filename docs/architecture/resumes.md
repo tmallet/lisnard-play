@@ -47,9 +47,9 @@ d'abord.
 |-------|--------|
 | Contenus | publiés, rendu `embed` YouTube, diffusion terminée (`live_status` `none` ou `ended`) |
 | Cadence | tâche `summarize` toutes les 2 min, 5 vidéos au plus par cycle |
-| Plafond quotidien | `SUMMARY_DAILY_BUDGET_USD` (1 $ par défaut), calculé en base depuis minuit, heure de Paris |
+| Plafond quotidien | `SUMMARY_DAILY_BUDGET_USD` (1 $ par défaut ; une valeur illisible arrête le worker au démarrage). La dépense est tenue jour par jour (heure de Paris) dans la table `summary_spend` : chaque appel payé y est ajouté, y compris une réponse invalide ou un résumé remplacé ensuite |
 | Vidéos trop longues | plus de 3 h : `kind: 'none', reason: 'too_long'`, sans appel |
-| Échecs | 3 tentatives, puis `reason: 'failed'` pour la version courante de la consigne |
+| Échecs | 3 tentatives espacées (15 min, puis 1 h : un direct tout juste terminé n'est souvent pas encore lisible), puis `reason: 'failed'` pour la version courante de la consigne |
 | Service indisponible | HTTP 402 (crédit épuisé), 429 ou 5xx : cycle interrompu, aucune tentative consommée |
 
 **Stockage** : `item.summary` (jsonb) contient le texte et les points, ou le

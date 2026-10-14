@@ -6,6 +6,7 @@ import { getPublishedById, listPublished } from './read';
 import { classification, item, type SummaryRecord } from './schema';
 import { createTestDb } from './testing';
 import {
+  addSummarySpend,
   type ClassificationRecord,
   listClassificationTargets,
   listSummaryTargets,
@@ -14,7 +15,7 @@ import {
   recordSummaryFailure,
   resetFailedSummaries,
   setMedia,
-  summaryCostSince,
+  summarySpentOn,
   upsertItem,
   upsertSources,
 } from './write';
@@ -264,7 +265,9 @@ describe('résumés', () => {
     const { id } = await candidate('yt:fail');
     await publish(id);
     const abandoned = ok({ kind: 'none', reason: 'failed', cost: 0 } as Partial<SummaryRecord>);
-    expect(await recordSummaryFailure(db, id, 3, abandoned)).toEqual({ abandoned: false });
+    // Échec avec attente : la vidéo n'est plus proposée avant l'échéance.
+    expect(await recordSummaryFailure(db, id, 3, abandoned, 60_000)).toEqual({ abandoned: false });
+    expect(await listSummaryTargets(db, 10, 1)).toHaveLength(0);
     expect(await recordSummaryFailure(db, id, 3, abandoned)).toEqual({ abandoned: false });
     expect(await recordSummaryFailure(db, id, 3, abandoned)).toEqual({ abandoned: true });
     expect(await listSummaryTargets(db, 10, 1)).toHaveLength(0);
@@ -284,8 +287,12 @@ describe('résumés', () => {
       b.id,
       ok({ kind: 'none', reason: 'not_speaking', cost: 0.5 } as Partial<SummaryRecord>),
     );
-    const since = new Date(Date.now() - 60_000);
-    expect(await summaryCostSince(db, since)).toBeCloseTo(0.75);
+    // La dépense est tenue à part : elle s'additionne, même si un résumé est remplacé.
+    await addSummarySpend(db, '2026-10-14', 0.25);
+    await addSummarySpend(db, '2026-10-14', 0.5);
+    await addSummarySpend(db, '2026-10-15', 0.1);
+    expect(await summarySpentOn(db, '2026-10-14')).toBeCloseTo(0.75);
+    expect(await summarySpentOn(db, '2026-10-13')).toBe(0);
     expect((await getPublishedById(db, a.id))?.summary).toEqual({
       text: 'Il estime que…',
       points: ['école'],

@@ -18,6 +18,16 @@ const ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions';
  */
 export class SummaryServiceUnavailable extends Error {}
 
+/** Réponse payée mais inexploitable : son coût compte quand même dans le plafond. */
+export class InvalidSummaryResponse extends Error {
+  constructor(
+    message: string,
+    readonly cost: number,
+  ) {
+    super(message);
+  }
+}
+
 export interface SummaryOutput {
   speaks: boolean;
   summary: string;
@@ -106,11 +116,19 @@ export function createOpenRouterSummarizer(options: {
         throw new SummaryServiceUnavailable(`OpenRouter : HTTP ${res.status}`);
       if (!res.ok) throw new Error(`OpenRouter : HTTP ${res.status}`);
       const body = (await res.json()) as ApiResponse;
-      return {
-        model: body.model ?? model,
-        output: parseSummaryOutput(body.choices?.[0]?.message?.content),
-        cost: body.usage?.cost ?? 0,
-      };
+      const cost = body.usage?.cost ?? 0;
+      try {
+        return {
+          model: body.model ?? model,
+          output: parseSummaryOutput(body.choices?.[0]?.message?.content),
+          cost,
+        };
+      } catch (error) {
+        throw new InvalidSummaryResponse(
+          error instanceof Error ? error.message : String(error),
+          cost,
+        );
+      }
     },
   };
 }

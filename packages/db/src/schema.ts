@@ -2,6 +2,8 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   customType,
+  date,
+  doublePrecision,
   index,
   integer,
   pgEnum,
@@ -151,6 +153,8 @@ export const item = pgTable(
     summary: jsonb<SummaryRecord>('summary'),
     /** Échecs consécutifs de production du résumé (plafond de tentatives). */
     summaryAttempts: integer('summary_attempts').notNull().default(0),
+    /** Pas de nouvel essai de résumé avant cette date (attente croissante après un échec). */
+    summaryRetryAt: timestamp('summary_retry_at', { withTimezone: true }),
     firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -167,6 +171,15 @@ export const item = pgTable(
 );
 
 /** Journal des décisions du classifieur : ajout seul (ADR 0005, ADR 0017). */
+/**
+ * Dépense en résumés par jour (heure de Paris) : chaque appel payé s'y ajoute, y compris
+ * une réponse invalide ou un résumé remplacé ensuite (plafond quotidien, ADR 0021).
+ */
+export const summarySpend = pgTable('summary_spend', {
+  day: date('day').primaryKey(),
+  cost: doublePrecision('cost').notNull().default(0),
+});
+
 export const classification = pgTable(
   'classification',
   {

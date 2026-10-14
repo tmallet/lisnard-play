@@ -110,6 +110,11 @@ export const minimalLink = (target: MediaTarget): Extract<MediaRender, { kind: '
   og: { title: target.title, siteName: target.outlet },
 });
 
+/** Rendu de repli (titre et média seulement) : aucune information obtenue de la source. */
+export function isMinimalLink(media: MediaRender): boolean {
+  return media.kind === 'link' && !media.url && !media.og.image && !media.og.description;
+}
+
 export async function resolveMedia(
   target: MediaTarget,
   ctx: MediaContext = {},
