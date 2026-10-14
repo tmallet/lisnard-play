@@ -34,7 +34,9 @@ https://docs.typesafe.ai, https://openrouter.ai/docs/guides/community/jev
   configuré sur l'URL de base et la clé OpenRouter. On pourra ainsi passer à
   un autre modèle compatible System One (ex. Drex de Nace.AI) en changeant
   seulement l'identifiant.
-- Le modèle est **épinglé** : `typesafe/jev-1.13`. L'alias
+- Le modèle est **épinglé** sur un instantané daté : `typesafe/jev-1.13-20260917`
+  (précision issue du spike du 2026-10-13 : `typesafe/jev-1.13` suit le dernier
+  instantané 1.13). L'alias
   `~typesafe/jev-latest` est interdit, car une montée de version décale la
   calibration et rend les seuils caducs.
 - Partage des rôles :
@@ -68,8 +70,9 @@ https://docs.typesafe.ai, https://openrouter.ai/docs/guides/community/jev
 
 ## Points ouverts
 
-- Schéma exact de `/api/v1/systemone` (passage du `model`, format des
-  questions) à confirmer avec le SDK JS lors d'un spike.
-- Tenue de la calibration sur du contenu en français.
+- ~~Schéma exact de `/api/v1/systemone`~~ : confirmé par le spike (voir design
+  du change `intervention-ingestion`, D4). Un client REST minimal suffit, sans SDK.
+- ~~Tenue de la calibration sur du contenu en français~~ : 20 cas sur 20
+  corrects au spike. Calibration complète à faire sur le jeu de référence.
 - Jev est en accès anticipé et son prix est peut-être subventionné (selon
   l'annonce) : surveiller.

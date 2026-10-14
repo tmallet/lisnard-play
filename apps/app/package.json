@@ -5,6 +5,7 @@
   "dependencies": {
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@lisnard/api": "workspace:*",
+    "@lisnard/db": "workspace:*",
     "@tanstack/react-query": "5.104.2",
     "@trpc/client": "11.19.0",
     "@trpc/server": "11.19.0",
@@ -23,6 +24,7 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.0",
+    "react-native-webview": "13.16.1",
     "tailwindcss": "^4.3.3",
     "uniwind": "^1.12.2"
   },
@@ -35,13 +37,14 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "dev": "expo start",
-    "ios": "expo start --ios",
-    "android": "expo start --android",
-    "web": "expo start --web",
-    "export:web": "expo export --platform web",
+    "dev": "bun --env-file=../../.env --bun expo start",
+    "ios": "bun --env-file=../../.env --bun expo start --ios",
+    "android": "bun --env-file=../../.env --bun expo start --android",
+    "web": "bun --env-file=../../.env --bun expo start --web",
+    "export:web": "bunx expo export --platform web",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "start": "bun server.ts"
   },
   "private": true,
   "jest": {

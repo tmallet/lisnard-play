@@ -1,0 +1,183 @@
+/**
+ * Calibration des seuils sur le jeu de référence (design D5). Privilégie la précision
+ * (une fausse publication coûte plus cher qu'un oubli, ADR 0005) sous la contrainte
+ * d'un rappel d'au moins 80 %.
+ */
+import type { Db } from '@lisnard/db/client';
+import { type ClassifierAnswers, classification, item, source } from '@lisnard/db/schema';
+import { desc, eq, sql } from 'drizzle-orm';
+
+import { decide } from './classifier/decide';
+import { QUESTIONS_VERSION } from './classifier/questions';
+import type { Classifier, ClassifierState } from './classifier/types';
+
+export interface ReferenceCase {
+  platformId: string;
+  outlet: string;
+  title: string;
+  expected: { intervient: boolean; role: string; kind: string };
+  note?: string;
+  synthetic?: boolean;
+  state?: ClassifierState;
+  validated: boolean;
+}
+
+export async function loadReference(path: string): Promise<ReferenceCase[]> {
+  const text = await Bun.file(path).text();
+  return text
+    .split('\n')
+    .filter((l) => l.trim())
+    .map((l) => JSON.parse(l) as ReferenceCase);
+}
+
+const shouldPublish = (c: ReferenceCase) =>
+  c.expected.intervient && (c.expected.role === 'national' || c.expected.role === 'amf');
+
+/**
+ * Probabilités par cas : dernière décision journalisée avec la version courante des
+ * questions, sinon appel au classifieur (cas synthétiques ou non encore classés).
+ */
+export async function collectAnswers(
+  db: Db,
+  classifier: Classifier,
+  cases: ReferenceCase[],
+): Promise<Map<string, ClassifierAnswers>> {
+  const answers = new Map<string, ClassifierAnswers>();
+  for (const c of cases) {
+    if (!c.synthetic) {
+      const [row] = await db
+        .select({
+          answers: classification.answers,
+          state: {
+            title: item.title,
+            description: item.description,
+            outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+            sourceKind: source.kind,
+            publishedAt: item.publishedAt,
+            startsAt: item.startsAt,
+          },
+          version: classification.questionsVersion,
+        })
+        .from(item)
+        .innerJoin(source, eq(item.sourceId, source.id))
+        .leftJoin(classification, eq(classification.itemId, item.id))
+        .where(eq(item.platformId, c.platformId))
+        .orderBy(desc(classification.createdAt))
+        .limit(1);
+      if (row?.answers && row.version === QUESTIONS_VERSION) {
+        answers.set(c.platformId, row.answers);
+        continue;
+      }
+      if (row) {
+        const s = row.state;
+        const result = await classifier.classify({
+          ...s,
+          publishedAt: s.publishedAt.toISOString(),
+          startsAt: s.startsAt?.toISOString() ?? null,
+        });
+        answers.set(c.platformId, result.answers);
+        continue;
+      }
+    }
+    if (c.state) answers.set(c.platformId, (await classifier.classify(c.state)).answers);
+  }
+  return answers;
+}
+
+export interface Evaluation {
+  thresholds: { intervient: number; role: number };
+  tp: number;
+  fp: number;
+  fn: number;
+  tn: number;
+  precision: number;
+  recall: number;
+  errors: {
+    platformId: string;
+    title: string;
+    kind: 'faux positif' | 'faux négatif';
+    intervient: number;
+    role: string;
+    confidence: number;
+    note?: string;
+  }[];
+}
+
+export function evaluate(
+  cases: ReferenceCase[],
+  answers: Map<string, ClassifierAnswers>,
+  thresholds: { intervient: number; role: number },
+): Evaluation {
+  const e: Evaluation = {
+    thresholds,
+    tp: 0,
+    fp: 0,
+    fn: 0,
+    tn: 0,
+    precision: 0,
+    recall: 0,
+    errors: [],
+  };
+  for (const c of cases) {
+    const a = answers.get(c.platformId);
+    if (!a) continue;
+    const predicted = decide(a, thresholds).outcome === 'published';
+    const expected = shouldPublish(c);
+    if (predicted && expected) e.tp += 1;
+    else if (predicted && !expected) e.fp += 1;
+    else if (!predicted && expected) e.fn += 1;
+    else e.tn += 1;
+    if (predicted !== expected)
+      e.errors.push({
+        platformId: c.platformId,
+        title: c.title,
+        kind: predicted ? 'faux positif' : 'faux négatif',
+        intervient: a.intervient,
+        role: a.role.choice,
+        confidence: a.role.confidence,
+        ...(c.note && { note: c.note }),
+      });
+  }
+  e.precision = e.tp + e.fp === 0 ? 1 : e.tp / (e.tp + e.fp);
+  e.recall = e.tp + e.fn === 0 ? 1 : e.tp / (e.tp + e.fn);
+  return e;
+}
+
+/** Exactitude du rôle et du type sur les cas où David Lisnard intervient. */
+export function labelAccuracy(cases: ReferenceCase[], answers: Map<string, ClassifierAnswers>) {
+  const speaking = cases.filter((c) => c.expected.intervient && answers.has(c.platformId));
+  const ok = (pick: (a: ClassifierAnswers) => string, field: 'role' | 'kind') =>
+    speaking.filter(
+      (c) => pick(answers.get(c.platformId) as ClassifierAnswers) === c.expected[field],
+    ).length / Math.max(speaking.length, 1);
+  return {
+    role: ok((a) => a.role.choice, 'role'),
+    kind: ok((a) => a.kind.choice, 'kind'),
+    cases: speaking.length,
+  };
+}
+
+/**
+ * Parcourt une grille de seuils et propose le couple qui maximise la précision avec un
+ * rappel ≥ minRecall (à précision égale : meilleur rappel, puis seuils les plus bas).
+ */
+export function proposeThresholds(
+  cases: ReferenceCase[],
+  answers: Map<string, ClassifierAnswers>,
+  minRecall = 0.8,
+): Evaluation | null {
+  let best: Evaluation | null = null;
+  for (let i = 30; i <= 90; i += 5) {
+    for (let r = 50; r <= 90; r += 5) {
+      const ev = evaluate(cases, answers, { intervient: i / 100, role: r / 100 });
+      if (ev.recall < minRecall) continue;
+      if (
+        !best ||
+        ev.precision > best.precision ||
+        (ev.precision === best.precision && ev.recall > best.recall)
+      )
+        best = ev;
+    }
+  }
+  return best;
+}

@@ -81,7 +81,8 @@ classification  id, item_id, model, questions_version, input_hash,
 - **Date de tri** : `coalesce(starts_at, published_at)`.
 
 ### D3 — Sources
-Stratégie YouTube : ADR 0017.
+Stratégie YouTube : ADR 0017. Rattrapage des chaînes officielles par leur
+playlist « uploads » : ADR 0018.
 
 - **YouTube** : flux RSS public
   `https://www.youtube.com/feeds/videos.xml?channel_id=<id>`, gratuit et sans
@@ -94,22 +95,39 @@ Stratégie YouTube : ADR 0017.
   Lisnard », langue `fr`). Un même adaptateur, avec un parseur XML.
 - **Cadences** : YouTube toutes les 3 minutes, RSS toutes les 15 minutes,
   revérification des directs à chaque cycle YouTube.
-- **Sources initiales** : chaîne @davidlisnard, chaînes YouTube de BFMTV,
-  CNEWS, franceinfo, LCI, Public Sénat, LCP, Sud Radio, RTL, Europe 1 et France
-  Inter, plus Google News. Les identifiants de chaîne sont résolus et vérifiés
-  à l'implémentation, puis figés dans `sources.config.ts`.
+- **Sources initiales** (identifiants vérifiés le 2026-10-13) : chaîne
+  **@david_lisnard**, liée depuis le site du parti (`@davidlisnard` est
+  inactive depuis 2017) ; chaînes de BFMTV, CNEWS (`@cnewsofficiel`),
+  franceinfo, LCI, Public Sénat, LCP, Sud Radio, RTL, Europe 1, France Inter,
+  Le Figaro et Le Parisien ; Google News. Première collecte réelle : 14 sources,
+  294 contenus, 110 retenus, 13 unités de quota.
 - **Quota** : environ 13 chaînes × 1 unité × 480 cycles par jour, soit environ
   6 000 unités, sous les 10 000 unités quotidiennes de l'API. Le compteur est
   journalisé.
 
 ### D4 — Classifieur
-Modèle, questions et seuils : ADR 0004 et 0005.
+Modèle, questions et seuils : ADR 0004. Règle de publication (dont l'exception de
+la chaîne officielle) : ADR 0018, qui remplace l'ADR 0005.
 
-- **Client** : le SDK TypeSafe JS pointé sur `https://openrouter.ai/api/v1`,
-  modèle `typesafe/jev-1.13` (ADR 0004). Le format exact de l'appel est
-  confirmé par le **spike** (tâche 1). Si le SDK ne convient pas, on écrit un
-  client REST minimal sur `POST /api/v1/systemone`. Dans les deux cas, le reste
-  du worker ne voit que l'interface `Classifier`.
+- **Client** : client REST minimal, sans SDK, sur
+  `POST https://openrouter.ai/api/v1/systemone` (`Authorization: Bearer`). Le
+  reste du worker ne voit que l'interface `Classifier`.
+- **Résultat du spike (tâche 1)** :
+  - Requête : `{ model, state (chaîne), questions: { <clé>: { type: "noul" | "choice",
+    instructions, criteria? } } }`.
+  - Réponse : `answers.<clé>` vaut `{ type: "noul", noul }` ou
+    `{ type: "choice", choice, probabilities, confidence }`, avec en plus
+    `model` (instantané servi, ex. `typesafe/jev-1.13-20260917`) et
+    `usage.cost`.
+  - 20 cas en français, couvrant tous les cas limites de l'ADR 0006 :
+    **20/20 décisions de publication correctes**. Rôle correct dans tous les
+    cas, et séparation nette de la probabilité « intervient » : les vraies
+    interventions nationales ou AMF sont à 0,57 ou plus, les simples citations
+    à 0,17 ou moins.
+  - Latence de 230 à 510 ms, environ 0,00003 $ par appel (3 questions).
+- **Modèle épinglé sur l'instantané daté** `typesafe/jev-1.13-20260917`.
+  L'identifiant `typesafe/jev-1.13` pointe sur le dernier instantané 1.13, ce
+  qui pourrait décaler la calibration. Le `model` renvoyé est journalisé.
 - **État envoyé** : JSON `{ title, description (tronquée à 2 000 caractères),
   outlet, sourceKind, publishedAt, startsAt }`.
 - **Questions** (`QUESTIONS_VERSION = 1`) :
@@ -119,8 +137,13 @@ Modèle, questions et seuils : ADR 0004 et 0005.
     descriptions qui tranchent les cas limites de l'ADR 0006 ;
   - Choice `kind` : les 8 types de la spec.
 - **Seuils** : `thresholds.ts`, indexés par identifiant de modèle. Valeurs
-  initiales prudentes (`τ_intervient = 0.85`, `τ_role = 0.80`), remplacées par
-  celles qu'obtient la calibration (tâche dédiée) avant la mise en production.
+  initiales tirées du spike (`τ_intervient = 0.50`, `τ_role = 0.60`). Avec
+  0,85, une matinale BFMTV (0,79) et un discours au congrès de l'AMF (0,74)
+  auraient été écartés. Elles seront confirmées ou ajustées par la calibration
+  (tâche 5) avant la mise en production.
+  *Résultat de la calibration (2026-10-13)* : `τ_intervient = 0.75`,
+  `τ_role = 0.60` avec les questions v2, soit 98 % de précision et 82,8 % de
+  rappel sur 120 cas validés. Voir `docs/architecture/classifier.md`.
 - **Reprise sur erreur** : 3 tentatives avec attente exponentielle par cycle ;
   au-delà, l'élément reste `pending` (spec « Indisponibilité du classifieur »).
 - **Cache** : `input_hash` (hash de l'état et de la version des questions). Si
@@ -186,7 +209,7 @@ Voir ADR 0014 et 0015.
   healthcheck Docker.
 - **Devcontainer** : passage à docker compose avec un service `postgres`
   (même version majeure qu'en production). Le pare-feu gagne
-  `www.youtube.com`, `youtube.googleapis.com`, `news.google.com`, les
+  `www.youtube.com`, `www.googleapis.com` (API YouTube Data), `news.google.com`, les
   endpoints oEmbed et les hôtes des flux RSS configurés.
 - **CI** : service Postgres dans le job. Les tests d'intégration de `@lisnard/db`
   et du worker utilisent une base jetable, migrée au démarrage du test.
@@ -222,9 +245,13 @@ Voir ADR 0014 et 0015.
 - **[Quota YouTube]** Environ 6 000 unités par jour sur 10 000. → Cadence
   configurable et compteur journalisé ; on peut réduire la fréquence des
   chaînes peu actives.
-- **[Google News]** Ses URL redirigent vers les articles, et la qualité est
-  variable. → Résolution de la redirection avant le dédoublonnage ; le
-  classifieur filtre les simples citations.
+- **[Google News]** Ses liens (`news.google.com/rss/articles/…`) ne se
+  résolvent pas par simple redirection HTTP : il faut du JavaScript côté
+  navigateur. → *Mise à jour à l'implémentation* : on garde l'URL Google News
+  (elle redirige dans le navigateur), on dédoublonne par `guid` et on lit le
+  média réel dans `<source>` (colonne `item.outlet`). Le rendu est un `link`
+  minimal. Le classifieur filtre les nombreux articles qui ne font que citer
+  David Lisnard.
 - **[Pare-feu du devcontainer et Open Graph]** La lecture d'Open Graph vise
   des domaines arbitraires, bloqués dans le devcontainer. → En développement,
   on s'appuie sur les fixtures, et l'échec donne un `link` minimal (spec). Le

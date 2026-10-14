@@ -22,8 +22,10 @@ https://www.lisnard2027.fr, ce qui peut faire croire à une application officiel
 ## Décision
 
 - L'application est **indépendante** et le dit explicitement : une mention
-  « Application indépendante, non affiliée à David Lisnard ni à Nouvelle
-  Énergie » figure dans le pied de page web et dans l'écran « À propos ».
+  « Initiative indépendante de soutiens. Ce site ne dépend ni de Nouvelle
+  Énergie ni de David Lisnard. » figure sur chaque écran (pied de page) et dans
+  l'écran « À propos ». Formulation précisée le 2026-10-13 par le porteur du
+  projet ; la source unique est `INDEPENDENCE_NOTICE` (`apps/app/src/config/app.ts`).
 - On reprend **uniquement** la palette et la police de la charte :
 
   | Token        | Valeur    | Usage                                   |

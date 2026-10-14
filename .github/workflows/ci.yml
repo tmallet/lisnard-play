@@ -18,6 +18,23 @@ jobs:
     name: check + smoke web
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    services:
+      # Même version majeure qu'en production (ADR 0014).
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: lisnard
+          POSTGRES_PASSWORD: lisnard
+          POSTGRES_DB: lisnard
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U lisnard -d lisnard"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      DATABASE_URL: postgres://lisnard:lisnard@localhost:5433/lisnard
     steps:
       - uses: actions/checkout@v4
 

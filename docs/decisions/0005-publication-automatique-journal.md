@@ -1,11 +1,11 @@
 ---
 id: "0005"
 title: Publication tout automatique et journal des décisions du classifieur
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [ingestion, ia, classifier, notifications]
 supersedes: null
-superseded-by: null
+superseded-by: "0018"
 related-specs: []
 related-changes: []
 ---

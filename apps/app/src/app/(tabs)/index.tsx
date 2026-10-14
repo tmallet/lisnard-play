@@ -1,6 +1,7 @@
 import { Text } from 'react-native';
 
 import { HealthStatus } from '@/components/HealthStatus';
+import { InterventionFeed } from '@/components/InterventionFeed';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
 import { Title } from '@/components/Title';
@@ -13,9 +14,7 @@ export default function Home() {
       <Text className="font-sans-bold text-blanc text-lg">
         En direct, à venir et passées : télévision, radio, presse, meetings.
       </Text>
-      <Text className="font-sans text-base text-blanc/85 leading-relaxed">
-        La liste des interventions arrive bientôt.
-      </Text>
+      <InterventionFeed />
       <HealthStatus />
     </Screen>
   );

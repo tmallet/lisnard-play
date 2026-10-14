@@ -9,16 +9,20 @@ recense les interventions publiques de David Lisnard, candidat à la
 présidentielle 2027. Le périmètre couvre tout sauf la mairie de Cannes, AMF
 inclus. Le contexte complet se trouve dans `openspec/config.yaml` (`context`).
 
-État actuel : **socle en place** (monorepo Bun, app Expo SDK 57, tRPC, CI,
-devcontainer). L'ingestion, la base de données et le classifieur restent à
-construire (ADR 0004 à 0007).
+État actuel : **ingestion en place**. Le worker collecte YouTube et Google News,
+classe avec Jev, résout les médias et écrit dans Postgres ; l'app affiche le flux
+paginé et le détail des interventions (ADR 0014 à 0019). Restent à venir : les
+résumés et transcriptions, les notifications et le SSR (SDK 58).
 
 ## Démarrer
 
 ```bash
 asdf install        # Bun et Node aux versions de .tool-versions
 bun install
-bun run dev         # Metro : web, iOS, Android, API routes
+docker compose up -d                 # Postgres local (port 5433)
+cp .env.example .env                 # puis renseigner les clés du worker
+bun apps/worker/src/index.ts         # worker : migrations, collecte, classification
+bun run dev         # Metro sous Bun : web, iOS, Android, API routes
 bun run check       # format, lint, types, tests, docs:check : avant de conclure
 ```
 
@@ -35,7 +39,7 @@ Pour travailler en bac à sable (agents en autonomie) :
 | Comportement attendu           | `openspec/specs/`                          |
 | Changements en cours           | `openspec/changes/` (`openspec list`)      |
 | Procédures récurrentes         | `.agents/skills/`                          |
-| Règles d'un module             | [apps/app/AGENTS.md](apps/app/AGENTS.md), [packages/api/AGENTS.md](packages/api/AGENTS.md) |
+| Règles d'un module             | [apps/app/AGENTS.md](apps/app/AGENTS.md), [apps/worker/AGENTS.md](apps/worker/AGENTS.md), [packages/api/AGENTS.md](packages/api/AGENTS.md), [packages/db/AGENTS.md](packages/db/AGENTS.md) |
 
 ## Règles
 
@@ -50,14 +54,21 @@ Pour travailler en bac à sable (agents en autonomie) :
   vérifié par `docs:check`). Ne jamais installer une autre version de Bun ou
   Node « en passant » (ADR 0010).
 - **Indépendance (ADR 0001)** : palette et Montserrat uniquement, jamais de
-  logo ni de visuel officiel, mention « non affiliée » visible. Skill `charte-ui`.
+  logo ni de visuel officiel, mention d'indépendance visible. Skill `charte-ui`.
 - **Expo (SDK 57)** : consulter la doc versionnée avant toute API Expo ou React
   Native, et ajouter les dépendances avec `bunx expo install` (voir
   `apps/app/AGENTS.md`).
-- **Classifieur (ADR 0004)** : modèle épinglé (`typesafe/jev-1.13`), jamais
-  d'alias `latest`. Toute modification des questions incrémente `questionsVersion`.
+- **Classifieur (ADR 0004, 0018)** : modèle épinglé sur un instantané daté
+  (`typesafe/jev-1.13-20260917`), jamais d'alias `latest`. Toute modification
+  des questions incrémente `QUESTIONS_VERSION`. Skill `classifier-jev`.
+- **Frontière d'écriture (ADR 0017)** : seul le worker écrit en base
+  (`@lisnard/db/write`) ; le backend lit (`@lisnard/db/read`) ; les clients ne
+  parlent qu'à l'API tRPC.
+- **Médias (ADR 0007)** : intégration du lecteur officiel ou lien vers la
+  source, jamais de téléchargement ni de réhébergement.
 - **Secrets** : jamais dans le code, l'image ni un fichier commité.
-  `OPENROUTER_API_KEY` et les clés des sources ne résident que dans le worker.
+  `OPENROUTER_API_KEY` et `YOUTUBE_API_KEY` ne résident que dans le worker et
+  le `.env` local : ne jamais les afficher.
 - **Commits** : Conventional Commits (skill `conventional-commit`).
 
 ## Skills du projet
@@ -69,6 +80,8 @@ Sources canoniques dans `.agents/skills/<nom>/`, symlinkées dans
 - `record-decision` : créer, remplacer ou déprécier un ADR.
 - `charte-ui` : règles visuelles, tokens, accessibilité.
 - `trpc-procedure` : ajouter une procédure tRPC et l'utiliser côté client.
+- `add-intervention-source` : ajouter ou corriger une source collectée.
+- `classifier-jev` : questions, seuils, calibration, changement de modèle.
 - `conventional-commit` : rédiger un message de commit.
 - `openspec-*` : flux OpenSpec (proposer, appliquer, archiver…).
 

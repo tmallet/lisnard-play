@@ -1,0 +1,181 @@
+import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
+import type { Db } from '@lisnard/db/client';
+import { createTestDb } from '@lisnard/db/testing';
+// Seuls les tests de l'API peuvent importer `write`, pour préparer les données (ADR 0017).
+import { recordClassification, setMedia, upsertItem, upsertSources } from '@lisnard/db/write';
+import { TRPCError } from '@trpc/server';
+
+import { createContext } from './context';
+import { createCaller } from './root';
+
+let db: Db;
+let drop: () => Promise<void>;
+const ids = new Map<string, string>();
+/** Identifiant d'un contenu créé par seed() (échoue si la clé est inconnue). */
+function id(key: string): string {
+  const value = ids.get(key);
+  if (!value) throw new Error(`contenu inconnu : ${key}`);
+  return value;
+}
+
+async function seed(
+  key: string,
+  opts: {
+    role?: 'national' | 'amf' | 'mairie';
+    outcome?: 'published' | 'rejected';
+    liveStatus?: 'live' | 'upcoming' | 'none';
+    startsAt?: Date;
+    publishedAt: Date;
+  },
+) {
+  const { id } = await upsertItem(db, {
+    sourceId: 'yt:bfmtv',
+    platformId: `yt:${key}`,
+    url: `https://www.youtube.com/watch?v=${key}`,
+    title: `Intervention ${key}`,
+    description: 'Description',
+    publishedAt: opts.publishedAt,
+    startsAt: opts.startsAt ?? null,
+    liveStatus: opts.liveStatus ?? 'none',
+  });
+  await recordClassification(db, {
+    itemId: id,
+    model: 'typesafe/jev-1.13-20260917',
+    questionsVersion: 2,
+    inputHash: 'h',
+    answers: {
+      intervient: 0.97,
+      role: { choice: opts.role ?? 'national', confidence: 0.99, probabilities: {} },
+      kind: { choice: 'tv', confidence: 1, probabilities: {} },
+    },
+    thresholds: { intervient: 0.75, role: 0.6 },
+    outcome: opts.outcome ?? 'published',
+    role: opts.role ?? 'national',
+    kind: 'tv',
+  });
+  await setMedia(db, id, {
+    kind: 'embed',
+    provider: 'youtube',
+    embedUrl: `https://www.youtube.com/embed/${key}`,
+  });
+  ids.set(key, id);
+}
+
+const day = (d: number) => new Date(Date.UTC(2026, 5, d, 12));
+const future = (h: number) => new Date(Date.now() + h * 3_600_000);
+
+beforeAll(async () => {
+  ({ db, drop } = await createTestDb());
+  await upsertSources(db, [{ id: 'yt:bfmtv', kind: 'youtube', name: 'BFMTV', active: true }]);
+  await seed('live', {
+    liveStatus: 'live',
+    startsAt: new Date(Date.now() - 600_000),
+    publishedAt: day(1),
+  });
+  await seed('soon', { liveStatus: 'upcoming', startsAt: future(2), publishedAt: day(1) });
+  await seed('later', { liveStatus: 'upcoming', startsAt: future(48), publishedAt: day(1) });
+  await seed('p1', { publishedAt: day(10) });
+  await seed('p2', { publishedAt: day(11), role: 'amf' });
+  await seed('p3', { publishedAt: day(12) });
+  await seed('rejected', { publishedAt: day(13), role: 'mairie', outcome: 'rejected' });
+});
+afterAll(() => drop());
+
+const caller = () => createCaller(createContext({ version: 'test', isDev: false, db }));
+
+describe('interventions.list', () => {
+  test('statut temporel et tri', async () => {
+    const c = caller();
+    expect((await c.interventions.list({ status: 'live' })).items.map((i) => i.id)).toEqual([
+      id('live'),
+    ]);
+    expect((await c.interventions.list({ status: 'upcoming' })).items.map((i) => i.id)).toEqual([
+      id('soon'),
+      id('later'),
+    ]);
+    expect((await c.interventions.list({ status: 'past' })).items.map((i) => i.id)).toEqual([
+      id('p3'),
+      id('p2'),
+      id('p1'),
+    ]);
+  });
+
+  test('pagination par curseur', async () => {
+    const c = caller();
+    const first = await c.interventions.list({ status: 'past', limit: 2 });
+    expect(first.items.map((i) => i.id)).toEqual([id('p3'), id('p2')]);
+    const next = await c.interventions.list({
+      status: 'past',
+      limit: 2,
+      cursor: first.nextCursor ?? '',
+    });
+    expect(next.items.map((i) => i.id)).toEqual([id('p1')]);
+    expect(next.nextCursor).toBeNull();
+  });
+
+  test('filtre par rôle', async () => {
+    const { items } = await caller().interventions.list({ status: 'past', role: 'amf' });
+    expect(items.map((i) => [i.id, i.role])).toEqual([[id('p2'), 'amf']]);
+  });
+
+  test('n’expose ni contenu écarté ni donnée interne', async () => {
+    const { items } = await caller().interventions.list({ status: 'past', limit: 50 });
+    expect(items.map((i) => i.id)).not.toContain(id('rejected'));
+    const [first] = items;
+    expect(Object.keys(first ?? {}).sort()).toEqual([
+      'date',
+      'id',
+      'kind',
+      'outlet',
+      'role',
+      'status',
+      'thumbnailUrl',
+      'title',
+    ]);
+  });
+
+  test('taille de page invalide : requête invalide', async () => {
+    const error = await caller()
+      .interventions.list({ status: 'past', limit: 500 })
+      .catch((e) => e);
+    expect(error).toBeInstanceOf(TRPCError);
+    expect((error as TRPCError).code).toBe('BAD_REQUEST');
+  });
+});
+
+describe('interventions.byId', () => {
+  test('détail avec rendu média et URL de la source', async () => {
+    const detail = await caller().interventions.byId({ id: id('p1') });
+    expect(detail).toMatchObject({
+      id: id('p1'),
+      outlet: 'BFMTV',
+      description: 'Description',
+      url: 'https://www.youtube.com/watch?v=p1',
+    });
+    expect(detail.media).toEqual({
+      kind: 'embed',
+      provider: 'youtube',
+      embedUrl: 'https://www.youtube.com/embed/p1',
+    });
+  });
+
+  test('inconnu, écarté ou identifiant invalide : NOT_FOUND', async () => {
+    for (const candidate of [
+      id('rejected'),
+      '00000000-0000-0000-0000-000000000000',
+      'pas-un-uuid',
+    ]) {
+      const error = await caller()
+        .interventions.byId({ id: candidate })
+        .catch((e) => e);
+      expect((error as TRPCError).code).toBe('NOT_FOUND');
+    }
+  });
+
+  test('sans base configurée : erreur interne, sans détail', async () => {
+    const error = await createCaller(createContext({ version: 't', isDev: false }))
+      .interventions.list({ status: 'past' })
+      .catch((e) => e);
+    expect((error as TRPCError).code).toBe('INTERNAL_SERVER_ERROR');
+  });
+});

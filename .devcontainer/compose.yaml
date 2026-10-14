@@ -1,0 +1,44 @@
+# Devcontainer en docker compose (ADR 0010, ADR 0014) : environnement de travail + Postgres.
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+      args:
+        TZ: ${TZ:-Europe/Paris}
+    cap_add: [NET_ADMIN, NET_RAW]
+    command: sleep infinity
+    environment:
+      DATABASE_URL: postgres://lisnard:lisnard@postgres:5432/lisnard
+    volumes:
+      - ..:/workspace:cached
+      # node_modules hors du montage macOS (performance de Metro).
+      - node-modules:/workspace/node_modules
+      - bun-cache:/home/dev/.bun/install/cache
+      # Configuration des agents persistée entre reconstructions.
+      - claude-config:/home/dev/.claude
+      - codex-config:/home/dev/.codex
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: lisnard
+      POSTGRES_PASSWORD: lisnard
+      POSTGRES_DB: lisnard
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lisnard -d lisnard"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  node-modules:
+  bun-cache:
+  claude-config:
+  codex-config:
+  pgdata:

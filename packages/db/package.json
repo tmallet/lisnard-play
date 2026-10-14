@@ -1,0 +1,27 @@
+{
+  "name": "@lisnard/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./read": "./src/read.ts",
+    "./write": "./src/write.ts",
+    "./schema": "./src/schema.ts",
+    "./client": "./src/client.ts",
+    "./migrate": "./src/migrate.ts",
+    "./testing": "./src/testing.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "db:generate": "drizzle-kit generate",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.4"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.3",
+    "drizzle-kit": "0.31.11"
+  }
+}

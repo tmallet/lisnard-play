@@ -24,7 +24,8 @@ titre, de la description, du média et des dates :
 ### Requirement: Règle de publication
 Un contenu DOIT être publié si et seulement si :
 - la probabilité d'intervention est au moins égale au seuil `τ_intervient` du
-  modèle utilisé ;
+  modèle utilisé, sauf pour un contenu de la chaîne officielle de David Lisnard,
+  où son intervention est présumée (ADR 0018) ;
 - le rôle le plus probable est `national` ou `amf` ;
 - la confiance associée à ce rôle est au moins égale au seuil `τ_role`.
 
@@ -42,6 +43,14 @@ visible publiquement.
 #### Scenario: Simple citation
 - **WHEN** un article cite David Lisnard sans qu'il s'exprime lui-même et que la probabilité d'intervention est sous le seuil
 - **THEN** le contenu est écarté
+
+#### Scenario: Vidéo de la chaîne officielle
+- **WHEN** une vidéo de la chaîne officielle obtient une probabilité d'intervention sous le seuil, avec le rôle `national` et une confiance supérieure au seuil
+- **THEN** elle est publiée
+
+#### Scenario: Vidéo de la chaîne officielle sur la ville de Cannes
+- **WHEN** le rôle le plus probable d'une vidéo de la chaîne officielle est `mairie`
+- **THEN** elle est écartée
 
 #### Scenario: Intervention AMF
 - **WHEN** le rôle le plus probable d'un contenu est `amf` avec une confiance supérieure au seuil, et la probabilité d'intervention aussi

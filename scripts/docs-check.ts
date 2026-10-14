@@ -198,6 +198,15 @@ if (pkg.engines?.node !== toolVersions.nodejs)
     `package.json : engines.node « ${pkg.engines?.node} » ≠ ${toolVersions.nodejs} (.tool-versions)`,
   );
 
+// Dockerfiles : ARG BUN_VERSION identique à .tool-versions (ADR 0010, ADR 0015).
+for (const dockerfile of ['apps/app/Dockerfile', 'apps/worker/Dockerfile']) {
+  const path = join(ROOT, dockerfile);
+  if (!existsSync(path)) continue;
+  const version = read(path).match(/^ARG BUN_VERSION=(\S+)/m)?.[1];
+  if (version !== toolVersions.bun)
+    fail(`${dockerfile} : BUN_VERSION « ${version} » ≠ ${toolVersions.bun} (.tool-versions)`);
+}
+
 // ─── Résultat ───────────────────────────────────────────────────────────────
 if (errors.length > 0) {
   console.error(`docs:check : ${errors.length} problème(s)\n`);
