@@ -99,7 +99,10 @@ dépense sur la clé OpenRouter.
    - Build Pack « Dockerfile », Base Directory `/`, Dockerfile
      `apps/app/Dockerfile`, port exposé `3000`.
    - Domaine en HTTPS.
-   - Healthcheck HTTP : `/api/trpc/health`.
+   - **Désactiver le healthcheck de Coolify** : il lance `curl` ou `wget` dans le
+     conteneur, absents de l'image « slim », et le déploiement échoue. L'image
+     a son propre `HEALTHCHECK` (`/api/trpc/health` appelé avec Bun), dont
+     Coolify lit l'état.
    - Variable : `DATABASE_URL` seulement. **Ne pas définir `ALLOW_INDEXING`** :
      l'indexation reste bloquée.
 6. **Vérifications** :
