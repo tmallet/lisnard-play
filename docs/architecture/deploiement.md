@@ -63,6 +63,57 @@ mise en route. Le journal des décisions (`classification`) et les contenus
 au-delà de ce qu'exposent les flux (ADR 0016) : la sauvegarde est donc
 indispensable.
 
+## Premier déploiement, pas à pas (Coolify)
+
+Prérequis : les PR à déployer sont mergées dans `main`, et l'on dispose d'une clé
+OpenRouter et d'une clé YouTube **dédiées à la production**, avec une limite de
+dépense sur la clé OpenRouter.
+
+1. **Réseau isolé** (Serveur → Destinations) : créer une destination Docker
+   dédiée, par exemple `lisnard`, sur le même serveur. Les trois ressources
+   ci-dessous y seront déployées : le worker n'atteint ainsi ni les autres
+   services de l'hôte ni leurs bases (voir « Réseau du worker »).
+2. **Projet** : créer un projet `lisnard-play`, environnement `production`, avec la
+   destination `lisnard`.
+3. **Postgres** : nouvelle ressource « PostgreSQL », image `postgres:18-alpine`,
+   sans port public. Noter l'**URL interne** (`postgres://…@<service>:5432/…`).
+   Activer « Backups » (quotidien, vers S3), puis tester une restauration.
+4. **Worker** : nouvelle application depuis le dépôt GitHub, branche `main`.
+   - Build Pack « Dockerfile », Base Directory `/`, Dockerfile
+     `apps/worker/Dockerfile`.
+   - Aucun domaine.
+   - Désactiver le healthcheck HTTP de Coolify : l'image a son propre
+     `HEALTHCHECK` (fichier de pulsation).
+   - Variables : `DATABASE_URL` (URL interne), `OPENROUTER_API_KEY` et
+     `YOUTUBE_API_KEY`, en secrets. `SUMMARY_DAILY_BUDGET_USD` est facultative
+     (1 par défaut).
+   - Déployer, puis suivre les logs :
+     - `worker démarré` ;
+     - `backfill:youtube` (environ 195 vidéos et 8 unités de quota) ;
+     - `collect:youtube` et `collect:rss` ;
+     - `classify` (lots de 50, environ 0,02 $ pour l'historique) ;
+     - `media` ;
+     - `summarize`.
+5. **App** : nouvelle application depuis le même dépôt.
+   - Build Pack « Dockerfile », Base Directory `/`, Dockerfile
+     `apps/app/Dockerfile`, port exposé `3000`.
+   - Domaine en HTTPS.
+   - Healthcheck HTTP : `/api/trpc/health`.
+   - Variable : `DATABASE_URL` seulement. **Ne pas définir `ALLOW_INDEXING`** :
+     l'indexation reste bloquée.
+6. **Vérifications** :
+   - `https://<domaine>/api/trpc/health` répond `ok` ;
+   - l'accueil affiche les interventions au fil du classement ;
+   - `curl -I https://<domaine>/` montre `X-Robots-Tag: noindex, nofollow` ;
+   - `https://<domaine>/robots.txt` contient `Disallow: /`.
+7. **Résumés de l'historique** (facultatif) : au plafond par défaut, ils
+   arrivent en quelques jours. Pour les obtenir d'un coup (environ 5 $), ouvrir
+   le terminal du worker dans Coolify et lancer
+   `bun cli.js summarize --budget 6`.
+
+Sur une base neuve, ni `recompute` ni `media --refresh` ne sont nécessaires :
+chaque contenu est traité directement avec les règles en vigueur.
+
 ## Mise en production (ordre)
 
 1. **Postgres** : créer le service, noter l'URL interne, activer les sauvegardes.
