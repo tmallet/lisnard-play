@@ -2,14 +2,8 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 
-import {
-  formatDate,
-  formatDateTime,
-  kindLabel,
-  largeThumbnail,
-  type Theme,
-  themesLabel,
-} from '@/lib/format';
+import { kindLabelFor, largeThumbnail, type Theme, themesLabel, whenLabel } from '@/lib/format';
+import { useMinuteTick } from '@/lib/useMinuteTick';
 
 import { LiveBadge } from './LiveBadge';
 
@@ -43,7 +37,9 @@ function CardImage({ url }: { url: string }) {
  * celle-ci occupe toute la largeur en tête de carte, badge « en direct » par-dessus.
  */
 export function InterventionCard({ item }: { item: InterventionCardData }) {
-  const when = item.status === 'upcoming' ? formatDateTime(item.date) : formatDate(item.date);
+  // Pendant un direct, la durée écoulée se met à jour chaque minute.
+  const now = useMinuteTick(item.status === 'live');
+  const when = whenLabel(item.status, item.date, now);
   const live = item.status === 'live' ? <LiveBadge /> : null;
   return (
     <Link href={`/interventions/${item.id}`} asChild>
@@ -60,7 +56,7 @@ export function InterventionCard({ item }: { item: InterventionCardData }) {
         <View className="gap-1.5 p-4">
           {item.thumbnailUrl ? null : live}
           <Text className="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
-            {item.outlet} · {kindLabel(item.kind)}
+            {item.outlet} · {kindLabelFor(item.status, item.kind)}
             {item.themes.length > 0 ? ` · ${themesLabel(item.themes, 2)}` : ''}
           </Text>
           <Text className="font-sans-bold text-lg text-blanc leading-snug" numberOfLines={3}>

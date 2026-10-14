@@ -1,4 +1,4 @@
-import { largeThumbnail, repeatsTitle } from '../format';
+import { kindLabelFor, largeThumbnail, liveSince, repeatsTitle, whenLabel } from '../format';
 
 const title =
   '“Revoir l’excuse de minorité”: David Lisnard, candidat “Nouvelle Énergie” à la présidentielle';
@@ -37,5 +37,23 @@ describe('largeThumbnail', () => {
 
   it('laisse les autres images inchangées', () => {
     expect(largeThumbnail('https://static.lejdd.fr/a.jpeg')).toBe('https://static.lejdd.fr/a.jpeg');
+  });
+});
+
+describe('libellés de direct', () => {
+  const start = '2026-10-14T07:00:00.000Z';
+  const at = (minutes: number) => new Date(Date.parse(start) + minutes * 60_000);
+
+  it('durée écoulée depuis le début', () => {
+    expect(liveSince(start, at(0))).toBe('Commencé à l’instant');
+    expect(liveSince(start, at(12))).toBe('Commencé il y a 12 min');
+    expect(liveSince(start, at(65))).toBe('Commencé il y a 1 h 05');
+  });
+
+  it('type « Direct » et date selon le statut', () => {
+    expect(kindLabelFor('live', 'tv')).toBe('Direct');
+    expect(kindLabelFor('past', 'tv')).toBe('Télévision');
+    expect(whenLabel('live', start, at(12))).toBe('Commencé il y a 12 min');
+    expect(whenLabel('past', start)).toBe('14 octobre 2026');
   });
 });

@@ -96,3 +96,23 @@ export function repeatsTitle(text: string | null | undefined, title: string, out
 export function largeThumbnail(url: string): string {
   return url.replace(/^(https:\/\/i\d?\.ytimg\.com\/vi\/[^/]+\/)hqdefault\.jpg$/, '$1hq720.jpg');
 }
+
+/** Durée écoulée depuis le début d'un direct : « Commencé il y a 12 min », « … il y a 1 h 05 ». */
+export function liveSince(iso: string, now: Date = new Date()): string {
+  const minutes = Math.max(0, Math.floor((now.getTime() - new Date(iso).getTime()) / 60_000));
+  if (minutes < 1) return 'Commencé à l’instant';
+  if (minutes < 60) return `Commencé il y a ${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  return `Commencé il y a ${hours} h ${String(minutes % 60).padStart(2, '0')}`;
+}
+
+/** Ligne de date d'une intervention selon son statut temporel. */
+export function whenLabel(status: 'live' | 'upcoming' | 'past', iso: string, now?: Date): string {
+  if (status === 'live') return liveSince(iso, now);
+  return status === 'upcoming' ? formatDateTime(iso) : formatDate(iso);
+}
+
+/** Type affiché : « Direct » pendant la diffusion, quel que soit le format. */
+export function kindLabelFor(status: 'live' | 'upcoming' | 'past', kind: string | null): string {
+  return status === 'live' ? 'Direct' : kindLabel(kind);
+}
