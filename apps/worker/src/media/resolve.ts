@@ -1,11 +1,13 @@
 /**
  * Rendu média (spec intervention-media, ADR 0007, ADR 0017) : lecteur intégré via
  * oEmbed pour les fournisseurs en liste blanche, sinon carte de lien Open Graph,
- * avec repli sur un lien minimal en cas d'échec.
+ * avec repli sur un lien minimal en cas d'échec. Les liens Google News sont d'abord
+ * résolus vers l'éditeur (ADR 0021).
  */
 import type { MediaRender } from '@lisnard/db/schema';
 
-import { decodeEntities } from '../text';
+import { decodeEntities, stripHtml } from '../text';
+import { decodeGoogleNewsUrl, isGoogleNewsUrl } from './google-news';
 import { type Resolver, safeFetchText } from './safe-fetch';
 
 interface Provider {
@@ -30,9 +32,6 @@ const PROVIDERS: Provider[] = [
     playerHosts: ['www.dailymotion.com', 'geo.dailymotion.com'],
   },
 ];
-
-/** Hôtes dont les pages ne donnent pas d'Open Graph exploitable (redirection en JavaScript). */
-const NO_OPEN_GRAPH = ['news.google.com'];
 
 export interface MediaContext {
   fetch?: typeof fetch;
@@ -85,10 +84,12 @@ const meta = (html: string, property: string) => {
   return value ? decodeEntities(value).trim() : undefined;
 };
 
-async function tryOpenGraph(target: MediaTarget, ctx: MediaContext): Promise<MediaRender | null> {
-  const { status, body, contentType } = await safeFetchText(target.url, {
+/** Balises de partage de l'en-tête uniquement : le corps de la page n'est pas lu (ADR 0021). */
+async function tryOpenGraph(url: string, ctx: MediaContext): Promise<MediaRender | null> {
+  const { status, body, contentType } = await safeFetchText(url, {
     ...ctx,
     accept: 'text/html',
+    headOnly: true,
   });
   if (status !== 200 || !contentType.includes('html')) return null;
   const head = body.slice(0, body.search(/<\/head>/i) + 1 || body.length);
@@ -97,16 +98,22 @@ async function tryOpenGraph(target: MediaTarget, ctx: MediaContext): Promise<Med
     title: meta(head, 'og:title'),
     image: image?.startsWith('https://') ? image : undefined,
     siteName: meta(head, 'og:site_name'),
-    description: meta(head, 'og:description')?.slice(0, 300),
+    // Certains éditeurs encodent du HTML dans l'accroche (« &lt;br /&gt; »).
+    description: stripHtml(meta(head, 'og:description') ?? '').slice(0, 300) || undefined,
   };
   return { kind: 'link', og: Object.fromEntries(Object.entries(og).filter(([, v]) => v)) };
 }
 
 /** Lien minimal : titre et média déjà connus par la collecte (spec « Échec de la résolution »). */
-export const minimalLink = (target: MediaTarget): MediaRender => ({
+export const minimalLink = (target: MediaTarget): Extract<MediaRender, { kind: 'link' }> => ({
   kind: 'link',
   og: { title: target.title, siteName: target.outlet },
 });
+
+/** Rendu de repli (titre et média seulement) : aucune information obtenue de la source. */
+export function isMinimalLink(media: MediaRender): boolean {
+  return media.kind === 'link' && !media.url && !media.og.image && !media.og.description;
+}
 
 export async function resolveMedia(
   target: MediaTarget,
@@ -115,10 +122,22 @@ export async function resolveMedia(
   try {
     const provider = PROVIDERS.find((p) => p.matches.test(target.url));
     if (provider) return (await tryOEmbed(target, provider, ctx)) ?? minimalLink(target);
-    if (NO_OPEN_GRAPH.includes(new URL(target.url).hostname)) return minimalLink(target);
-    const og = await tryOpenGraph(target, ctx);
-    if (!og || og.kind !== 'link') return minimalLink(target);
-    return { kind: 'link', og: { title: target.title, siteName: target.outlet, ...og.og } };
+    let pageUrl = target.url;
+    let publisherUrl: string | undefined;
+    if (isGoogleNewsUrl(target.url)) {
+      const decoded = await decodeGoogleNewsUrl(target.url, ctx);
+      if (!decoded) return minimalLink(target);
+      pageUrl = publisherUrl = decoded;
+    }
+    const og = await tryOpenGraph(pageUrl, ctx);
+    // L'URL de l'éditeur reste utile même si sa page refuse la lecture (lien direct).
+    if (og?.kind !== 'link')
+      return { ...minimalLink(target), ...(publisherUrl && { url: publisherUrl }) };
+    return {
+      kind: 'link',
+      og: { title: target.title, siteName: target.outlet, ...og.og },
+      ...(publisherUrl && { url: publisherUrl }),
+    };
   } catch {
     return minimalLink(target);
   }

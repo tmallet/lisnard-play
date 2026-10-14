@@ -4,12 +4,15 @@
  *   bun run cli reclassify [--model M] [--version N]  reclasse en rappelant le classifieur
  *   bun run cli calibrate [--validated] [--model M]  mesure les seuils sur eval/reference.jsonl
  *   bun run cli backfill                         rattrape toutes les vidéos des chaînes officielles
+ *   bun run cli summarize [--budget N] [--retry]  résume les vidéos jusqu'au plafond du jour (N $)
+ *   bun run cli media --refresh [--source ID]    recalcule le rendu des contenus publiés
  */
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { createDb } from '@lisnard/db/client';
 import { runMigrations } from '@lisnard/db/migrate';
+import { resetFailedSummaries } from '@lisnard/db/write';
 import {
   collectAnswers,
   evaluate,
@@ -21,9 +24,12 @@ import {
 import { createSystemOneClassifier } from './classifier/systemone';
 import { thresholdsFor } from './classifier/thresholds';
 import { runBackfill } from './collect';
-import { requireEnv } from './config';
+import { requireEnv, SUMMARY_DAILY_BUDGET_USD } from './config';
+import { refreshMedia } from './media/task';
 import { reclassify, recompute } from './publish';
 import { SOURCES } from './sources.config';
+import { createOpenRouterSummarizer } from './summaries/openrouter';
+import { summarizePending } from './summaries/task';
 
 const { positionals, values } = parseArgs({
   args: Bun.argv.slice(2),
@@ -32,6 +38,10 @@ const { positionals, values } = parseArgs({
     model: { type: 'string' },
     version: { type: 'string' },
     validated: { type: 'boolean' },
+    budget: { type: 'string' },
+    retry: { type: 'boolean' },
+    refresh: { type: 'boolean' },
+    source: { type: 'string' },
   },
 });
 
@@ -49,6 +59,24 @@ switch (positionals[0]) {
       ...(values.version && { questionsVersion: Number(values.version) }),
     };
     console.log(await reclassify(db, classifier, filter));
+    break;
+  }
+  case 'summarize': {
+    if (values.retry) console.log({ relancés: await resetFailedSummaries(db) });
+    const summarizer = createOpenRouterSummarizer({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+    const dailyBudget = values.budget ? Number(values.budget) : SUMMARY_DAILY_BUDGET_USD;
+    // Cycles successifs jusqu'à épuisement des vidéos à résumer ou du budget du jour.
+    for (;;) {
+      const stats = await summarizePending(db, summarizer, { dailyBudget });
+      console.log(stats);
+      const done = stats.summarized + stats.notSpeaking + stats.skipped + stats.failed;
+      if (stats.budgetReached || stats.unavailable || done === 0) break;
+    }
+    break;
+  }
+  case 'media': {
+    if (!values.refresh) throw new Error('Usage : media --refresh [--source ID]');
+    console.log(await refreshMedia(db, {}, values.source));
     break;
   }
   case 'backfill': {
@@ -101,7 +129,7 @@ switch (positionals[0]) {
   }
   default:
     console.error(
-      'Usage : bun run cli <recompute | reclassify [--model M] [--version N] | calibrate [--validated] [--model M] | backfill>',
+      'Usage : bun run cli <recompute | reclassify [--model M] [--version N] | calibrate [--validated] [--model M] | backfill | summarize [--budget N] [--retry] | media --refresh [--source ID]>',
     );
     process.exit(1);
 }

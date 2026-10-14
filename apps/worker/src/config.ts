@@ -9,7 +9,26 @@ export const CADENCE_MS = {
   rss: 15 * 60_000,
   /** Rattrapage des chaînes officielles : au démarrage, puis une fois par jour (ADR 0018). */
   backfill: 24 * 60 * 60_000,
+  /** Résumés des vidéos (spec intervention-summaries, design D4). */
+  summarize: 2 * 60_000,
 } as const;
+
+/**
+ * Plafond quotidien en dollars : 1 si la variable est absente ou vide. Une valeur
+ * illisible arrête le worker au démarrage plutôt que de lever le plafond (NaN).
+ */
+export function parseBudget(raw: string | undefined): number {
+  if (raw === undefined || raw.trim() === '') return 1;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value < 0)
+    throw new Error(
+      `SUMMARY_DAILY_BUDGET_USD invalide : « ${raw} » (nombre de dollars attendu, ex. 1.5)`,
+    );
+  return value;
+}
+
+/** Plafond quotidien de dépense en résumés, en dollars (ADR 0021). */
+export const SUMMARY_DAILY_BUDGET_USD = parseBudget(process.env.SUMMARY_DAILY_BUDGET_USD);
 
 /** Intervalle de la boucle de planification. */
 export const TICK_MS = 30_000;

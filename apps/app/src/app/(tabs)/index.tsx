@@ -7,7 +7,7 @@ import { Title } from '@/components/Title';
 
 export default function Home() {
   return (
-    <Screen>
+    <Screen wide>
       <PageHead />
       <Title highlight="David Lisnard">Toutes les interventions de David Lisnard</Title>
       <Text className="font-sans-bold text-blanc text-lg">

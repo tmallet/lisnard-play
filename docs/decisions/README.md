@@ -32,3 +32,4 @@ Règles :
 | [0018](0018-chaine-officielle-rattrapage-et-publication.md) | Publication automatique, journal des décisions et cas de la chaîne officielle | accepted | ingestion, ia, classifier, notifications |
 | [0019](0019-runtime-bun-metro-et-connexion-partagee.md) | Serveur de développement sous le runtime Bun, shim Metro `bun` et connexion Postgres partagée | accepted | architecture, outillage, donnees, api |
 | [0020](0020-perimetre-campagne-et-thematiques.md) | Périmètre recentré sur la campagne présidentielle et classement par thématiques | accepted | produit, perimetre, classifier, ui |
+| [0021](0021-resumes-gemini-et-presse.md) | Résumés des vidéos par Gemini via OpenRouter, sans résumé des articles de presse | accepted | ia, ingestion, media, juridique |

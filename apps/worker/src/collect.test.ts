@@ -17,7 +17,7 @@ import type {
   SourceContext,
   YoutubeSourceConfig,
 } from './sources/types';
-import { parseChannelFeed, toVideoDetails } from './sources/youtube';
+import { parseChannelFeed, parseIsoDuration, toVideoDetails } from './sources/youtube';
 
 const fixture = (name: string) => Bun.file(resolve(import.meta.dir, '__fixtures__', name));
 
@@ -73,6 +73,14 @@ describe('analyse des flux', () => {
     expect(entries).toHaveLength(3);
     expect(entries[1]?.title.startsWith('"Je ne crois pas')).toBe(true);
     expect(entries[0]?.thumbnailUrl).toContain('ytimg.com');
+  });
+
+  test('durée ISO 8601 en secondes ; nulle ou absente : null', () => {
+    expect(parseIsoDuration('PT1M42S')).toBe(102);
+    expect(parseIsoDuration('PT2H5M')).toBe(7500);
+    expect(parseIsoDuration('P1DT1S')).toBe(86_401);
+    expect(parseIsoDuration('P0D')).toBeNull();
+    expect(parseIsoDuration(undefined)).toBeNull();
   });
 
   test('statut de diffusion : none, upcoming, live, ended', () => {
@@ -179,6 +187,8 @@ describe('collecte en base', () => {
     const upcoming = rows.find((r) => r.platformId === 'yt:FQbmJzN2qZg');
     expect(upcoming?.liveStatus).toBe('upcoming');
     expect(upcoming?.description).toBe('Direct programmé.');
+    expect(upcoming?.durationS).toBeNull();
+    expect(rows.find((r) => r.platformId === 'yt:z2Y9PwBVeA4')?.durationS).toBe(102);
     const article = rows.find((r) => r.sourceId === 'rss:google-news');
     expect(article?.outlet).not.toBeNull();
   });

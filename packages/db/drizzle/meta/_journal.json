@@ -36,6 +36,20 @@
       "when": 1791961855608,
       "tag": "0004_item_themes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791961992356,
+      "tag": "0005_item_summary",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791979896552,
+      "tag": "0006_summary_spend",
+      "breakpoints": true
     }
   ]
 }

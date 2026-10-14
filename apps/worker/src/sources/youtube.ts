@@ -65,11 +65,14 @@ export interface VideoDetails {
   liveStatus: 'none' | 'upcoming' | 'live' | 'ended';
   startsAt: Date | null;
   endsAt: Date | null;
+  /** Durée en secondes ; null pour un direct à venir ou en cours (« P0D »). */
+  durationS: number | null;
 }
 
 interface ApiVideo {
   id: string;
   snippet?: { description?: string; liveBroadcastContent?: string };
+  contentDetails?: { duration?: string };
   liveStreamingDetails?: {
     scheduledStartTime?: string;
     actualStartTime?: string;
@@ -78,6 +81,20 @@ interface ApiVideo {
 }
 
 const toDate = (value?: string) => (value ? new Date(value) : null);
+
+/** Durée ISO 8601 de l'API (« PT1H2M3S », « P1DT2H ») en secondes ; null si absente ou nulle. */
+export function parseIsoDuration(value?: string): number | null {
+  const m = value?.match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/);
+  if (!m) return null;
+  const [d, h, min, sec] = m.slice(1).map((x) => Number(x ?? 0)) as [
+    number,
+    number,
+    number,
+    number,
+  ];
+  const total = ((d * 24 + h) * 60 + min) * 60 + sec;
+  return total > 0 ? total : null;
+}
 
 /** Statut de diffusion à partir des métadonnées de la plateforme (spec intervention-collection). */
 export function toVideoDetails(v: ApiVideo): VideoDetails {
@@ -96,6 +113,7 @@ export function toVideoDetails(v: ApiVideo): VideoDetails {
     liveStatus,
     startsAt: toDate(live?.actualStartTime ?? live?.scheduledStartTime),
     endsAt: toDate(live?.actualEndTime),
+    durationS: parseIsoDuration(v.contentDetails?.duration),
   };
 }
 
@@ -108,7 +126,7 @@ export async function fetchVideoDetails(
   if (!ctx.youtubeApiKey) throw new Error('YOUTUBE_API_KEY manquante');
   for (let i = 0; i < ids.length; i += BATCH) {
     const batch = ids.slice(i, i + BATCH);
-    const url = `${VIDEOS_URL}?part=snippet,liveStreamingDetails&id=${batch.join(',')}&key=${ctx.youtubeApiKey}`;
+    const url = `${VIDEOS_URL}?part=snippet,liveStreamingDetails,contentDetails&id=${batch.join(',')}&key=${ctx.youtubeApiKey}`;
     const res = await ctx.fetch(url);
     ctx.quota.youtubeUnits += 1;
     if (!res.ok) throw new Error(`videos.list : HTTP ${res.status}`);
@@ -137,6 +155,7 @@ async function toCandidates(entries: FeedEntry[], ctx: SourceContext): Promise<C
       endsAt: d?.endsAt ?? null,
       liveStatus: d?.liveStatus ?? 'none',
       thumbnailUrl: e.thumbnailUrl,
+      durationS: d?.durationS ?? null,
     };
   });
 }

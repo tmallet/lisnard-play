@@ -9,13 +9,22 @@ import { upsertSources } from '@lisnard/db/write';
 
 import { createSystemOneClassifier } from './classifier/systemone';
 import { recheckLive, runBackfill, runCollection } from './collect';
-import { CADENCE_MS, HEARTBEAT_FILE, LEADER_LOCK_KEY, requireEnv, TICK_MS } from './config';
+import {
+  CADENCE_MS,
+  HEARTBEAT_FILE,
+  LEADER_LOCK_KEY,
+  requireEnv,
+  SUMMARY_DAILY_BUDGET_USD,
+  TICK_MS,
+} from './config';
 import { log } from './log';
 import { resolvePendingMedia } from './media/task';
 import { classifyPending } from './publish';
 import { Scheduler, type Task, tryAcquireLeaderLock } from './scheduler';
 import type { SourceContext } from './sources/types';
 import { SOURCES } from './sources.config';
+import { createOpenRouterSummarizer } from './summaries/openrouter';
+import { summarizePending } from './summaries/task';
 
 const databaseUrl = requireEnv('DATABASE_URL');
 const db = createDb(databaseUrl);
@@ -43,6 +52,7 @@ const ctx: SourceContext = {
 };
 
 const classifier = createSystemOneClassifier({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+const summarizer = createOpenRouterSummarizer({ apiKey: requireEnv('OPENROUTER_API_KEY') });
 
 const tasks: Task[] = [
   {
@@ -83,6 +93,11 @@ const tasks: Task[] = [
     name: 'media',
     everyMs: TICK_MS,
     run: () => resolvePendingMedia(db),
+  },
+  {
+    name: 'summarize',
+    everyMs: CADENCE_MS.summarize,
+    run: () => summarizePending(db, summarizer, { dailyBudget: SUMMARY_DAILY_BUDGET_USD }),
   },
 ];
 

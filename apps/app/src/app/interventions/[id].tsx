@@ -8,9 +8,11 @@ import { LiveBadge } from '@/components/LiveBadge';
 import { MediaEmbed } from '@/components/MediaEmbed';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
+import { SummaryBlock } from '@/components/SummaryBlock';
 import { WebChrome } from '@/components/WebChrome';
-import { formatDate, formatDateTime, kindLabel, repeatsTitle, themesLabel } from '@/lib/format';
+import { kindLabelFor, repeatsTitle, themesLabel, whenLabel } from '@/lib/format';
 import { useTRPC } from '@/lib/trpc';
+import { useMinuteTick } from '@/lib/useMinuteTick';
 import { colors } from '@/theme/colors';
 import { fontFamily } from '@/theme/fonts';
 
@@ -25,6 +27,7 @@ export default function InterventionDetail() {
     trpc.interventions.byId.queryOptions({ id: String(id) }, { retry: false }),
   );
   // Les descriptions de Google News ne font souvent que répéter « titre + média ».
+  const now = useMinuteTick(data?.status === 'live');
   const description =
     data?.description && !repeatsTitle(data.description, data.title, data.outlet)
       ? data.description
@@ -72,7 +75,7 @@ export default function InterventionDetail() {
           <View className="gap-5">
             {data.status === 'live' ? <LiveBadge /> : null}
             <Text className="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
-              {data.outlet} · {kindLabel(data.kind)}
+              {data.outlet} · {kindLabelFor(data.status, data.kind)}
               {data.themes.length > 0 ? ` · ${themesLabel(data.themes)}` : ''}
             </Text>
             <Text
@@ -83,18 +86,20 @@ export default function InterventionDetail() {
               {data.title}
             </Text>
             <Text className="font-sans text-blanc/70 text-sm">
-              {data.status === 'upcoming' ? formatDateTime(data.date) : formatDate(data.date)}
+              {whenLabel(data.status, data.date, now)}
             </Text>
             {data.media.kind === 'embed' ? (
               <MediaEmbed embedUrl={data.media.embedUrl} title={data.title} />
             ) : (
               <LinkCard
-                url={data.url}
+                // URL de l'éditeur pour un article relayé par Google News (ADR 0021).
+                url={data.media.url ?? data.url}
                 og={data.media.og}
                 outlet={data.outlet}
                 shownTexts={description ? [data.title, description] : [data.title]}
               />
             )}
+            {data.summary ? <SummaryBlock {...data.summary} /> : null}
             {description ? (
               <Text className="font-sans text-base text-blanc/85 leading-relaxed">
                 {description}

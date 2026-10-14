@@ -17,7 +17,8 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 | `src/collect.ts` | Pré-filtre, seuil d'historique, upsert ; rattrapage ; revérification des directs |
 | `src/classifier/` | `questions.ts` (version), `systemone.ts` (client REST), `thresholds.ts`, `decide.ts` |
 | `src/publish.ts` | `classifyPending`, `recompute`, `reclassify` |
-| `src/media/` | `safe-fetch.ts` (anti-SSRF), `resolve.ts` (oEmbed, Open Graph), `task.ts` |
+| `src/media/` | `safe-fetch.ts` (anti-SSRF, POST, lecture limitée à l'en-tête), `resolve.ts` (oEmbed, Open Graph), `google-news.ts` (décodage vers l'éditeur), `task.ts` (rendus, `refreshMedia`) |
+| `src/summaries/` | `prompt.ts` (consigne, `PROMPT_VERSION`, `SUMMARY_MODEL`), `openrouter.ts` (client Gemini, validation), `task.ts` (sélection, budget, échecs). Voir `docs/architecture/resumes.md` |
 | `src/calibrate.ts`, `eval/reference.jsonl` | Calibration sur le jeu de référence validé |
 | `src/cli.ts` | `backfill`, `calibrate`, `recompute`, `reclassify` |
 
@@ -30,6 +31,10 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
   l'API. Jamais de `search.list` (100 unités).
 - **Classifieur** : modèle épinglé (instantané daté). Changer les questions
   impose d'incrémenter `QUESTIONS_VERSION` et de recalibrer. Skill `classifier-jev`.
+- **Résumés** : modèle épinglé ; changer la consigne impose d'incrémenter
+  `PROMPT_VERSION` et de faire relire un échantillon. Jamais de résumé d'un article
+  de presse ni de lecture de son texte : pour un éditeur, `safeFetchText` avec
+  `headOnly` (ADR 0021).
 - **Ajouter une source** : skill `add-intervention-source`.
 - **Logs** : `log.info|warn|error` (JSON par ligne), jamais de secret dans les
   données journalisées.

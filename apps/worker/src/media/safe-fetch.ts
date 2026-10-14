@@ -1,7 +1,8 @@
 /**
  * Lecture d'URL externes sécurisée (ADR 0017) : http(s) uniquement, refus des adresses
  * privées après résolution DNS (protection SSRF), redirections revalidées, délai de
- * 5 s et réponse limitée à 1 Mo.
+ * 5 s et réponse limitée à 1 Mo. L'identité HTTP est explicite : certains éditeurs
+ * refusent les clients sans nom de produit reconnaissable.
  */
 import { lookup } from 'node:dns/promises';
 import { isIP } from 'node:net';
@@ -9,6 +10,7 @@ import { isIP } from 'node:net';
 export const MAX_BYTES = 1_000_000;
 const TIMEOUT_MS = 5_000;
 const MAX_REDIRECTS = 3;
+const USER_AGENT = 'Mozilla/5.0 (compatible; LisnardPlay/1.0; +https://lisnard-play.app)';
 
 export type Resolver = (host: string) => Promise<string[]>;
 
@@ -53,22 +55,39 @@ async function assertPublicUrl(raw: string, resolve: Resolver): Promise<URL> {
   return url;
 }
 
+export interface SafeFetchOptions {
+  fetch?: typeof fetch;
+  resolve?: Resolver;
+  accept?: string;
+  /** POST avec corps (décodage des liens Google News, ADR 0021). */
+  post?: { body: string; contentType: string };
+  /**
+   * Arrête la lecture après `</head>` : seules les métadonnées de partage sont lues,
+   * jamais le texte d'un article (ADR 0021).
+   */
+  headOnly?: boolean;
+}
+
 /** Lit une URL publique et renvoie son corps texte (tronqué à 1 Mo). */
 export async function safeFetchText(
   raw: string,
-  options: { fetch?: typeof fetch; resolve?: Resolver; accept?: string } = {},
+  options: SafeFetchOptions = {},
 ): Promise<{ url: string; status: number; body: string; contentType: string }> {
   const doFetch = options.fetch ?? fetch;
   const resolve = options.resolve ?? defaultResolver;
   let current = raw;
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     const url = await assertPublicUrl(current, resolve);
+    const post = hop === 0 ? options.post : undefined;
     const res = await doFetch(url, {
+      method: post ? 'POST' : 'GET',
+      body: post?.body,
       redirect: 'manual',
       signal: AbortSignal.timeout(TIMEOUT_MS),
       headers: {
-        'User-Agent': 'Mozilla/5.0 (lisnard-play worker)',
+        'User-Agent': USER_AGENT,
         Accept: options.accept ?? '*/*',
+        ...(post && { 'Content-Type': post.contentType }),
       },
     });
     const location = res.headers.get('location');
@@ -80,22 +99,29 @@ export async function safeFetchText(
       url: url.toString(),
       status: res.status,
       contentType: res.headers.get('content-type') ?? '',
-      body: await readLimited(res),
+      body: await readLimited(res, options.headOnly ?? false),
     };
   }
   throw new UnsafeUrlError('trop de redirections');
 }
 
-async function readLimited(res: Response): Promise<string> {
+async function readLimited(res: Response, headOnly: boolean): Promise<string> {
   if (!res.body) return '';
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];
+  const decoder = new TextDecoder();
   let size = 0;
+  let tail = '';
   while (size < MAX_BYTES) {
     const { done, value } = await reader.read();
     if (done || !value) break;
     chunks.push(value);
     size += value.byteLength;
+    if (headOnly) {
+      // Fenêtre glissante : la balise peut être coupée entre deux morceaux.
+      tail = (tail + decoder.decode(value, { stream: true })).slice(-4096);
+      if (/<\/head>/i.test(tail)) break;
+    }
   }
   await reader.cancel().catch(() => {});
   return new TextDecoder().decode(Buffer.concat(chunks).subarray(0, MAX_BYTES));

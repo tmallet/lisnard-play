@@ -3,13 +3,19 @@ import { sql } from 'drizzle-orm';
 
 import type { Db } from './client';
 import { getPublishedById, listPublished } from './read';
-import { classification, item } from './schema';
+import { classification, item, type SummaryRecord } from './schema';
 import { createTestDb } from './testing';
 import {
+  addSummarySpend,
   type ClassificationRecord,
   listClassificationTargets,
+  listSummaryTargets,
   recordClassification,
+  recordSummary,
+  recordSummaryFailure,
+  resetFailedSummaries,
   setMedia,
+  summarySpentOn,
   upsertItem,
   upsertSources,
 } from './write';
@@ -223,5 +229,91 @@ describe('stockage jsonb', () => {
       sql`select jsonb_typeof(answers) as a, (answers->>'intervient')::float as p from ${classification}`,
     )) as unknown as { a: string; p: number }[];
     expect(row).toEqual({ a: 'object', p: 0.9 });
+  });
+});
+
+describe('résumés', () => {
+  const ok = (over: Partial<SummaryRecord> = {}): SummaryRecord =>
+    ({
+      kind: 'ok',
+      text: 'Il estime que…',
+      points: ['école'],
+      model: 'google/gemini-3.5-flash-lite',
+      promptVersion: 1,
+      generatedAt: new Date().toISOString(),
+      cost: 0.01,
+      ...over,
+    }) as SummaryRecord;
+
+  test('cibles : vidéos YouTube publiées et terminées, sans résumé de la version courante', async () => {
+    const video = await candidate('yt:video');
+    const live = await candidate('yt:live', { liveStatus: 'live' });
+    const article = await candidate('rss:article');
+    const done = await candidate('yt:done');
+    for (const c of [video, live, done]) await publish(c.id);
+    await recordClassification(db, decision(article.id));
+    await setMedia(db, article.id, { kind: 'link', og: {} });
+    await recordSummary(db, done.id, ok());
+    expect((await listSummaryTargets(db, 10, 1)).map((t) => t.id)).toEqual([video.id]);
+    // Nouvelle version de la consigne : le résumé existant est à régénérer.
+    expect((await listSummaryTargets(db, 10, 2)).map((t) => t.id).sort()).toEqual(
+      [video.id, done.id].sort(),
+    );
+  });
+
+  test('échecs : abandon au plafond, pour la version courante seulement', async () => {
+    const { id } = await candidate('yt:fail');
+    await publish(id);
+    const abandoned = ok({ kind: 'none', reason: 'failed', cost: 0 } as Partial<SummaryRecord>);
+    // Échec avec attente : la vidéo n'est plus proposée avant l'échéance.
+    expect(await recordSummaryFailure(db, id, 3, abandoned, 60_000)).toEqual({ abandoned: false });
+    expect(await listSummaryTargets(db, 10, 1)).toHaveLength(0);
+    expect(await recordSummaryFailure(db, id, 3, abandoned)).toEqual({ abandoned: false });
+    expect(await recordSummaryFailure(db, id, 3, abandoned)).toEqual({ abandoned: true });
+    expect(await listSummaryTargets(db, 10, 1)).toHaveLength(0);
+    expect(await listSummaryTargets(db, 10, 2)).toHaveLength(1);
+    expect(await resetFailedSummaries(db)).toBe(1);
+    expect(await listSummaryTargets(db, 10, 1)).toHaveLength(1);
+  });
+
+  test('dépense du jour et résumé public', async () => {
+    const a = await candidate('yt:a');
+    const b = await candidate('yt:b');
+    await publish(a.id);
+    await publish(b.id);
+    await recordSummary(db, a.id, ok({ cost: 0.25 }));
+    await recordSummary(
+      db,
+      b.id,
+      ok({ kind: 'none', reason: 'not_speaking', cost: 0.5 } as Partial<SummaryRecord>),
+    );
+    // La dépense est tenue à part : elle s'additionne, même si un résumé est remplacé.
+    await addSummarySpend(db, '2026-10-14', 0.25);
+    await addSummarySpend(db, '2026-10-14', 0.5);
+    await addSummarySpend(db, '2026-10-15', 0.1);
+    expect(await summarySpentOn(db, '2026-10-14')).toBeCloseTo(0.75);
+    expect(await summarySpentOn(db, '2026-10-13')).toBe(0);
+    expect((await getPublishedById(db, a.id))?.summary).toEqual({
+      text: 'Il estime que…',
+      points: ['école'],
+    });
+    expect((await getPublishedById(db, b.id))?.summary).toBeNull();
+  });
+
+  test('la durée de la vidéo est conservée si une collecte ne la fournit pas', async () => {
+    await candidate('yt:dur', { durationS: 600 });
+    await candidate('yt:dur');
+    const [row] = await db.select().from(item);
+    expect(row?.durationS).toBe(600);
+  });
+});
+
+describe('image des cartes', () => {
+  test('article sans miniature : image Open Graph de l’éditeur', async () => {
+    const { id } = await candidate('rss:img');
+    await recordClassification(db, decision(id));
+    await setMedia(db, id, { kind: 'link', og: { image: 'https://static.lejdd.fr/a.jpeg' } });
+    const { items } = await listPublished(db, { status: 'past', limit: 50 });
+    expect(items[0]?.thumbnailUrl).toBe('https://static.lejdd.fr/a.jpeg');
   });
 });

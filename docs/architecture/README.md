@@ -7,6 +7,7 @@ dans les [ADR](../decisions/README.md), le comportement attendu dans
 Pages détaillées :
 - [commandes.md](commandes.md) : commandes du quotidien ;
 - [classifier.md](classifier.md) : modèle, questions, seuils, calibration ;
+- [resumes.md](resumes.md) : résumés des vidéos (Gemini) et cartes des articles ;
 - [deploiement.md](deploiement.md) : Coolify, variables d'environnement, sauvegardes ;
 - [devcontainer.md](devcontainer.md) : environnement et pare-feu.
 
@@ -59,7 +60,8 @@ lisnard-play/
 │  ├─ src/collect.ts      collecte, rattrapage, revérification des directs
 │  ├─ src/classifier/     questions, client System One, seuils, règle de décision
 │  ├─ src/publish.ts      classification, recompute, reclassify
-│  ├─ src/media/          lecture d'URL sécurisée, oEmbed / Open Graph
+│  ├─ src/media/          lecture d'URL sécurisée, oEmbed / Open Graph, liens Google News
+│  ├─ src/summaries/      résumés des vidéos : consigne, client OpenRouter (Gemini), tâche
 │  ├─ src/calibrate.ts    calibration sur eval/reference.jsonl
 │  ├─ src/cli.ts          recompute, reclassify, calibrate, backfill
 │  └─ Dockerfile
@@ -76,7 +78,7 @@ lisnard-play/
 | Table | Rôle | Points clés |
 |-------|------|-------------|
 | `source` | Sources configurées, recopiées depuis `sources.config.ts` | `id` (« yt:bfmtv »), `kind`, `name`, `active` |
-| `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `media` (rendu) |
+| `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `media` (rendu, dont l'URL de l'éditeur pour un article Google News), `summary` (résumé ou motif d'absence), `duration_s` |
 | `classification` | Journal des décisions, en ajout seul | `model` (instantané servi), `questions_version`, `input_hash`, `answers` (probabilités brutes), `thresholds`, `outcome` |
 
 - **Empreinte d'entrée** : un contenu n'est (re)classé que si son empreinte
@@ -94,6 +96,7 @@ lisnard-play/
 | `collect:rss` | 15 min | Google News |
 | `classify` | 30 s | contenus en attente ou modifiés → Jev → décision journalisée |
 | `media` | 30 s | rendu des contenus publiés sans rendu (ils deviennent visibles) |
+| `summarize` | 2 min | résumé des vidéos publiées, dans la limite du plafond quotidien (ADR 0021) |
 
 Une seule instance travaille à la fois (verrou de session Postgres). La
 pulsation (`HEARTBEAT_FILE`) sert de healthcheck.

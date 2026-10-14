@@ -1,6 +1,10 @@
-import type { ReactNode } from 'react';
-import { Platform, ScrollView, View } from 'react-native';
+import { useQueryClient } from '@tanstack/react-query';
+import { type ReactNode, useState } from 'react';
+import { Platform, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { refreshActiveQueries } from '@/lib/refresh';
+import { colors } from '@/theme/colors';
 
 import { Footer } from './Footer';
 import { ScrollEndProvider, useScrollEndSource } from './ScrollEnd';
@@ -9,6 +13,8 @@ interface ScreenProps {
   children: ReactNode;
   /** Pied de page avec la mention d'indépendance (à désactiver si l'écran l'affiche déjà). */
   footer?: boolean;
+  /** Zone de contenu élargie sur tablette (grille de l'accueil) ; sinon colonne de lecture. */
+  wide?: boolean;
 }
 
 /**
@@ -19,10 +25,21 @@ interface ScreenProps {
  *   porte (exigence des onglets natifs pour détecter le défilement).
  * - Pied de page : la mention d'indépendance (spec app-shell).
  * - Fin de défilement signalée au contenu (chargement continu du flux, ScrollEnd).
+ * - Tirer pour actualiser : relance les requêtes affichées par l'écran.
  */
-export function Screen({ children, footer = true }: ScreenProps) {
+export function Screen({ children, footer = true, wide = false }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const scrollEnd = useScrollEndSource();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshActiveQueries(queryClient);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   return (
     <ScrollEndProvider value={scrollEnd.listeners}>
       <View
@@ -31,9 +48,19 @@ export function Screen({ children, footer = true }: ScreenProps) {
       >
         <ScrollView
           {...scrollEnd.scrollProps}
+          testID="screen-scroll"
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.blanc}
+              colors={[colors.bleu]}
+              progressBackgroundColor={colors.blanc}
+            />
+          }
           contentInsetAdjustmentBehavior="automatic"
           style={Platform.OS === 'android' ? { paddingTop: insets.top } : undefined}
-          contentContainerClassName="w-full max-w-3xl self-center gap-6 px-6 py-10"
+          contentContainerClassName={`w-full self-center gap-6 px-6 py-10 ${wide ? 'max-w-6xl' : 'max-w-3xl'}`}
         >
           {children}
           {footer && <Footer />}

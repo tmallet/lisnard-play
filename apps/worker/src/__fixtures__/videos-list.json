@@ -6,7 +6,8 @@
       "snippet": {
         "description": "Description complète depuis l'API.",
         "liveBroadcastContent": "none"
-      }
+      },
+      "contentDetails": { "duration": "PT1M42S" }
     },
     {
       "id": "FQbmJzN2qZg",

@@ -42,7 +42,8 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | Variable | app | worker | Remarque |
 |----------|:---:|:------:|----------|
 | `DATABASE_URL` | ✅ | ✅ | URL interne Coolify du service Postgres |
-| `OPENROUTER_API_KEY` | — | ✅ | Classifieur Jev (ADR 0004). Clé dédiée, avec une limite de dépense |
+| `OPENROUTER_API_KEY` | — | ✅ | Classifieur Jev (ADR 0004) et résumés Gemini (ADR 0021). Clé dédiée, avec une limite de dépense |
+| `SUMMARY_DAILY_BUDGET_USD` | — | facultatif | Plafond quotidien des résumés (1 $ par défaut). Nombre avec un point (`1.5`) : une valeur illisible arrête le worker au démarrage |
 | `YOUTUBE_API_KEY` | — | ✅ | API YouTube Data v3, restreinte à cette API (environ 6 000 unités par jour sur 10 000) |
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
 | `NODE_ENV` | `production` (image) | `production` (image) | Masque les détails d'erreur de l'API |
@@ -80,6 +81,11 @@ indispensable.
 tout de suite aux décisions journalisées (les contenus AMF sont écartés), sans
 appel au modèle. Si la version des questions a changé, le worker reclasse
 ensuite tous les contenus de lui-même, à raison de 50 contenus toutes les 30 s.
+
+**Reprise après `intervention-summaries`** : lancer `bun cli.js media --refresh
+--source rss:google-news` pour que les articles existants pointent vers leur
+éditeur, avec son image. Si l'on veut tous les résumés sans attendre le plafond
+quotidien, lancer ensuite `bun cli.js summarize --budget 5` (environ 3 à 5 $).
 
 **Retour arrière** : arrêter le worker. L'app continue d'afficher les dernières
 interventions publiées. Pour revenir à une version précédente, redéployer

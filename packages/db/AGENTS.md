@@ -30,6 +30,9 @@ Postgres intégré à Bun (`drizzle-orm/bun-sql`). Vue d'ensemble :
 - **Journal `classification`** : en ajout seul, on n'y fait jamais
   d'`UPDATE`. `item.status`, `role`, `kind` et `themes` sont dénormalisés à partir de la
   dernière décision (`recordClassification`, en transaction).
+- **Résumés** : `item.summary` ne garde que le dernier résumé, car aucune décision
+  n'en dépend. `read` n'en expose que `{ text, points }`, et seulement si
+  `kind = 'ok'` (ADR 0021).
 - **Visibilité** : `read` exige `status = 'published'` **et** `media is not null`.
 - **Pool** : un seul client par processus. Côté API route, il est mis en cache
   sur `globalThis`, car le module est réévalué à chaque rechargement en

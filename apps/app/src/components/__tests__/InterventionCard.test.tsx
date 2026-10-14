@@ -30,18 +30,20 @@ test('carte passée : média, type et date en français', async () => {
   expect(screen.queryByText('En direct')).toBeNull();
 });
 
-test('carte en direct : thèmes (deux au plus, puis +N) et badge', async () => {
+test('carte en direct : type « Direct », durée écoulée, thèmes (deux au plus, puis +N) et badge', async () => {
   await render(
     <InterventionCard
       item={{
         ...base,
         status: 'live',
         kind: 'discours',
+        date: new Date(Date.now() - 12 * 60_000).toISOString(),
         themes: ['economy', 'security', 'campaign'],
       }}
     />,
   );
-  expect(screen.getByText('France Inter · Discours · Économie, Sécurité +1')).toBeTruthy();
+  expect(screen.getByText('France Inter · Direct · Économie, Sécurité +1')).toBeTruthy();
+  expect(screen.getByText('Commencé il y a 12 min')).toBeTruthy();
   expect(screen.getByText('En direct')).toBeTruthy();
 });
 

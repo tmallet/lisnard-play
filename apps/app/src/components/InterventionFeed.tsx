@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { useTRPC } from '@/lib/trpc';
 
+import { CardGrid } from './CardGrid';
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
 import { useOnEndReached } from './ScrollEnd';
 import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
@@ -35,9 +36,11 @@ function Section({
   return (
     <View className="gap-3">
       <SectionTitle live={live}>{title}</SectionTitle>
-      {items.map((item) => (
-        <InterventionCard key={item.id} item={item} />
-      ))}
+      <CardGrid>
+        {items.map((item) => (
+          <InterventionCard key={item.id} item={item} />
+        ))}
+      </CardGrid>
     </View>
   );
 }
@@ -108,7 +111,11 @@ export function InterventionFeed() {
                   : 'Les interventions de David Lisnard apparaîtront ici.'}
               </Text>
             ) : (
-              pastItems.map((item) => <InterventionCard key={item.id} item={item} />)
+              <CardGrid>
+                {pastItems.map((item) => (
+                  <InterventionCard key={item.id} item={item} />
+                ))}
+              </CardGrid>
             )}
             {past.isFetchNextPageError && !past.isFetchingNextPage && (
               <Pressable

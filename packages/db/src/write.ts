@@ -11,7 +11,9 @@ import {
   classification,
   item,
   type MediaRender,
+  type SummaryRecord,
   source,
+  summarySpend,
   type Theme,
 } from './schema';
 
@@ -46,6 +48,7 @@ export interface CandidateInput {
   endsAt?: Date | null;
   liveStatus?: 'none' | 'upcoming' | 'live' | 'ended';
   thumbnailUrl?: string | null;
+  durationS?: number | null;
 }
 
 /**
@@ -66,6 +69,7 @@ export async function upsertItem(
       liveStatus: input.liveStatus ?? 'none',
       thumbnailUrl: input.thumbnailUrl ?? null,
       outlet: input.outlet ?? null,
+      durationS: input.durationS ?? null,
     })
     .onConflictDoUpdate({
       target: item.platformId,
@@ -78,6 +82,7 @@ export async function upsertItem(
         endsAt: sql`coalesce(excluded.ends_at, ${item.endsAt})`,
         liveStatus: sql`excluded.live_status`,
         thumbnailUrl: sql`coalesce(excluded.thumbnail_url, ${item.thumbnailUrl})`,
+        durationS: sql`coalesce(excluded.duration_s, ${item.durationS})`,
         updatedAt: sql`now()`,
       },
     })
@@ -256,4 +261,127 @@ export async function listPublishedWithoutMedia(db: Db, limit: number) {
     .innerJoin(source, eq(item.sourceId, source.id))
     .where(and(eq(item.status, 'published'), sql`${item.media} is null`))
     .limit(limit);
+}
+
+/** Contenus publiés (d'une source, ou tous) dont on recalcule le rendu à la demande. */
+export async function listPublishedForMediaRefresh(db: Db, sourceId?: string) {
+  return db
+    .select({
+      id: item.id,
+      url: item.url,
+      title: item.title,
+      outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+      media: item.media,
+    })
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(and(eq(item.status, 'published'), sourceId ? eq(item.sourceId, sourceId) : undefined));
+}
+
+export interface SummaryTarget {
+  id: string;
+  url: string;
+  title: string;
+  outlet: string;
+  durationS: number | null;
+  /** Échecs déjà comptés : fixe l'attente avant l'essai suivant. */
+  summaryAttempts: number;
+}
+
+/**
+ * Vidéos YouTube publiées à résumer (spec intervention-summaries, design D2) : diffusion
+ * terminée, sans résumé ou avec un résumé d'une autre version de la consigne. Les plus
+ * récentes d'abord.
+ */
+export async function listSummaryTargets(
+  db: Db,
+  limit: number,
+  promptVersion: number,
+): Promise<SummaryTarget[]> {
+  return db
+    .select({
+      id: item.id,
+      url: item.url,
+      title: item.title,
+      outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+      durationS: item.durationS,
+      summaryAttempts: item.summaryAttempts,
+    })
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(
+      and(
+        eq(item.status, 'published'),
+        sql`${item.media}->>'provider' = 'youtube'`,
+        inArray(item.liveStatus, ['none', 'ended']),
+        sql`(${item.summary} is null or (${item.summary}->>'promptVersion')::int <> ${promptVersion})`,
+        sql`(${item.summaryRetryAt} is null or ${item.summaryRetryAt} <= now())`,
+      ),
+    )
+    .orderBy(desc(sql`coalesce(${item.startsAt}, ${item.publishedAt})`))
+    .limit(limit);
+}
+
+/** Enregistre un résumé (ou son absence motivée) et remet le compteur d'échecs à zéro. */
+export async function recordSummary(db: Db, itemId: string, summary: SummaryRecord) {
+  await db
+    .update(item)
+    .set({ summary, summaryAttempts: 0, summaryRetryAt: null })
+    .where(eq(item.id, itemId));
+}
+
+/**
+ * Compte un échec et reporte le prochain essai (`retryAfterMs`). Au plafond, enregistre
+ * l'abandon pour la version courante de la consigne (design D5) : une nouvelle version
+ * relancera la production.
+ */
+export async function recordSummaryFailure(
+  db: Db,
+  itemId: string,
+  maxAttempts: number,
+  abandoned: SummaryRecord,
+  retryAfterMs = 0,
+): Promise<{ abandoned: boolean }> {
+  const [row] = await db
+    .update(item)
+    .set({
+      summaryAttempts: sql`${item.summaryAttempts} + 1`,
+      summaryRetryAt: sql`now() + ${`${retryAfterMs} milliseconds`}::interval`,
+    })
+    .where(eq(item.id, itemId))
+    .returning({ attempts: item.summaryAttempts });
+  if ((row?.attempts ?? 0) < maxAttempts) return { abandoned: false };
+  await recordSummary(db, itemId, abandoned);
+  return { abandoned: true };
+}
+
+/** Ajoute le coût d'un appel à la dépense du jour (« AAAA-MM-JJ », heure de Paris). */
+export async function addSummarySpend(db: Db, day: string, cost: number): Promise<void> {
+  if (cost <= 0) return;
+  await db
+    .insert(summarySpend)
+    .values({ day, cost })
+    .onConflictDoUpdate({
+      target: summarySpend.day,
+      set: { cost: sql`${summarySpend.cost} + excluded.cost` },
+    });
+}
+
+/** Dépense en résumés d'un jour (plafond quotidien, design D4). */
+export async function summarySpentOn(db: Db, day: string): Promise<number> {
+  const [row] = await db
+    .select({ cost: summarySpend.cost })
+    .from(summarySpend)
+    .where(eq(summarySpend.day, day));
+  return row?.cost ?? 0;
+}
+
+/** Relance les résumés abandonnés après des échecs (commande summarize --retry). */
+export async function resetFailedSummaries(db: Db): Promise<number> {
+  const rows = await db
+    .update(item)
+    .set({ summary: null, summaryAttempts: 0, summaryRetryAt: null })
+    .where(sql`${item.summary}->>'reason' = 'failed'`)
+    .returning({ id: item.id });
+  return rows.length;
 }
