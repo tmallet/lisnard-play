@@ -14,6 +14,18 @@ export interface Task {
   run: () => Promise<unknown>;
 }
 
+/**
+ * Retire du résultat journalisé un compteur d'échecs vide (`failed: 0` ou `[]`). Coolify
+ * classe les lignes en erreur d'après leur contenu : un « failed » vide ferait passer
+ * chaque cycle réussi pour une erreur. Un échec réel reste journalisé.
+ */
+export function withoutEmptyFailures(result: unknown): unknown {
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return result;
+  const { failed, ...rest } = result as Record<string, unknown>;
+  const empty = failed === 0 || (Array.isArray(failed) && failed.length === 0);
+  return empty || failed === undefined ? rest : { ...rest, failed };
+}
+
 export class Scheduler {
   private lastRun = new Map<string, number>();
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -49,7 +61,11 @@ export class Scheduler {
         const start = Date.now();
         try {
           const result = await task.run();
-          log.info('tâche terminée', { task: task.name, ms: Date.now() - start, result });
+          log.info('tâche terminée', {
+            task: task.name,
+            ms: Date.now() - start,
+            result: withoutEmptyFailures(result),
+          });
         } catch (error) {
           log.error('tâche en échec', { task: task.name, error: errorMessage(error) });
         }
