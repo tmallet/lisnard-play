@@ -488,6 +488,8 @@ export async function listNotificationEvents(db: Db): Promise<NotificationEvent[
     event(
       'reminder',
       and(
+        // Rendu exigé : la notification ouvre la page de l'intervention, introuvable sans lui.
+        visible,
         eq(item.liveStatus, 'upcoming'),
         sql`${item.startsAt} between now() and now() + interval '15 minutes'`,
       ) as SQL,

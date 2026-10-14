@@ -8,6 +8,8 @@ import { isPushServiceUrl } from '@lisnard/db/subscriptions';
 import type { NotificationEvent } from '@lisnard/db/write';
 import webpush from 'web-push';
 
+import { errorMessage, log } from '../log';
+
 export interface VapidConfig {
   publicKey: string;
   privateKey: string;
@@ -138,7 +140,11 @@ export async function sendExpo(
               : 'failed',
         );
       }
-    } catch {
+    } catch (error) {
+      log.warn('notifications Expo en échec', {
+        recipients: batch.length,
+        error: errorMessage(error),
+      });
       for (const r of batch) result.set(r.id, 'failed');
     }
   }

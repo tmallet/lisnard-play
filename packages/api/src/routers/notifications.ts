@@ -1,4 +1,5 @@
 import {
+  confirmSubscription,
   countSubscriptions,
   deleteSubscription,
   isPushServiceUrl,
@@ -8,7 +9,7 @@ import {
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
-import type { Context } from '../context';
+import { clientIp, requireDb } from '../context';
 import { publicProcedure, router } from '../trpc';
 
 /** Plafond global d'abonnements : borne le remplissage de la table (design D2). */
@@ -43,14 +44,32 @@ const subscription = z.discriminatedUnion('kind', [
   }),
 ]);
 
-function requireDb(ctx: Context) {
-  if (!ctx.db)
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Base de données non configurée',
-    });
-  return ctx.db;
+/**
+ * Limite des nouveaux abonnements par adresse IP (fenêtre fixe d'une heure) : empêche de
+ * remplir la table, et donc de bloquer les vrais abonnés, avec des adresses inventées.
+ * En mémoire : un seul serveur d'app sert l'API (ADR 0015).
+ */
+export const NEW_SUBSCRIPTIONS_PER_IP_PER_HOUR = 10;
+const recentSubscriptions = new Map<string, { windowStart: number; count: number }>();
+
+export function allowNewSubscription(ip: string, now = Date.now()): boolean {
+  if (recentSubscriptions.size > 10_000)
+    for (const [key, w] of recentSubscriptions)
+      if (now - w.windowStart > 3_600_000) recentSubscriptions.delete(key);
+  const w = recentSubscriptions.get(ip);
+  if (!w || now - w.windowStart > 3_600_000) {
+    recentSubscriptions.set(ip, { windowStart: now, count: 1 });
+    return true;
+  }
+  w.count += 1;
+  return w.count <= NEW_SUBSCRIPTIONS_PER_IP_PER_HOUR;
 }
+
+export function resetSubscriptionLimits() {
+  recentSubscriptions.clear();
+}
+
+const tooMany = (message: string) => new TRPCError({ code: 'TOO_MANY_REQUESTS', message });
 
 const notFound = () => new TRPCError({ code: 'NOT_FOUND', message: 'Abonnement introuvable' });
 
@@ -64,14 +83,19 @@ export const notificationsRouter = router({
 
   subscribe: publicProcedure.input(subscription).mutation(async ({ ctx, input }) => {
     const db = requireDb(ctx);
-    if ((await countSubscriptions(db)) >= MAX_SUBSCRIPTIONS)
-      throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Abonnements complets' });
-    return saveSubscription(db, {
+    const record = {
       kind: input.kind,
       endpoint: input.endpoint,
       keys: input.kind === 'web' ? input.keys : null,
       preferences: input.preferences,
-    });
+    };
+    // Abonnement connu : simple confirmation, jamais bloquée par les limites.
+    const confirmed = await confirmSubscription(db, record);
+    if (confirmed) return confirmed;
+    if (!allowNewSubscription(clientIp(ctx.req)))
+      throw tooMany('Trop d’abonnements depuis cette adresse');
+    if ((await countSubscriptions(db)) >= MAX_SUBSCRIPTIONS) throw tooMany('Abonnements complets');
+    return saveSubscription(db, record);
   }),
 
   update: publicProcedure

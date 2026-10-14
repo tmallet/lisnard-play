@@ -11,6 +11,10 @@ import { sql } from 'drizzle-orm';
 
 import { createContext } from './context';
 import { createCaller } from './root';
+import {
+  NEW_SUBSCRIPTIONS_PER_IP_PER_HOUR,
+  resetSubscriptionLimits,
+} from './routers/notifications';
 
 let db: Db;
 let drop: () => Promise<void>;
@@ -20,10 +24,20 @@ beforeAll(async () => {
 afterAll(() => drop());
 beforeEach(async () => {
   await db.execute(sql`truncate ${pushSubscription}`);
+  resetSubscriptionLimits();
 });
 
-const caller = (vapidPublicKey: string | null = 'BPublicKey') =>
-  createCaller(createContext({ version: 'test', isDev: true, db, vapidPublicKey }));
+const caller = (vapidPublicKey: string | null = 'BPublicKey', ip = '203.0.113.7') =>
+  createCaller(
+    createContext({
+      version: 'test',
+      isDev: true,
+      db,
+      vapidPublicKey,
+      // Le proxy ajoute l'adresse réelle en dernier ; la première est fournie par le client.
+      req: new Request('http://test', { headers: { 'x-forwarded-for': `1.2.3.4, ${ip}` } }),
+    }),
+  );
 
 const WEB = {
   kind: 'web' as const,
@@ -70,6 +84,20 @@ describe('notifications', () => {
     expect(await codeOf(api.subscribe({ kind: 'expo', endpoint: 'pas un jeton' }))).toBe(
       'BAD_REQUEST',
     );
+  });
+
+  test('limite par adresse : nouveaux abonnements bornés, confirmations toujours acceptées', async () => {
+    const api = caller().notifications;
+    const sub = (n: number) => ({ ...WEB, endpoint: `${WEB.endpoint}-${n}` });
+    for (let n = 0; n < NEW_SUBSCRIPTIONS_PER_IP_PER_HOUR; n++)
+      expect(await codeOf(api.subscribe(sub(n)))).toBe('OK');
+    expect(await codeOf(api.subscribe(sub(99)))).toBe('TOO_MANY_REQUESTS');
+    // Un appareil déjà abonné se confirme sans être compté.
+    expect(await codeOf(api.subscribe(sub(0)))).toBe('OK');
+    // Une autre adresse n'est pas concernée.
+    expect(
+      await codeOf(caller('BPublicKey', '198.51.100.2').notifications.subscribe(sub(99))),
+    ).toBe('OK');
   });
 
   test('liste blanche des services push', () => {

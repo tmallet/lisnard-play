@@ -117,7 +117,10 @@ const tasks: Task[] = [
     name: 'notify',
     everyMs: TICK_MS,
     run: () => notifyPending(db, notify),
-    quiet: (r) => (r as { events: number }).events === 0,
+    quiet: (r) => {
+      const { events, deferred } = r as { events: number; deferred: number };
+      return events === 0 && deferred === 0;
+    },
   },
   {
     name: 'notify:purge',

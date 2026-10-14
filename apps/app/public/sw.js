@@ -33,12 +33,15 @@ self.addEventListener('notificationclick', (event) => {
   // Seules les pages du site sont ouvertes, jamais une adresse externe.
   if (target.origin !== self.location.origin) return;
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
-      for (const client of windows) {
-        if ('focus' in client && 'navigate' in client)
-          return client.navigate(target.href).then((c) => (c || client).focus());
-      }
-      return self.clients.openWindow(target.href);
-    }),
+    // Onglet du site contrôlé par ce service worker : on l'y emmène. navigate() échoue sur
+    // un onglet non contrôlé : on ouvre alors une nouvelle fenêtre.
+    self.clients
+      .matchAll({ type: 'window' })
+      .then((windows) => {
+        const client = windows.find((c) => 'navigate' in c);
+        if (!client) return self.clients.openWindow(target.href);
+        return client.navigate(target.href).then((c) => (c || client).focus());
+      })
+      .catch(() => self.clients.openWindow(target.href)),
   );
 });

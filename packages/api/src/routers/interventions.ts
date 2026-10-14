@@ -2,17 +2,8 @@ import { getPublishedById, listPublished, THEMES } from '@lisnard/db/read';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
-import type { Context } from '../context';
+import { requireDb } from '../context';
 import { publicProcedure, router } from '../trpc';
-
-function requireDb(ctx: Context) {
-  if (!ctx.db)
-    throw new TRPCError({
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'Base de données non configurée',
-    });
-  return ctx.db;
-}
 
 /** Interventions publiées, en lecture seule (specs intervention-feed et intervention-themes, ADR 0017). */
 export const interventionsRouter = router({

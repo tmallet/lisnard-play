@@ -9,6 +9,8 @@ export interface PushAvailability {
   /** null tant que l'on ne sait pas encore (pré-rendu, chargement). */
   support: PushSupport | null;
   subscribed: boolean;
+  /** Autorisation déjà refusée par l'utilisateur. */
+  blocked: boolean;
 }
 
 /**
@@ -18,7 +20,11 @@ export interface PushAvailability {
 export function usePushAvailability(): PushAvailability {
   const trpc = useTRPC();
   const config = useQuery(trpc.notifications.config.queryOptions());
-  const [state, setState] = useState<PushAvailability>({ support: null, subscribed: false });
+  const [state, setState] = useState<PushAvailability>({
+    support: null,
+    subscribed: false,
+    blocked: false,
+  });
   const vapidPublicKey = config.data?.vapidPublicKey ?? null;
   useEffect(() => {
     if (!config.isSuccess) return;
@@ -26,7 +32,11 @@ export function usePushAvailability(): PushAvailability {
     let cancelled = false;
     (support === 'supported' ? pushClient.current() : Promise.resolve(null))
       .catch(() => null)
-      .then((current) => !cancelled && setState({ support, subscribed: current !== null }));
+      .then(
+        (current) =>
+          !cancelled &&
+          setState({ support, subscribed: current !== null, blocked: pushClient.blocked() }),
+      );
     return () => {
       cancelled = true;
     };
@@ -34,6 +44,9 @@ export function usePushAvailability(): PushAvailability {
   return state;
 }
 
-/** Inviter à s'abonner : appareil compatible (ou iPhone à installer) et pas encore abonné. */
-export const shouldInvite = ({ support, subscribed }: PushAvailability) =>
-  !subscribed && (support === 'supported' || support === 'needs-install');
+/**
+ * Inviter à s'abonner : appareil compatible (ou iPhone à installer), pas encore abonné,
+ * et qui n'a pas déjà refusé l'autorisation.
+ */
+export const shouldInvite = ({ support, subscribed, blocked }: PushAvailability) =>
+  !subscribed && !blocked && (support === 'supported' || support === 'needs-install');

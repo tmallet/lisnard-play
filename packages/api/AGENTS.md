@@ -31,6 +31,8 @@ Le client n'importe que le **type** `AppRouter`.
 - **Abonnements** : l'appareil prouve qu'il détient l'abonnement en fournissant
   son `endpoint`. Une adresse Web Push hors de la liste blanche
   (`isPushServiceUrl`) est refusée : le worker ne doit jamais appeler d'autre hôte.
+  Un nouvel abonnement est limité par adresse IP (`allowNewSubscription`, adresse lue
+  par `clientIp` dans `X-Forwarded-For`) ; une confirmation ne l'est jamais.
 - Pas de secret dans ce package tant qu'il est servi par l'app. Les secrets
   d'ingestion restent dans le worker (ADR 0011).
 

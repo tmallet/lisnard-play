@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { pushClient } from './push';
 import type { PushRegistration, PushSupport } from './push-types';
@@ -70,18 +70,25 @@ export function useNotifications() {
     }
   };
 
-  const setPreference = async (key: keyof Preferences, value: boolean) => {
-    if (state.status !== 'on') return;
-    const preferences = { ...state.preferences, [key]: value };
-    setState({ ...state, preferences });
-    try {
-      setState({
-        ...state,
-        preferences: await update.mutateAsync({ endpoint: state.endpoint, preferences }),
+  // Préférences les plus récentes et file des mises à jour : deux bascules rapides
+  // s'appliquent l'une après l'autre, sans qu'une requête périmée écrase la suivante.
+  const latest = useRef<Preferences | null>(null);
+  const queue = useRef<Promise<unknown>>(Promise.resolve());
+  if (state.status === 'on' && latest.current === null) latest.current = state.preferences;
+  if (state.status !== 'on') latest.current = null;
+
+  const setPreference = (key: keyof Preferences, value: boolean) => {
+    if (state.status !== 'on' || !latest.current) return;
+    const { endpoint } = state;
+    const preferences = { ...latest.current, [key]: value };
+    latest.current = preferences;
+    setState({ status: 'on', endpoint, preferences });
+    queue.current = queue.current
+      .then(() => update.mutateAsync({ endpoint, preferences }))
+      .catch(() => {
+        // Échec : on revient à l'état du serveur au prochain affichage de l'écran.
+        setState({ status: 'error' });
       });
-    } catch {
-      setState(state);
-    }
   };
 
   const disable = async () => {
@@ -96,6 +103,7 @@ export function useNotifications() {
     }
   };
 
-  const busy = subscribe.isPending || update.isPending || unsubscribe.isPending;
+  // Les interrupteurs restent actifs pendant une mise à jour (file ci-dessus).
+  const busy = subscribe.isPending || unsubscribe.isPending;
   return { state, busy, enable, setPreference, disable };
 }

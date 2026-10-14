@@ -91,6 +91,7 @@ describe('notify', () => {
 
     expect(await notifyPending(db, { vapid, fetch: fetchFn })).toEqual({
       events: 1,
+      deferred: 0,
       sent: 2,
       removed: 0,
       failed: 0,
@@ -132,6 +133,7 @@ describe('notify', () => {
     const { fetchFn } = pushServices({ [WEB_A]: 410, [WEB_B]: 503 }, [EXPO]);
     expect(await notifyPending(db, { vapid, fetch: fetchFn })).toEqual({
       events: 1,
+      deferred: 0,
       sent: 0,
       removed: 2,
       failed: 1,
@@ -140,8 +142,23 @@ describe('notify', () => {
     expect(left).toEqual([{ endpoint: WEB_B }]);
   });
 
-  test('sans clés VAPID : abonnements web ignorés, Expo servi', async () => {
+  test('sans clés VAPID : événement mis en attente pour les abonnés web, puis envoyé', async () => {
     await saveSubscription(db, { kind: 'web', endpoint: WEB_A, keys: browserKeys() });
+    await publish('Live', { liveStatus: 'live', startsAt: new Date() });
+    const { calls, fetchFn } = pushServices();
+    expect(await notifyPending(db, { vapid: null, fetch: fetchFn })).toMatchObject({
+      events: 0,
+      deferred: 1,
+    });
+    expect(calls).toEqual([]);
+    // Clés ajoutées : l'événement, resté dans la fenêtre, part au tour suivant.
+    expect(await notifyPending(db, { vapid, fetch: fetchFn })).toMatchObject({
+      events: 1,
+      sent: 1,
+    });
+  });
+
+  test('sans clés VAPID et sans abonné web : Expo servi', async () => {
     await saveSubscription(db, { kind: 'expo', endpoint: EXPO });
     await publish('Live', { liveStatus: 'live', startsAt: new Date() });
     const { calls, fetchFn } = pushServices();

@@ -49,7 +49,13 @@ supprimer.
 Le système NE DOIT accepter que des abonnements Web Push dont l'adresse est en
 HTTPS et appartient à un service push connu (Google, Mozilla, Apple, Microsoft),
 et des jetons Expo Push au format attendu. Toute autre adresse DOIT être refusée
-à l'enregistrement.
+à l'enregistrement. Le nombre de nouveaux abonnements DOIT être limité par adresse
+IP ; la confirmation d'un abonnement existant NE DOIT jamais être bloquée par cette
+limite ni par le plafond global.
+
+#### Scenario: Remplissage abusif
+- **WHEN** une même adresse IP enregistre plus de 10 nouveaux abonnements en une heure
+- **THEN** les suivants sont refusés, tandis que les appareils déjà abonnés continuent de se confirmer
 
 #### Scenario: Adresse arbitraire
 - **WHEN** une requête d'abonnement porte une adresse `https://exemple.com/push`

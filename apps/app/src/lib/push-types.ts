@@ -21,4 +21,6 @@ export interface PushClient {
   /** Demande l'autorisation puis abonne l'appareil ; `denied` si l'utilisateur refuse. */
   register(vapidPublicKey: string | null): Promise<PushRegistration | 'denied'>;
   unregister(): Promise<void>;
+  /** L'utilisateur a déjà refusé l'autorisation : inutile de l'inviter à s'abonner. */
+  blocked(): boolean;
 }

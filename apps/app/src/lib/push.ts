@@ -58,4 +58,9 @@ export const pushClient: PushClient = {
 
   // Le serveur oublie le jeton ; l'autorisation système reste du ressort des réglages.
   async unregister() {},
+
+  // Sur mobile, l'état n'est connu qu'en asynchrone : l'écran gère le refus.
+  blocked() {
+    return false;
+  },
 };

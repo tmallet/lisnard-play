@@ -27,6 +27,7 @@ jest.mock('@/lib/push', () => ({
     unregister: async () => {
       mockPush.unregistered += 1;
     },
+    blocked: () => false,
   },
 }));
 
@@ -115,4 +116,20 @@ test('abonnement existant : reconfirmé, préférence modifiée, puis désactiva
   expect(await screen.findByText('Activer les notifications')).toBeTruthy();
   expect(mockApi.calls.at(-1)).toEqual(['unsubscribe', { endpoint: REGISTRATION.endpoint }]);
   expect(mockPush.unregistered).toBe(1);
+});
+
+test('deux bascules successives : la seconde requête contient aussi la première', async () => {
+  mockPush.existing = REGISTRATION;
+  await renderSettings();
+  await screen.findByText('Les notifications sont activées sur cet appareil.');
+  await fireEvent(screen.getByLabelText('Rappel avant un direct'), 'valueChange', false);
+  await fireEvent(screen.getByLabelText('Nouvelles interventions'), 'valueChange', true);
+  await screen.findByText('Les notifications sont activées sur cet appareil.');
+  expect(mockApi.calls.filter(([name]) => name === 'update').at(-1)).toEqual([
+    'update',
+    {
+      endpoint: REGISTRATION.endpoint,
+      preferences: { live: true, reminder: false, newItem: true },
+    },
+  ]);
 });

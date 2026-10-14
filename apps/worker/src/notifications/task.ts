@@ -29,6 +29,8 @@ export interface NotifyDeps {
 
 export interface NotifyStats {
   events: number;
+  /** Événements laissés en attente faute de clés VAPID. */
+  deferred: number;
   sent: number;
   removed: number;
   failed: number;
@@ -72,16 +74,18 @@ async function deliver(
 }
 
 export async function notifyPending(db: Db, deps: NotifyDeps): Promise<NotifyStats> {
-  const stats: NotifyStats = { events: 0, sent: 0, removed: 0, failed: 0 };
+  const stats: NotifyStats = { events: 0, deferred: 0, sent: 0, removed: 0, failed: 0 };
   for (const event of await listNotificationEvents(db)) {
+    const subscribers = await listSubscribers(db, event.kind);
+    // Sans clés VAPID, l'événement n'est pas réservé tant que des abonnés web l'attendent :
+    // il sera envoyé une fois les clés configurées (s'il reste dans la fenêtre de 2 h).
+    if (!deps.vapid && subscribers.some((s) => s.kind === 'web')) {
+      stats.deferred += 1;
+      continue;
+    }
     if (!(await claimNotification(db, event.itemId, event.kind))) continue;
     stats.events += 1;
-    const result = await deliver(
-      db,
-      await listSubscribers(db, event.kind),
-      buildMessage(event),
-      deps,
-    );
+    const result = await deliver(db, subscribers, buildMessage(event), deps);
     await setNotificationRecipients(db, event.itemId, event.kind, result.sent);
     stats.sent += result.sent;
     stats.removed += result.removed;

@@ -106,6 +106,11 @@ describe('événements à notifier', () => {
     await add('Live', { liveStatus: 'live', startsAt: new Date() });
     await add('Soon', { liveStatus: 'upcoming', startsAt: new Date(Date.now() + 10 * 60_000) });
     await add('Later', { liveStatus: 'upcoming', startsAt: new Date(Date.now() + 3_600_000) });
+    await add(
+      'SoonNoMedia',
+      { liveStatus: 'upcoming', startsAt: new Date(Date.now() + 5 * 60_000) },
+      { media: false },
+    );
     await add('Video');
     await add('Pending', {}, { published: false });
     await add('NoMedia', {}, { media: false });

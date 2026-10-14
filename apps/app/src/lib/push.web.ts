@@ -68,6 +68,10 @@ export const pushClient: PushClient = {
     return result;
   },
 
+  blocked() {
+    return typeof Notification !== 'undefined' && Notification.permission === 'denied';
+  },
+
   async unregister() {
     await (await (await registration())?.pushManager.getSubscription())?.unsubscribe();
   },

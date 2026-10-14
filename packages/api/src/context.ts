@@ -1,4 +1,5 @@
 import type { Db } from '@lisnard/db/client';
+import { TRPCError } from '@trpc/server';
 
 export interface CreateContextOptions {
   /** Requête HTTP entrante (absente pour les appels serveur directs). */
@@ -14,6 +15,25 @@ export interface CreateContextOptions {
 }
 
 export type Context = CreateContextOptions;
+
+/** Connexion à la base, ou erreur propre si DATABASE_URL n'est pas configuré. */
+export function requireDb(ctx: Context): Db {
+  if (!ctx.db)
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Base de données non configurée',
+    });
+  return ctx.db;
+}
+
+/**
+ * Adresse du client : dernière entrée de X-Forwarded-For, celle qu'ajoute le proxy
+ * (Caddy, Coolify) ; les entrées précédentes viennent du client et ne sont pas fiables.
+ */
+export function clientIp(req?: Request): string {
+  const forwarded = req?.headers.get('x-forwarded-for');
+  return forwarded?.split(',').at(-1)?.trim() || 'direct';
+}
 
 export function createContext(opts: CreateContextOptions): Context {
   return opts;

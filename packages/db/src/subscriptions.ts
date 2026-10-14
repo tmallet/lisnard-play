@@ -58,6 +58,23 @@ export async function countSubscriptions(db: Db): Promise<number> {
 }
 
 /**
+ * Confirme un abonnement existant (clés et date de confirmation rafraîchies, préférences
+ * remplacées si fournies) ; null s'il est inconnu. Ne compte ni n'insère rien : c'est le
+ * chemin de chaque ouverture de l'app, qui doit rester léger et passer même table pleine.
+ */
+export async function confirmSubscription(
+  db: Db,
+  input: SubscriptionInput,
+): Promise<Preferences | null> {
+  const [row] = await db
+    .update(pushSubscription)
+    .set({ keys: input.keys ?? null, confirmedAt: sql`now()`, ...(input.preferences ?? {}) })
+    .where(eq(pushSubscription.endpoint, input.endpoint))
+    .returning(columns);
+  return row ?? null;
+}
+
+/**
  * Enregistre l'abonnement, ou le confirme s'il existe déjà (clés et date de
  * confirmation rafraîchies). Renvoie les préférences en vigueur.
  */

@@ -59,9 +59,10 @@ notification_sent
     `updates.push.services.mozilla.com`, `web.push.apple.com`,
     `*.notify.windows.com`), clés en base64url de longueur attendue.
   - Expo : `^ExponentPushToken\[[A-Za-z0-9_-]{10,}\]$`.
-- **Limite d'abus** : plafond global de 50 000 abonnements, au-delà duquel
-  `subscribe` répond `TOO_MANY_REQUESTS`. Il n'y a pas de limite par adresse IP
-  pour l'instant (pas d'état partagé). C'est suffisant pour une préproduction.
+- **Limite d'abus** : un abonnement connu est seulement confirmé (aucun comptage).
+  Un nouvel abonnement est limité à 10 par adresse IP et par heure (en mémoire, un
+  seul serveur d'app ; adresse = dernière entrée de `X-Forwarded-For`, ajoutée par le
+  proxy), puis au plafond global de 50 000. Au-delà : `TOO_MANY_REQUESTS`.
 
 ### D3 — Web
 
@@ -99,8 +100,8 @@ notification_sent
   `notification_sent` :
   - `live` : `published`, rendu présent, `live_status = 'live'`, `starts_at`
     (ou à défaut `first_seen_at`) dans les 2 dernières heures ;
-  - `reminder` : `published`, `upcoming`, `starts_at` dans les 15 prochaines
-    minutes ;
+  - `reminder` : `published`, rendu présent (la notification ouvre la page de
+    détail), `upcoming`, `starts_at` dans les 15 prochaines minutes ;
   - `new_item` : `published`, rendu présent, `live_status in ('none','ended')`,
     `first_seen_at` dans les 2 dernières heures.
 - **Un seul envoi** : chaque événement est d'abord inséré dans
@@ -123,8 +124,9 @@ notification_sent
   dépasse 13 mois. L'app rappelle `subscribe` à chaque ouverture de l'écran des
   notifications et au démarrage si elle est abonnée, ce qui rafraîchit
   `confirmed_at`.
-- **Sans `VAPID_PRIVATE_KEY`** : les abonnements web sont ignorés, avec un
-  avertissement au démarrage.
+- **Sans `VAPID_PRIVATE_KEY`** : avertissement au démarrage ; un événement attendu
+  par des abonnés web n'est pas réservé (compté `deferred`) et part dès que les clés
+  sont configurées, s'il reste dans la fenêtre de 2 h.
 
 ### D6 — Écran
 
