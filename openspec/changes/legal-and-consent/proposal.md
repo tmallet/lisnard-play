@@ -19,7 +19,7 @@ l'adresse `lisnardplay@tmallet.fr`.
 - **Page « Mentions légales et confidentialité »** (`/mentions-legales`),
   accessible depuis le pied de page de chaque écran et depuis « À propos » :
   - éditeur anonyme et adresse de contact ;
-  - hébergeur (Scaleway) ;
+  - hébergeur (OneProvider, serveur en France) ;
   - données traitées : journaux techniques du serveur, aucun cookie propre,
     cookies des lecteurs tiers après consentement ;
   - droits des personnes et réclamation auprès de la CNIL ;

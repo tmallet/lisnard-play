@@ -78,11 +78,12 @@ export default function LegalNotice() {
 
         <Section title="Hébergeur">
           <P>
-            {LEGAL.host.name}, {LEGAL.host.address} —{' '}
+            {LEGAL.host.name}, {LEGAL.host.address}, téléphone {LEGAL.host.phone} —{' '}
             <ExternalLink url={LEGAL.host.url}>
               {LEGAL.host.url.replace('https://', '')}
             </ExternalLink>
           </P>
+          <P>Le serveur et les données sont situés en France, dans {LEGAL.host.datacenter}.</P>
         </Section>
 
         <Section title="Contenus">

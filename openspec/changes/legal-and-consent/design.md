@@ -8,8 +8,9 @@ Motivation : voir `proposal.md`. Décisions : ADR 0022.
 
 `apps/app/src/config/legal.ts` regroupe :
 - l'adresse de contact (`lisnardplay@tmallet.fr`) ;
-- l'hébergeur (Scaleway SAS, 8 rue de la Ville-l'Évêque, 75008 Paris, constaté
-  par la résolution inverse du serveur de préproduction) ;
+- l'hébergeur : OneProvider (BrainStorm Network Inc., Laval, Canada), prestataire
+  du serveur dédié, avec le lieu d'hébergement (France, centre de données
+  Scaleway à Paris, d'après le whois de l'adresse IP) ;
 - la date de mise à jour.
 
 La page `/mentions-legales` et « À propos » lisent cette configuration. Changer
