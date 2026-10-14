@@ -2,8 +2,11 @@
 
 ### Requirement: Abonnement d'un appareil
 L'application DOIT permettre d'activer les notifications d'un appareil depuis un
-écran dédié, accessible depuis « À propos » et, sur le web, à l'adresse
-`/notifications`. L'autorisation du système NE DOIT être demandée qu'après une
+écran dédié, à l'adresse `/notifications` sur le web, accessible depuis l'en-tête
+(cloche) sur le web, depuis l'accueil sur mobile quand l'appareil peut en recevoir,
+et depuis « À propos ». Quand aucun direct n'est en cours, l'accueil DOIT inviter à
+s'abonner, sauf si l'appareil est déjà abonné ou ne peut pas recevoir de
+notifications. L'autorisation du système NE DOIT être demandée qu'après une
 action explicite de l'utilisateur. L'abonnement DOIT porter trois préférences :
 début d'un direct (activée par défaut), rappel avant un direct programmé
 (activée par défaut) et nouvelle intervention (désactivée par défaut). Aucun
@@ -15,6 +18,10 @@ de proposer l'activation.
 #### Scenario: Activation sur le web
 - **WHEN** un visiteur d'un navigateur compatible appuie sur « Activer les notifications » et accepte l'autorisation
 - **THEN** l'abonnement est enregistré avec les préférences par défaut et l'écran affiche les trois interrupteurs
+
+#### Scenario: Invitation sur l'accueil
+- **WHEN** un visiteur d'un navigateur compatible, non abonné, ouvre l'accueil sans direct en cours
+- **THEN** l'accueil affiche « Aucun direct en ce moment » avec un lien « Être prévenu du prochain » vers l'écran des notifications, et ne l'affiche plus une fois l'appareil abonné
 
 #### Scenario: Autorisation refusée
 - **WHEN** l'utilisateur refuse l'autorisation du système

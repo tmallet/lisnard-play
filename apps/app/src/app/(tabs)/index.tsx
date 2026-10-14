@@ -1,6 +1,7 @@
 import { Text } from 'react-native';
 
 import { InterventionFeed } from '@/components/InterventionFeed';
+import { NotificationsEntry } from '@/components/NotificationsEntry';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
 import { Title } from '@/components/Title';
@@ -13,6 +14,7 @@ export default function Home() {
       <Text className="font-sans-bold text-blanc text-lg">
         En direct, à venir et passées : télévision, radio, presse, meetings.
       </Text>
+      <NotificationsEntry />
       <InterventionFeed />
     </Screen>
   );

@@ -20,6 +20,7 @@
 - [x] 4.1 `public/sw.js` et `public/manifest.webmanifest`, liens dans `+html.tsx`, en-têtes servis correctement par `server.ts`
 - [x] 4.2 `src/lib/push.web.ts` et `src/lib/push.native.ts` (`expo-notifications`, `expo-device`, plugin), API commune ; tests
 - [x] 4.3 Écran `/notifications` et lien depuis « À propos » ; tests (activation, refus, iPhone, préférences, désactivation)
+- [x] 4.3b Entrées : cloche dans l'en-tête web, lien sur l'accueil mobile (si compatible), invitation sur l'accueil sans direct ; tests
 - [x] 4.4 Ouverture de l'intervention au toucher d'une notification (mobile)
 - [x] 4.5 Mentions légales : section notifications ; `LEGAL.updatedAt`
 

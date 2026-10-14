@@ -5,6 +5,8 @@ import type { InterventionCardData } from '../InterventionCard';
 import { InterventionFeed } from '../InterventionFeed';
 import { ScrollEndProvider } from '../ScrollEnd';
 
+// L'invitation aux notifications a ses propres tests (usePushAvailability).
+jest.mock('../NotifyInvite', () => ({ NotifyInvite: () => null }));
 jest.mock('expo-router', () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
