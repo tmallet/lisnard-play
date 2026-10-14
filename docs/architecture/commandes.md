@@ -99,7 +99,7 @@ Voir `.env.example`. Un fichier `.env*` n'est jamais commité (sauf `.env.exampl
 | `SUMMARY_DAILY_BUDGET_USD` | Worker : plafond quotidien des résumés, en dollars (1 par défaut) |
 | `ALLOW_INDEXING` | Serveur web : `true` lève le blocage de l'indexation (bloquée par défaut) |
 | `EXPO_PUBLIC_API_URL` | URL de base de l'API pour les clients mobiles hors développement |
-| `EXPO_PUBLIC_SITE_URL` | Origine déclarée par le lecteur vidéo mobile (défaut : `https://lisnard-play.app`) |
+| `EXPO_PUBLIC_SITE_URL` | Origine déclarée par le lecteur vidéo mobile (défaut : `https://lisnardplay.thimal.fr`) |
 
 ## CI
 

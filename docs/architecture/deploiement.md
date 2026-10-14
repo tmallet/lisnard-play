@@ -49,7 +49,7 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
 | `NODE_ENV` | `production` (image) | `production` (image) | Masque les détails d'erreur de l'API |
 | `MIGRATIONS_DIR`, `HEARTBEAT_FILE` | — | fixés par l'image | Ne pas modifier |
-| `EXPO_PUBLIC_API_URL` | — | — | **Au build des apps mobiles** : URL publique de l'app (ex. `https://…/`) |
+| `EXPO_PUBLIC_API_URL` | — | — | **Au build des apps mobiles** : URL publique de l'app (ex. `https://lisnardplay.thimal.fr` en préproduction). Même valeur pour `EXPO_PUBLIC_SITE_URL`, l'origine déclarée par le lecteur vidéo |
 
 Le backend (`app`) ne reçoit que `DATABASE_URL`. Les clés d'ingestion ne
 résident que dans le worker (ADR 0017).
@@ -95,6 +95,7 @@ dépense sur la clé OpenRouter.
      - `media` ;
      - `summarize`.
 5. **App** : nouvelle application depuis le même dépôt.
+   Domaine de préproduction : `lisnardplay.thimal.fr`.
    - Build Pack « Dockerfile », Base Directory `/`, Dockerfile
      `apps/app/Dockerfile`, port exposé `3000`.
    - Domaine en HTTPS.
