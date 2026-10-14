@@ -6,6 +6,7 @@ import { useTRPC } from '@/lib/trpc';
 
 import { CardGrid } from './CardGrid';
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
+import { NotifyInvite } from './NotifyInvite';
 import { useOnEndReached } from './ScrollEnd';
 import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
 
@@ -108,7 +109,11 @@ export function InterventionFeed() {
         <Text className="font-sans text-base text-blanc/70">Chargement des interventions…</Text>
       ) : (
         <>
-          {liveItems.length > 0 && <Section title="En direct" items={liveItems} live />}
+          {liveItems.length > 0 ? (
+            <Section title="En direct" items={liveItems} live />
+          ) : (
+            !theme && <NotifyInvite />
+          )}
           {upcomingItems.length > 0 && <Section title="À venir" items={upcomingItems} />}
           <View className="gap-3">
             <SectionTitle>Passées</SectionTitle>

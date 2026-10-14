@@ -9,7 +9,8 @@ Postgres intégré à Bun (`drizzle-orm/bun-sql`). Vue d'ensemble :
 | Import | Pour qui | Contenu |
 |--------|----------|---------|
 | `@lisnard/db/read` | backend (`packages/api`) | interventions **publiées et dotées d'un rendu** uniquement, sans donnée interne (ADR 0017) |
-| `@lisnard/db/write` | worker uniquement | upserts, journal des décisions, recalcul, rendus médias |
+| `@lisnard/db/write` | worker uniquement | upserts, journal des décisions, recalcul, rendus médias, événements et envois de notifications |
+| `@lisnard/db/subscriptions` | backend et worker | abonnements aux notifications (seule écriture du backend, ADR 0024), liste blanche `isPushServiceUrl` |
 | `@lisnard/db/client` | tous | `createDb(url, { max, idleTimeout })` |
 | `@lisnard/db/schema` | tous | tables, énumérations, types (`MediaRender`, `ClassifierAnswers`…) |
 | `@lisnard/db/migrate` | worker | `runMigrations(db)` (`MIGRATIONS_DIR` dans l'image Docker) |

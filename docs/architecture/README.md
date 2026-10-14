@@ -64,6 +64,7 @@ lisnard-play/
 │  ├─ src/media/          lecture d'URL sécurisée, oEmbed / Open Graph, liens Google News
 │  ├─ src/summaries/      résumés des vidéos : consigne, client OpenRouter (Gemini), tâche
 │  ├─ src/websub/         notifications push YouTube : serveur, abonnements, voie rapide
+│  ├─ src/notifications/  envoi des notifications : Web Push (VAPID), Expo Push, tâche notify
 │  ├─ src/calibrate.ts    calibration sur eval/reference.jsonl
 │  ├─ src/cli.ts          recompute, reclassify, calibrate, backfill
 │  └─ Dockerfile
@@ -81,6 +82,8 @@ lisnard-play/
 |-------|------|-------------|
 | `source` | Sources configurées, recopiées depuis `sources.config.ts` | `id` (« yt:bfmtv »), `kind`, `name`, `active` |
 | `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `media` (rendu, dont l'URL de l'éditeur pour un article Google News), `summary` (résumé ou motif d'absence), `duration_s` |
+| `push_subscription` | Abonnements aux notifications, **écrits par l'API** (ADR 0024) | `kind` (`web` / `expo`), `endpoint` unique (adresse Web Push ou jeton Expo), `keys`, préférences `live` / `reminder` / `new_item`, `confirmed_at` (purge à 13 mois) |
+| `notification_sent` | Envois effectués, un par intervention et par type | clé (`item_id`, `kind`), `recipients` |
 | `classification` | Journal des décisions, en ajout seul | `model` (instantané servi), `questions_version`, `input_hash`, `answers` (probabilités brutes), `thresholds`, `outcome` |
 
 - **Empreinte d'entrée** : un contenu n'est (re)classé que si son empreinte
@@ -98,6 +101,8 @@ lisnard-play/
 | `collect:youtube` | 3 min | flux RSS des chaînes, enrichissement `videos.list`, revérification des directs |
 | `recheck:soon` | 30 s | directs programmés dans le quart d'heure : statut revérifié (aucun appel sinon) |
 | `collect:rss` | 15 min | Google News |
+| `notify` | 30 s (et après la voie rapide WebSub) | notifications : début de direct, rappel à 15 min, nouvelle intervention (ADR 0024) |
+| `notify:purge` | 24 h | abonnements sans confirmation depuis 13 mois |
 | `classify` | 30 s | contenus en attente ou modifiés → Jev → décision journalisée |
 | `media` | 30 s | rendu des contenus publiés sans rendu (ils deviennent visibles) |
 | `summarize` | 2 min | résumé des vidéos publiées, dans la limite du plafond quotidien (ADR 0021) |
@@ -127,7 +132,9 @@ SDK 58. Sur mobile, le client appelle `${EXPO_PUBLIC_API_URL}/api/trpc`.
 ## Contrat tRPC
 
 - Procédures : `health`, `interventions.list` (statut, thème, curseur,
-  `limit ≤ 50`), `interventions.byId` (`NOT_FOUND`). Les éléments exposent
+  `limit ≤ 50`), `interventions.byId` (`NOT_FOUND`), `notifications.config`,
+  `notifications.subscribe` / `update` / `unsubscribe` (seules écritures de l'API,
+  dans `push_subscription`, ADR 0024). Les éléments exposent
   `themes` ; le rôle n'est pas exposé, puisque tout contenu publié est
   `national` (ADR 0020).
 - Le client importe uniquement le type `AppRouter`. Garde-fou de typage :

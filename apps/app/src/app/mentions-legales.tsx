@@ -107,6 +107,15 @@ export default function LegalNotice() {
             exploités à d’autres fins ni transmis à des tiers, hors l’hébergeur.
           </P>
           <P>
+            Si vous activez les notifications, le serveur conserve l’adresse d’abonnement fournie
+            par votre navigateur ou le jeton fourni par l’application, ainsi que vos préférences.
+            Ces données servent uniquement à vous envoyer les notifications choisies, par
+            l’intermédiaire du service de notification de votre navigateur (Google, Mozilla, Apple
+            ou Microsoft) ou de l’application (Expo, Apple, Google). Elles sont supprimées dès que
+            vous désactivez les notifications, quand ce service les déclare expirées, ou après 13
+            mois sans utilisation de l’appareil.
+          </P>
+          <P>
             Les vidéos YouTube et Dailymotion ne se chargent que si vous appuyez sur « Lire la vidéo
             ». La plateforme peut alors déposer des cookies et recueillir des données selon ses
             propres règles (pour YouTube :{' '}

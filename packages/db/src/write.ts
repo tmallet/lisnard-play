@@ -2,7 +2,7 @@
  * Écriture (worker uniquement, ADR 0017). Un import de ce module dans packages/api
  * est une erreur de revue.
  */
-import { and, between, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import { and, between, desc, eq, inArray, or, type SQL, sql } from 'drizzle-orm';
 
 import type { Db } from './client';
 import {
@@ -11,6 +11,9 @@ import {
   classification,
   item,
   type MediaRender,
+  type NotificationKind,
+  notificationSent,
+  pushSubscription,
   type SummaryRecord,
   source,
   summarySpend,
@@ -438,5 +441,130 @@ export async function resetFailedSummaries(db: Db): Promise<number> {
     .set({ summary: null, summaryAttempts: 0, summaryRetryAt: null })
     .where(sql`${item.summary}->>'reason' = 'failed'`)
     .returning({ id: item.id });
+  return rows.length;
+}
+
+// --- Notifications (spec push-notifications, ADR 0024) ---
+
+/** Fenêtre au-delà de laquelle un événement n'est plus notifié (rattrapage, reprise). */
+const NOTIFY_WINDOW = sql`interval '2 hours'`;
+
+export interface NotificationEvent {
+  itemId: string;
+  kind: NotificationKind;
+  title: string;
+  outlet: string;
+}
+
+/**
+ * Événements à notifier qui ne l'ont pas encore été (design D5) : passage en direct,
+ * direct dans les 15 minutes, nouvelle intervention visible. Une nouvelle intervention
+ * déjà annoncée comme direct ou rappel n'est pas notifiée une seconde fois.
+ */
+export async function listNotificationEvents(db: Db): Promise<NotificationEvent[]> {
+  const notSent = (kind: NotificationKind) =>
+    sql`not exists (select 1 from ${notificationSent} n where n.item_id = ${item.id} and n.kind = ${kind})`;
+  const event = (kind: NotificationKind, where: SQL) =>
+    db
+      .select({
+        itemId: item.id,
+        kind: sql<NotificationKind>`${kind}::notification_kind`,
+        title: item.title,
+        outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+      })
+      .from(item)
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(and(eq(item.status, 'published'), where, notSent(kind)));
+  const visible = sql`${item.media} is not null`;
+  const [live, reminder, newItem] = await Promise.all([
+    event(
+      'live',
+      and(
+        visible,
+        eq(item.liveStatus, 'live'),
+        sql`coalesce(${item.startsAt}, ${item.firstSeenAt}) > now() - ${NOTIFY_WINDOW}`,
+      ) as SQL,
+    ),
+    event(
+      'reminder',
+      and(
+        // Rendu exigé : la notification ouvre la page de l'intervention, introuvable sans lui.
+        visible,
+        eq(item.liveStatus, 'upcoming'),
+        sql`${item.startsAt} between now() and now() + interval '15 minutes'`,
+      ) as SQL,
+    ),
+    event(
+      'new_item',
+      and(
+        visible,
+        inArray(item.liveStatus, ['none', 'ended']),
+        sql`${item.firstSeenAt} > now() - ${NOTIFY_WINDOW}`,
+        sql`not exists (select 1 from ${notificationSent} n where n.item_id = ${item.id} and n.kind in ('live', 'reminder'))`,
+      ) as SQL,
+    ),
+  ]);
+  return [...live, ...reminder, ...newItem];
+}
+
+/**
+ * Réserve l'envoi d'un événement : true si c'est la première fois. Réserver avant
+ * d'envoyer fait perdre une notification en cas de panne plutôt que la doubler.
+ */
+export async function claimNotification(
+  db: Db,
+  itemId: string,
+  kind: NotificationKind,
+): Promise<boolean> {
+  const rows = await db
+    .insert(notificationSent)
+    .values({ itemId, kind })
+    .onConflictDoNothing()
+    .returning({ itemId: notificationSent.itemId });
+  return rows.length > 0;
+}
+
+export async function setNotificationRecipients(
+  db: Db,
+  itemId: string,
+  kind: NotificationKind,
+  recipients: number,
+): Promise<void> {
+  await db
+    .update(notificationSent)
+    .set({ recipients })
+    .where(and(eq(notificationSent.itemId, itemId), eq(notificationSent.kind, kind)));
+}
+
+const PREFERENCE_COLUMN = {
+  live: pushSubscription.live,
+  reminder: pushSubscription.reminder,
+  new_item: pushSubscription.newItem,
+} as const;
+
+/** Abonnements qui ont choisi ce type de notification ; tous sans type (envoi de test). */
+export async function listSubscribers(db: Db, kind?: NotificationKind) {
+  return db
+    .select({
+      id: pushSubscription.id,
+      kind: pushSubscription.kind,
+      endpoint: pushSubscription.endpoint,
+      keys: pushSubscription.keys,
+    })
+    .from(pushSubscription)
+    .where(kind ? eq(PREFERENCE_COLUMN[kind], true) : undefined);
+}
+
+/** Supprime les abonnements que le service push déclare expirés ou invalides. */
+export async function deleteSubscriptionsById(db: Db, ids: string[]): Promise<void> {
+  if (ids.length > 0) await db.delete(pushSubscription).where(inArray(pushSubscription.id, ids));
+}
+
+/** Purge des abonnements sans confirmation depuis 13 mois (spec push-notifications). */
+export async function purgeStaleSubscriptions(db: Db): Promise<number> {
+  const rows = await db
+    .delete(pushSubscription)
+    .where(sql`${pushSubscription.confirmedAt} < now() - interval '13 months'`)
+    .returning({ id: pushSubscription.id });
   return rows.length;
 }

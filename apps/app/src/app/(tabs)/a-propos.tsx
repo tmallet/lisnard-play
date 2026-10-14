@@ -19,6 +19,9 @@ export default function About() {
       </Text>
       <Text className="font-sans-bold text-base text-blanc">{INDEPENDENCE_NOTICE}</Text>
       <Text className="font-sans text-base text-blanc/85 leading-relaxed">{SOURCES_NOTICE}</Text>
+      <Link href="/notifications" className="font-sans-semibold text-base text-chamois underline">
+        Être prévenu des directs (notifications)
+      </Link>
       <Link href={CONTACT.url} className="font-sans-semibold text-base text-chamois underline">
         {CONTACT.label}
       </Link>

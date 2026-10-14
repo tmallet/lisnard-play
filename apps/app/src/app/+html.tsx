@@ -19,6 +19,11 @@ export default function Root({ children }: { children: ReactNode }) {
         <meta property="og:site_name" content={APP_NAME} />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="fr_FR" />
+        {/* Installation sur l'écran d'accueil (notifications sur iPhone, ADR 0024). */}
+        <link rel="manifest" href="/manifest" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <ScrollViewStyleReset />
       </head>
       <body style={{ backgroundColor: colors.bleuSombre }}>{children}</body>
