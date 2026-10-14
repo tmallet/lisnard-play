@@ -74,6 +74,13 @@ indispensable.
 4. **Apps mobiles** : build avec `EXPO_PUBLIC_API_URL` pointant vers le domaine
    de l'app.
 
+**Changement de règle de publication** (par exemple au déploiement de
+`campaign-themes`, ADR 0020) : après le démarrage du nouveau worker, lancer
+`bun cli.js recompute` dans son conteneur. La nouvelle règle s'applique ainsi
+tout de suite aux décisions journalisées (les contenus AMF sont écartés), sans
+appel au modèle. Si la version des questions a changé, le worker reclasse
+ensuite tous les contenus de lui-même, à raison de 50 contenus toutes les 30 s.
+
 **Retour arrière** : arrêter le worker. L'app continue d'afficher les dernières
 interventions publiées. Pour revenir à une version précédente, redéployer
 l'image précédente du service concerné. Les migrations ne font qu'ajouter, et
@@ -85,7 +92,7 @@ Depuis le terminal du conteneur worker dans Coolify :
 
 | Besoin | Commande |
 |--------|----------|
-| Recalculer la publication après un changement de seuils | `bun cli.js recompute` |
+| Recalculer la publication et les thèmes après un changement de seuils ou de règle | `bun cli.js recompute` |
 | Reclasser après un changement de modèle | `bun cli.js reclassify --model <ancien>` |
 | Mesurer les seuils | `bun cli.js calibrate --validated`. À lancer plutôt depuis le dépôt, car le jeu de référence n'est pas dans l'image |
 

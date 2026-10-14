@@ -11,15 +11,15 @@ jest.mock(
 );
 
 // jest-expo cible iOS : c'est la variante mobile (Screen.tsx) qui est testée.
-test('affiche le nom de l’application en en-tête et la mention en pied de page', async () => {
+test('affiche le contenu et la mention en pied de page, sans surtitre', async () => {
   await render(
     <Screen>
       <Text>Contenu</Text>
     </Screen>,
   );
-  expect(screen.getByText(APP_NAME)).toBeTruthy();
   expect(screen.getByText('Contenu')).toBeTruthy();
   expect(screen.getByText(INDEPENDENCE_NOTICE)).toBeTruthy();
+  expect(screen.queryByText(APP_NAME)).toBeNull();
 });
 
 test('footer={false} retire le pied de page (écran qui affiche déjà la mention)', async () => {

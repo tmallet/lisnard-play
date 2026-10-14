@@ -6,8 +6,8 @@ Point d'entrée pour les agents de codage. Lire ce fichier en premier.
 
 Application web et mobile **indépendante** (non affiliée à la campagne) qui
 recense les interventions publiques de David Lisnard, candidat à la
-présidentielle 2027. Le périmètre couvre tout sauf la mairie de Cannes, AMF
-inclus. Le contexte complet se trouve dans `openspec/config.yaml` (`context`).
+présidentielle 2027. Le périmètre est sa campagne présidentielle : ni l'AMF ni
+la mairie de Cannes (ADR 0020). Les interventions sont classées par thèmes. Le contexte complet se trouve dans `openspec/config.yaml` (`context`).
 
 État actuel : **ingestion en place**. Le worker collecte YouTube et Google News,
 classe avec Jev, résout les médias et écrit dans Postgres ; l'app affiche le flux

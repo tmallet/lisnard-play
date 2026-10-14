@@ -5,9 +5,7 @@
 Fournir la coquille commune de l'application sur le web, iOS et Android : mise
 en page, navigation de base, identité visuelle issue de la charte réduite et
 affichage permanent du caractère indépendant de l'application.
-
 ## Requirements
-
 ### Requirement: Disponibilité multiplateforme
 L'application DOIT être utilisable dans un navigateur web, sur iOS et sur
 Android à partir d'une même base de code, avec les mêmes écrans.
@@ -39,8 +37,8 @@ Chaque page web DOIT exposer un titre, une description, une langue de document
 
 ### Requirement: Mention d'indépendance
 Chaque écran DOIT afficher, de façon visible et sans interaction préalable, la
-mention « Application indépendante, non affiliée à David Lisnard ni à Nouvelle
-Énergie ».
+mention « Initiative indépendante de soutiens. Ce site ne dépend ni de Nouvelle
+Énergie ni de David Lisnard. »
 
 #### Scenario: Mention sur le web
 - **WHEN** une page quelconque est affichée sur le web
@@ -92,3 +90,4 @@ de page et métadonnées.
 #### Scenario: Changement du nom
 - **WHEN** le nom de l'application est modifié dans sa source unique
 - **THEN** le nouveau nom apparaît dans l'en-tête, l'écran « À propos », le titre des pages web et les balises `og:title`
+

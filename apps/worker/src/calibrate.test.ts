@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 
 import type { ClassifierAnswers } from '@lisnard/db/schema';
 
-import { evaluate, proposeThresholds, type ReferenceCase } from './calibrate';
+import { evaluate, proposeThresholds, type ReferenceCase, themeScores } from './calibrate';
 
 const answers = (intervient: number, role: string, confidence: number): ClassifierAnswers => ({
   intervient,
@@ -34,18 +34,47 @@ const map = new Map([
 ]);
 
 describe('calibration', () => {
-  test('évaluation : vrais/faux positifs et négatifs', () => {
+  test('évaluation : vrais/faux positifs et négatifs, AMF à écarter (ADR 0020)', () => {
     const ev = evaluate(cases, map, { intervient: 0.5, role: 0.6 });
-    expect([ev.tp, ev.fp, ev.fn, ev.tn]).toEqual([3, 1, 0, 1]);
-    expect(ev.precision).toBeCloseTo(0.75);
+    expect([ev.tp, ev.fp, ev.fn, ev.tn]).toEqual([2, 1, 0, 2]);
+    expect(ev.precision).toBeCloseTo(2 / 3);
     expect(ev.recall).toBe(1);
     expect(ev.errors.map((e) => [e.platformId, e.kind])).toEqual([['c', 'faux positif']]);
   });
 
   test('proposition : précision maximale sous contrainte de rappel', () => {
-    const best = proposeThresholds(cases, map, 0.6);
+    const best = proposeThresholds(cases, map, 0.5);
     expect(best?.precision).toBe(1);
     expect(best?.thresholds.intervient).toBeGreaterThan(0.6);
-    expect(proposeThresholds(cases, map, 1)?.precision).toBeCloseTo(0.75);
+    expect(proposeThresholds(cases, map, 1)?.precision).toBeCloseTo(2 / 3);
+  });
+
+  test('chaîne officielle : intervention présumée, comme à la publication', () => {
+    const low = new Map([['o', answers(0.4, 'national', 0.9)]]);
+    const t = { intervient: 0.75, role: 0.6 };
+    expect(evaluate([ref('o', true)], low, t, new Set(['o'])).tp).toBe(1);
+    expect(evaluate([ref('o', true)], low, t).fn).toBe(1);
+  });
+
+  test('thèmes : précision et rappel par thème sur les cas étiquetés', () => {
+    const withThemes = (id: string, themes: ReferenceCase['expected']['themes']) => ({
+      ...ref(id, true),
+      expected: { intervient: true, role: 'national', kind: 'tv', themes },
+    });
+    const themed = [withThemes('t1', ['economy']), withThemes('t2', ['security']), ref('t3', true)];
+    const probs = (themes: ClassifierAnswers['themes']) => ({
+      ...answers(0.9, 'national', 0.9),
+      themes,
+    });
+    const answersMap = new Map([
+      ['t1', probs({ economy: 0.8, security: 0.6 })],
+      ['t2', probs({ security: 0.3 })],
+      ['t3', probs({ economy: 0.9 })], // non étiqueté : ignoré
+    ]);
+    const { cases: n, scores } = themeScores(themed, answersMap, 0.5);
+    expect(n).toBe(2);
+    const by = Object.fromEntries(scores.map((s) => [s.theme, s]));
+    expect(by.economy).toMatchObject({ tp: 1, fp: 0, fn: 0 });
+    expect(by.security).toMatchObject({ tp: 0, fp: 1, fn: 1, precision: 0, recall: 0 });
   });
 });

@@ -16,6 +16,7 @@ import {
   labelAccuracy,
   loadReference,
   proposeThresholds,
+  themeScores,
 } from './calibrate';
 import { createSystemOneClassifier } from './classifier/systemone';
 import { thresholdsFor } from './classifier/thresholds';
@@ -62,7 +63,7 @@ switch (positionals[0]) {
     });
     const all = await loadReference(resolve(import.meta.dir, '../eval/reference.jsonl'));
     const cases = values.validated ? all.filter((c) => c.validated) : all;
-    const answers = await collectAnswers(db, classifier, cases);
+    const { answers, official } = await collectAnswers(db, classifier, cases);
     const current = thresholdsFor(classifier.model);
     const pct = (n: number) => `${(n * 100).toFixed(1)} %`;
     console.log(
@@ -73,7 +74,7 @@ switch (positionals[0]) {
       `Exactitude sur ${acc.cases} interventions : rôle ${pct(acc.role)}, type ${pct(acc.kind)}`,
     );
     if (current) {
-      const ev = evaluate(cases, answers, current);
+      const ev = evaluate(cases, answers, current, official);
       console.log(
         `Seuils actuels ${JSON.stringify(current)} : précision ${pct(ev.precision)}, rappel ${pct(ev.recall)} (VP ${ev.tp}, FP ${ev.fp}, FN ${ev.fn}, VN ${ev.tn})`,
       );
@@ -82,7 +83,15 @@ switch (positionals[0]) {
           `  ${e.kind.padEnd(12)} p=${e.intervient.toFixed(2)} ${e.role}(${e.confidence.toFixed(2)})  ${e.title.slice(0, 90)}${e.note ? `  [${e.note}]` : ''}`,
         );
     }
-    const best = proposeThresholds(cases, answers);
+    const themes = themeScores(cases, answers, current?.theme ?? 0.5);
+    if (themes.cases > 0) {
+      console.log(`Thèmes (${themes.cases} cas étiquetés, seuil ${current?.theme ?? 0.5}) :`);
+      for (const t of themes.scores)
+        console.log(
+          `  ${t.theme.padEnd(14)} précision ${pct(t.precision)}, rappel ${pct(t.recall)} (VP ${t.tp}, FP ${t.fp}, FN ${t.fn})`,
+        );
+    }
+    const best = proposeThresholds(cases, answers, 0.8, official);
     console.log(
       best
         ? `Proposition (précision max, rappel ≥ 80 %) : ${JSON.stringify(best.thresholds)} → précision ${pct(best.precision)}, rappel ${pct(best.recall)}`

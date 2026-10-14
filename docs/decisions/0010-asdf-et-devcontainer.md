@@ -3,7 +3,7 @@ id: "0010"
 title: Versions d'outils via asdf et devcontainer bac à sable pour agents
 status: accepted
 date: 2026-10-13
-tags: [outillage, environnement, agents, securite]
+tags: [outillage, environnement, agents, security]
 supersedes: null
 superseded-by: null
 related-specs: []

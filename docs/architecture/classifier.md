@@ -1,7 +1,8 @@
 # Classifieur
 
 Décide si un contenu collecté est une intervention publique de David Lisnard
-dans le périmètre de l'application (ADR 0004, 0006, 0018). Code :
+dans le périmètre de l'application, la campagne présidentielle (ADR 0004, 0018,
+0020), et lui attribue des thèmes. Code :
 `apps/worker/src/classifier/` et `apps/worker/src/publish.ts`.
 
 ## Modèle
@@ -14,13 +15,14 @@ dans le périmètre de l'application (ADR 0004, 0006, 0018). Code :
 - Coût observé : environ 0,00003 $ par contenu (3 questions). Latence de 230 à
   510 ms.
 
-## Questions (`questions.ts`, version 2)
+## Questions (`questions.ts`, version 3)
 
 | Clé | Type | Rôle |
 |-----|------|------|
 | `intervient` | Noul (probabilité 0 à 1) | Le contenu rapporte-t-il une prise de parole de David Lisnard lui-même ? Les déclarations rapportées (« déclare », « affirme »…) comptent ; les analyses, portraits, sondages ou anecdotes ne comptent pas |
-| `role` | Choice | `national` (par défaut), `amf` (communes, maires, collectivités), `mairie` (uniquement si le sujet porte explicitement sur Cannes), `hors_sujet` |
+| `role` | Choice | `national` (par défaut, y compris quand il parle des communes ou de la décentralisation dans son programme), `amf` (seulement s'il parle au nom des maires, en tant que président de l'AMF), `mairie` (uniquement si le sujet porte explicitement sur Cannes), `hors_sujet` |
 | `kind` | Choice | `tv`, `radio`, `presse`, `podcast`, `meeting`, `discours`, `stream`, `reseau_social` |
+| `theme_<id>` (×7) | Noul | David Lisnard aborde-t-il ce thème, même parmi d'autres ? Thèmes et définitions : spec `intervention-themes` (`economy`, `security`, `immigration`, `education`, `institutions`, `international`, `campaign`) |
 
 **État envoyé** : titre, description (2 000 caractères au plus), média, type de
 source, dates. Jev ne produit pas de texte : il ne fait que décider.
@@ -31,16 +33,21 @@ Un contenu est publié si et seulement si :
 - `intervient ≥ τ_intervient`, sauf pour la chaîne officielle de David Lisnard
   (`official: true` dans `sources.config.ts`), où son intervention est présumée
   (ADR 0018) ;
-- le rôle le plus probable est `national` ou `amf` ;
+- le rôle le plus probable est `national` : l'AMF et la mairie sont hors
+  périmètre (ADR 0020) ;
 - la confiance de ce rôle est `≥ τ_role`.
 
 Un modèle sans seuils dans `thresholds.ts` ne publie rien.
 
+**Thèmes** : un thème est attribué quand sa probabilité est `≥ τ_theme`. Une
+intervention peut en avoir plusieurs, ou aucun : elle reste alors visible sous
+« Tout ». Les thèmes n'influencent pas la publication.
+
 ## Seuils actuels
 
-| Modèle | τ_intervient | τ_role |
-|--------|--------------|--------|
-| `typesafe/jev-1.13-20260917` | 0,75 | 0,60 |
+| Modèle | τ_intervient | τ_role | τ_theme |
+|--------|--------------|--------|---------|
+| `typesafe/jev-1.13-20260917` | 0,75 | 0,60 | 0,50 |
 
 ## Calibration du 2026-10-13
 
@@ -71,12 +78,40 @@ communiqué de la ville, homonyme, AMF…).
     courtes de déclarations, dont la probabilité `intervient` est comprise
     entre 0,40 et 0,75.
 
+## Calibration des questions v3 (2026-10-13, ADR 0020)
+
+Le jeu de référence compte 138 cas :
+- les 120 cas d'origine ;
+- 18 contenus de l'échantillon de thèmes, validés par le porteur du projet.
+
+| Mesure | Résultat |
+|--------|----------|
+| Publication (0,75 / 0,60) | précision 95,5 %, rappel 86,5 % (VP 64, FP 3, FN 10) |
+| Rôle juste | 97,5 % |
+| Thèmes (28 cas étiquetés, τ_theme 0,50) | précision et rappel de 100 % pour chaque thème |
+
+- **AMF** : les contenus AMF déjà publiés ont été écartés par `recompute`. Avec
+  la question du rôle réécrite, la plupart des anciens contenus « AMF »
+  (décentralisation, bureaucratie) sont reclassés `national`. Les trois cas
+  ambigus (priorités des maires du Var, budget des collectivités, UMOP) ont été
+  validés comme relevant de la campagne.
+- **Thèmes** : sur 218 interventions publiées, 69 n'ont aucun thème, et le
+  porteur du projet l'accepte. Les thèmes les plus fréquents sont Économie (64),
+  Institutions (45), Éducation (33) et Sécurité (32).
+- **Chaîne officielle** : depuis cette calibration, `calibrate` applique la même
+  présomption d'intervention que la publication (ADR 0018). Les chiffres
+  reflètent donc la règle réelle.
+- **Proposition de `calibrate`** : 0,80 / 0,75 (précision 100 %, rappel 81,1 %).
+  Elle n'est pas appliquée : le changement est à décider par le porteur du
+  projet.
+- **Coût du reclassement v3** : environ 0,00007 $ par contenu (10 questions).
+
 ## Procédures
 
 | Besoin | Commande (depuis la racine) |
 |--------|-----------------------------|
 | Mesurer les seuils actuels et obtenir une proposition | `bun apps/worker/src/cli.ts calibrate --validated` |
-| Appliquer de nouveaux seuils sans rappeler le modèle | modifier `thresholds.ts`, puis `bun apps/worker/src/cli.ts recompute` |
+| Appliquer de nouveaux seuils (dont `τ_theme`) sans rappeler le modèle | modifier `thresholds.ts`, puis `bun apps/worker/src/cli.ts recompute` |
 | Reclasser après un changement de modèle | `bun apps/worker/src/cli.ts reclassify --model <ancien>` |
 
 **Modifier les questions** : changer le texte dans `questions.ts`, incrémenter

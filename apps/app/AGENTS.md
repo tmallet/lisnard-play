@@ -27,8 +27,8 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 | `src/app/(tabs)/` | Accueil (`index`, flux `InterventionFeed`) et `a-propos`. Navigation dans `components/AppNavigation(.web).tsx` : en-tête et liens sur le web, barre d'onglets **native** sur iOS et Android |
 | `src/app/interventions/[id].tsx` | Détail d'une intervention : média, métadonnées, lien source ; distingue `NOT_FOUND` d'une erreur réseau |
 | `src/app/api/trpc/[trpc]+api.ts` | Point d'accès tRPC (`GET`/`POST /api/trpc/*`), client Postgres partagé sur `globalThis` (ADR 0019) |
-| `src/components/` | Composants partagés (hors routes) : `InterventionFeed`, `InterventionCard`, `LiveBadge`, `RoleFilter`, `MediaEmbed(.web)`, `LinkCard`… |
-| `src/lib/format.ts` | Dates en heure de Paris, libellés de rôle, de type et de statut |
+| `src/components/` | Composants partagés (hors routes) : `InterventionFeed`, `InterventionCard`, `LiveBadge`, `ThemeFilter`, `MediaEmbed(.web)`, `LinkCard`… |
+| `src/lib/format.ts` | Dates en heure de Paris, libellés de type, libellés des thèmes (`THEME_LABELS`, type `Theme` inféré depuis `AppRouter`) |
 | `shims/bun.js`, `metro.config.js` | Module `bun` résolu vers `globalThis.Bun` pour Metro (ADR 0019) |
 | `server.ts` | Serveur de production Bun (`expo-server/adapter/bun`) qui sert `dist/` |
 | `src/config/identity.json` | **Source unique** du nom de l'application (lu par `config/app.ts` et `app.config.ts`) : ne jamais écrire le nom en dur ailleurs |
@@ -56,7 +56,7 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   ignore `backgroundColor` et adapte lui-même les couleurs.
 - **Écrans** : toujours envelopper le contenu dans `<Screen>`. Sur mobile
   (`Screen.tsx`), il fournit la mise en page commune : dégradé (le conteneur des
-  onglets natifs masque la racine), nom de l'app en surtitre, pied de page avec la
+  onglets natifs masque la racine), pied de page avec la
   mention d'indépendance (`footer={false}` si l'écran l'affiche déjà), et un
   `ScrollView` en premier élément, ce qu'exigent les onglets natifs. Sur le web
   (`Screen.web.tsx`), en-tête et pied de page viennent d'`AppNavigation.web.tsx`.
@@ -68,6 +68,11 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   curseur, comme le flux). L'app n'accède jamais à la base elle-même : seule l'API
   route lit Postgres, via `@lisnard/db/read` (ADR 0017). Pour ajouter une
   procédure : skill `trpc-procedure`.
+- **Listes longues** : le contenu d'un écran défile dans le `ScrollView` de
+  `Screen`. Pour charger la suite d'une liste à l'approche du bas, appeler
+  `useOnEndReached(cb)` (`components/ScrollEnd.tsx`) plutôt qu'ajouter un bouton
+  ou une `FlatList` imbriquée. Le rappel doit se protéger lui-même (`hasNextPage`,
+  `isFetchingNextPage`), car il est appelé à chaque défilement près du bas.
 - **Médias** : `MediaEmbed` affiche le lecteur de l'URL fournie par le worker
   (iframe sur le web, `react-native-webview` sur mobile), sinon `LinkCard`. Jamais
   de téléchargement ni de réhébergement (ADR 0007).

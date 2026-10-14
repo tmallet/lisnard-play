@@ -44,7 +44,7 @@ lisnard-play/
 │  │  ├─ +not-found.tsx   404
 │  │  └─ api/trpc/[trpc]+api.ts   point d'accès tRPC (connexion Postgres partagée)
 │  ├─ src/components/     Screen, WebChrome, AppNavigation, InterventionFeed,
-│  │                      InterventionCard, LiveBadge, RoleFilter, MediaEmbed, LinkCard…
+│  │                      InterventionCard, LiveBadge, ThemeFilter, MediaEmbed, LinkCard…
 │  ├─ src/config/         identity.json (nom), app.ts, navigation.ts
 │  ├─ src/lib/            client tRPC, URL de l'API, formats (dates, libellés)
 │  ├─ src/theme/          colors.ts, fonts.ts
@@ -76,7 +76,7 @@ lisnard-play/
 | Table | Rôle | Points clés |
 |-------|------|-------------|
 | `source` | Sources configurées, recopiées depuis `sources.config.ts` | `id` (« yt:bfmtv »), `kind`, `name`, `active` |
-| `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` dénormalisés depuis la dernière décision, `media` (rendu) |
+| `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `media` (rendu) |
 | `classification` | Journal des décisions, en ajout seul | `model` (instantané servi), `questions_version`, `input_hash`, `answers` (probabilités brutes), `thresholds`, `outcome` |
 
 - **Empreinte d'entrée** : un contenu n'est (re)classé que si son empreinte
@@ -112,8 +112,10 @@ SDK 58. Sur mobile, le client appelle `${EXPO_PUBLIC_API_URL}/api/trpc`.
 
 ## Contrat tRPC
 
-- Procédures : `health`, `interventions.list` (statut, rôle, curseur,
-  `limit ≤ 50`), `interventions.byId` (`NOT_FOUND`).
+- Procédures : `health`, `interventions.list` (statut, thème, curseur,
+  `limit ≤ 50`), `interventions.byId` (`NOT_FOUND`). Les éléments exposent
+  `themes` ; le rôle n'est pas exposé, puisque tout contenu publié est
+  `national` (ADR 0020).
 - Le client importe uniquement le type `AppRouter`. Garde-fou de typage :
   `apps/app/src/lib/api-contract.typecheck.ts`.
 - Erreurs : pas de pile d'appels ni de message interne en production, erreurs

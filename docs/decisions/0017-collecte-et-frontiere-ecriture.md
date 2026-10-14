@@ -3,7 +3,7 @@ id: "0017"
 title: Stratégie de collecte (YouTube RSS + videos.list), lecture d'URL externes et frontière d'écriture
 status: accepted
 date: 2026-10-13
-tags: [ingestion, donnees, securite, architecture]
+tags: [ingestion, donnees, security, architecture]
 supersedes: null
 superseded-by: null
 related-specs: [intervention-collection, intervention-media, intervention-feed]

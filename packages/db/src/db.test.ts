@@ -46,6 +46,7 @@ function decision(itemId: string, over: Partial<ClassificationRecord> = {}): Cla
     outcome: 'published',
     role: 'national',
     kind: 'tv',
+    themes: [],
     ...over,
   };
 }
@@ -196,13 +197,21 @@ describe('lecture publique', () => {
     expect(await getPublishedById(db, id)).not.toBeNull();
   });
 
-  test('filtre par rôle', async () => {
-    const nat = await candidate('yt:nat');
-    const amf = await candidate('yt:amf');
-    await publish(nat.id);
-    await publish(amf.id, { role: 'amf' });
-    const { items } = await listPublished(db, { status: 'past', role: 'amf', limit: 50 });
-    expect(items.map((i) => [i.id, i.role])).toEqual([[amf.id, 'amf']]);
+  test('filtre par thème, multi-thème et sans thème', async () => {
+    const eco = await candidate('yt:eco');
+    const both = await candidate('yt:both');
+    const none = await candidate('yt:none');
+    await publish(eco.id, { themes: ['economy'] });
+    await publish(both.id, { themes: ['economy', 'security'] });
+    await publish(none.id);
+    const security = await listPublished(db, { status: 'past', theme: 'security', limit: 50 });
+    expect(security.items.map((i) => [i.id, i.themes])).toEqual([
+      [both.id, ['economy', 'security']],
+    ]);
+    const economy = await listPublished(db, { status: 'past', theme: 'economy', limit: 50 });
+    expect(economy.items.map((i) => i.id).sort()).toEqual([eco.id, both.id].sort());
+    const all = await listPublished(db, { status: 'past', limit: 50 });
+    expect(all.items.find((i) => i.id === none.id)?.themes).toEqual([]);
   });
 });
 

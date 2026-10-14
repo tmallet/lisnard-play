@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:tes
 import type { Db } from '@lisnard/db/client';
 import { type ClassifierAnswers, classification, item } from '@lisnard/db/schema';
 import { createTestDb } from '@lisnard/db/testing';
-import { upsertItem, upsertSources } from '@lisnard/db/write';
+import { recordClassification, upsertItem, upsertSources } from '@lisnard/db/write';
 import { eq, sql } from 'drizzle-orm';
 
 import { decide } from './classifier/decide';
@@ -19,6 +19,7 @@ const ANSWERS: Record<string, ClassifierAnswers> = {
     intervient: 0.95,
     role: { choice: 'national', confidence: 1, probabilities: { national: 1 } },
     kind: { choice: 'tv', confidence: 1, probabilities: { tv: 1 } },
+    themes: { economy: 0.92, security: 0.81, campaign: 0.1, immigration: 0.02 },
   },
   amf: {
     intervient: 0.9,
@@ -59,14 +60,15 @@ class FakeClassifier implements Classifier {
 const noSleep = async () => {};
 
 describe('règle de publication', () => {
-  const t = { intervient: 0.5, role: 0.6 };
-  test('national et AMF publiés, mairie et simple citation écartés', () => {
+  const t = { intervient: 0.5, role: 0.6, theme: 0.5 };
+  test('national publié avec ses thèmes ; AMF, mairie et simple citation écartés', () => {
     expect(decide(ANSWERS.national as ClassifierAnswers, t)).toEqual({
       outcome: 'published',
       role: 'national',
       kind: 'tv',
+      themes: ['economy', 'security'],
     });
-    expect(decide(ANSWERS.amf as ClassifierAnswers, t).outcome).toBe('published');
+    expect(decide(ANSWERS.amf as ClassifierAnswers, t).outcome).toBe('rejected');
     expect(decide(ANSWERS.mairie as ClassifierAnswers, t).outcome).toBe('rejected');
     expect(decide(ANSWERS.citation as ClassifierAnswers, t).outcome).toBe('rejected');
   });
@@ -77,6 +79,13 @@ describe('règle de publication', () => {
       role: { choice: 'national', confidence: 0.5, probabilities: {} },
     };
     expect(decide(weak, t).outcome).toBe('rejected');
+  });
+
+  test('thèmes : seuil du modèle, aucun thème sans empêcher la publication', () => {
+    const national = ANSWERS.national as ClassifierAnswers;
+    expect(decide(national, { ...t, theme: 0.9 }).themes).toEqual(['economy']);
+    const sansTheme = decide({ ...national, themes: undefined }, t);
+    expect(sansTheme).toMatchObject({ outcome: 'published', themes: [] });
   });
 
   test('sans seuils, rien n’est publié', () => {
@@ -105,6 +114,8 @@ describe('client System One', () => {
             confidence: 0.99,
           },
           kind: { type: 'choice', choice: 'radio', probabilities: { radio: 1 }, confidence: 1 },
+          theme_economy: { type: 'noul', noul: 0.7 },
+          theme_security: { type: 'noul', noul: 1.4 },
         },
         usage: { cost: 0.00003 },
       });
@@ -127,8 +138,17 @@ describe('client System One', () => {
       'intervient',
       'role',
       'kind',
+      'theme_economy',
+      'theme_security',
+      'theme_immigration',
+      'theme_education',
+      'theme_institutions',
+      'theme_international',
+      'theme_campaign',
     ]);
     expect(result.answers.role.choice).toBe('national');
+    // Réponse de thème hors de [0, 1] ignorée, sans faire échouer la décision.
+    expect(result.answers.themes).toEqual({ economy: 0.7 });
     expect(result.model).toBe('typesafe/jev-1.13-20260917');
   });
 
@@ -173,7 +193,7 @@ describe('classification en base', () => {
     });
   const statusOf = async (id: string) => (await db.select().from(item).where(eq(item.id, id)))[0];
 
-  test('publie national et AMF (avec rôle), écarte mairie et simple citation', async () => {
+  test('publie national (rôle, type, thèmes), écarte AMF, mairie et simple citation', async () => {
     const ids = {
       national: (await add('national')).id,
       amf: (await add('amf')).id,
@@ -181,13 +201,14 @@ describe('classification en base', () => {
       citation: (await add('citation')).id,
     };
     const stats = await classifyPending(db, new FakeClassifier(), { sleep: noSleep });
-    expect(stats).toMatchObject({ classified: 4, published: 2, rejected: 2, failed: 0 });
+    expect(stats).toMatchObject({ classified: 4, published: 1, rejected: 3, failed: 0 });
     expect(await statusOf(ids.national)).toMatchObject({
       status: 'published',
       role: 'national',
       kind: 'tv',
+      themes: ['economy', 'security'],
     });
-    expect(await statusOf(ids.amf)).toMatchObject({ status: 'published', role: 'amf' });
+    expect(await statusOf(ids.amf)).toMatchObject({ status: 'rejected', role: 'amf' });
     expect((await statusOf(ids.mairie))?.status).toBe('rejected');
     expect((await statusOf(ids.citation))?.status).toBe('rejected');
     const [entry] = await db
@@ -288,16 +309,47 @@ describe('classification en base', () => {
   });
 
   test('recalcul avec de nouveaux seuils, sans appel au classifieur', async () => {
-    const { id } = await add('amf');
+    const { id } = await add('national');
     const classifier = new FakeClassifier();
     await classifyPending(db, classifier, { sleep: noSleep });
     expect((await statusOf(id))?.status).toBe('published');
-    const result = await recompute(db, () => ({ intervient: 0.99, role: 0.6 }));
+    const result = await recompute(db, () => ({ intervient: 0.99, role: 0.6, theme: 0.5 }));
     expect(result).toEqual({ changed: 1, total: 1 });
     expect((await statusOf(id))?.status).toBe('rejected');
     expect(classifier.calls).toBe(1);
     const entries = await db.select().from(classification).where(eq(classification.itemId, id));
     expect(entries).toHaveLength(2); // traçabilité : nouvelle entrée, ancienne intacte
+  });
+
+  test('recalcul des thèmes seuls avec un nouveau τ_theme', async () => {
+    const { id } = await add('national');
+    await classifyPending(db, new FakeClassifier(), { sleep: noSleep });
+    const result = await recompute(db, () => ({ intervient: 0.5, role: 0.6, theme: 0.9 }));
+    expect(result.changed).toBe(1);
+    expect(await statusOf(id)).toMatchObject({ status: 'published', themes: ['economy'] });
+    expect((await recompute(db, () => ({ intervient: 0.5, role: 0.6, theme: 0.9 }))).changed).toBe(
+      0,
+    );
+  });
+
+  test('contenu AMF publié avant ADR 0020 : écarté par le recalcul', async () => {
+    const { id } = await add('ancien-amf');
+    await recordClassification(db, {
+      itemId: id,
+      model: PINNED_MODEL,
+      questionsVersion: 2,
+      inputHash: 'h-v2',
+      answers: ANSWERS.amf as ClassifierAnswers,
+      thresholds: { intervient: 0.75, role: 0.6 },
+      outcome: 'published',
+      role: 'amf',
+      kind: 'discours',
+      themes: [],
+    });
+    const classifier = new FakeClassifier();
+    await recompute(db);
+    expect((await statusOf(id))?.status).toBe('rejected');
+    expect(classifier.calls).toBe(0);
   });
 
   test('reclassification : nouvelle entrée de journal, la plus récente fait foi', async () => {

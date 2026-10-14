@@ -5,17 +5,19 @@
 import { and, eq, type SQL, sql } from 'drizzle-orm';
 
 import type { Db } from './client';
-import { item, type MediaRender, source } from './schema';
+import { isTheme, item, type MediaRender, source, type Theme } from './schema';
+
+export { THEMES, type Theme } from './schema';
 
 export type TemporalStatus = 'live' | 'upcoming' | 'past';
-export type PublicRole = 'national' | 'amf';
 
 export interface InterventionSummary {
   id: string;
   title: string;
   outlet: string;
   kind: string | null;
-  role: PublicRole;
+  /** Thèmes de campagne, éventuellement aucun (spec intervention-themes). */
+  themes: Theme[];
   status: TemporalStatus;
   /** Début de diffusion, sinon publication (ISO 8601). */
   date: string;
@@ -30,7 +32,7 @@ export interface InterventionDetail extends InterventionSummary {
 
 export interface ListOptions {
   status: TemporalStatus;
-  role?: PublicRole;
+  theme?: Theme;
   cursor?: string;
   limit: number;
   now?: Date;
@@ -83,7 +85,7 @@ const summaryColumns = {
   title: item.title,
   outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
   kind: item.kind,
-  role: item.role,
+  themes: item.themes,
   liveStatus: item.liveStatus,
   startsAt: item.startsAt,
   date: sortDate,
@@ -95,7 +97,7 @@ type SummaryRow = {
   title: string;
   outlet: string;
   kind: string | null;
-  role: string | null;
+  themes: string[];
   liveStatus: string;
   startsAt: Date | null;
   date: Date | string;
@@ -108,7 +110,8 @@ function toSummary(row: SummaryRow, now: Date): InterventionSummary {
     title: row.title,
     outlet: row.outlet,
     kind: row.kind,
-    role: row.role as PublicRole,
+    // Valeurs inconnues ignorées : la liste peut évoluer avant un reclassement.
+    themes: row.themes.filter(isTheme),
     status: temporalStatus(row, now),
     date: new Date(row.date).toISOString(),
     thumbnailUrl: row.thumbnailUrl,
@@ -118,7 +121,7 @@ function toSummary(row: SummaryRow, now: Date): InterventionSummary {
 /** Liste paginée par curseur des interventions publiées (spec intervention-feed). */
 export async function listPublished(
   db: Db,
-  { status, role, cursor, limit, now = new Date() }: ListOptions,
+  { status, theme, cursor, limit, now = new Date() }: ListOptions,
 ): Promise<{ items: InterventionSummary[]; nextCursor: string | null }> {
   // À venir : de la plus proche à la plus lointaine ; sinon de la plus récente à la plus ancienne.
   const ascending = status === 'upcoming';
@@ -128,7 +131,7 @@ export async function listPublished(
     sql`${item.media} is not null`,
     statusCondition(status, now),
   ];
-  if (role) conditions.push(eq(item.role, role));
+  if (theme) conditions.push(sql`${item.themes} @> array[${theme}]::text[]`);
   const after = cursor ? decodeCursor(cursor) : null;
   if (after) {
     conditions.push(
