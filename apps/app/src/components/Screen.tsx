@@ -12,6 +12,8 @@ interface ScreenProps {
   children: ReactNode;
   /** Pied de page avec la mention d'indépendance (à désactiver si l'écran l'affiche déjà). */
   footer?: boolean;
+  /** Zone de contenu élargie sur tablette (grille de l'accueil) ; sinon colonne de lecture. */
+  wide?: boolean;
 }
 
 /**
@@ -24,7 +26,7 @@ interface ScreenProps {
  * - Fin de défilement signalée au contenu (chargement continu du flux, ScrollEnd).
  * - Tirer pour actualiser : relance les requêtes affichées par l'écran.
  */
-export function Screen({ children, footer = true }: ScreenProps) {
+export function Screen({ children, footer = true, wide = false }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const scrollEnd = useScrollEndSource();
   const queryClient = useQueryClient();
@@ -57,7 +59,7 @@ export function Screen({ children, footer = true }: ScreenProps) {
           }
           contentInsetAdjustmentBehavior="automatic"
           style={Platform.OS === 'android' ? { paddingTop: insets.top } : undefined}
-          contentContainerClassName="w-full max-w-3xl self-center gap-6 px-6 py-10"
+          contentContainerClassName={`w-full self-center gap-6 px-6 py-10 ${wide ? 'max-w-6xl' : 'max-w-3xl'}`}
         >
           {children}
           {footer && <Footer />}

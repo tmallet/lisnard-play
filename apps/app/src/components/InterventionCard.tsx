@@ -45,7 +45,8 @@ export function InterventionCard({ item }: { item: InterventionCardData }) {
     <Link href={`/interventions/${item.id}`} asChild>
       <Pressable
         accessibilityRole="link"
-        className="overflow-hidden rounded-xl border border-blanc/15 bg-blanc/5 active:bg-blanc/10"
+        // flex-1 : même hauteur que les autres cartes de la rangée (CardGrid).
+        className="flex-1 overflow-hidden rounded-xl border border-blanc/15 bg-blanc/5 active:bg-blanc/10"
       >
         {item.thumbnailUrl ? (
           <View>

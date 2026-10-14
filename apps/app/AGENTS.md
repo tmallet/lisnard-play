@@ -73,7 +73,9 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   `useOnEndReached(cb)` (`components/ScrollEnd.tsx`) plutôt qu'ajouter un bouton
   ou une `FlatList` imbriquée. Le rappel doit se protéger lui-même (`hasNextPage`,
   `isFetchingNextPage`), car il est appelé à chaque défilement près du bas.
-- **Cartes** : image à la une en 16:9 sur toute la largeur. `largeThumbnail` passe les
+- **Cartes** : image à la une en 16:9 sur toute la largeur. Listes en `CardGrid` : 1 colonne sur
+  téléphone, 2 dès 768 px, 3 dès 1024 px ; l'accueil utilise `<Screen wide>` (max-w-6xl),
+  les autres écrans gardent la colonne de lecture (max-w-3xl). `largeThumbnail` passe les
   miniatures YouTube en `hq720`, avec repli sur l'image d'origine (`onError`).
 - **Médias** : `MediaEmbed` affiche le lecteur de l'URL fournie par le worker
   (iframe sur le web, `react-native-webview` sur mobile), sinon `LinkCard`. Jamais
