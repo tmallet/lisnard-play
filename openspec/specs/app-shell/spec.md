@@ -121,6 +121,10 @@ DOIT indiquer :
 - le nom et l'adresse de l'hébergeur ;
 - les données traitées et leur finalité (journaux techniques du serveur), et
   l'absence de cookie propre au site ;
+- pour les notifications : les données d'abonnement conservées (adresse ou
+  jeton fourni par le service push, préférences), leur finalité, leur
+  transmission aux services push du navigateur ou de la plateforme, et leur
+  suppression au désabonnement ou après 13 mois sans confirmation ;
 - le dépôt de cookies par les lecteurs tiers, seulement après l'action du
   visiteur, avec un lien vers les règles de confidentialité de Google ;
 - les droits des personnes et la possibilité de saisir la CNIL.
@@ -132,4 +136,8 @@ DOIT indiquer :
 #### Scenario: Contact
 - **WHEN** un visiteur ouvre la page des mentions légales
 - **THEN** il y trouve l'adresse `lisnardplay@tmallet.fr` et l'identité de l'hébergeur
+
+#### Scenario: Notifications
+- **WHEN** un visiteur ouvre la page des mentions légales
+- **THEN** il y trouve les données conservées pour les notifications et leur durée de conservation
 
