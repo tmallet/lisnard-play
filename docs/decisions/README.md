@@ -34,3 +34,4 @@ Règles :
 | [0020](0020-perimetre-campagne-et-thematiques.md) | Périmètre recentré sur la campagne présidentielle et classement par thématiques | accepted | produit, perimetre, classifier, ui |
 | [0021](0021-resumes-gemini-et-presse.md) | Résumés des vidéos par Gemini via OpenRouter, sans résumé des articles de presse | accepted | ia, ingestion, media, juridique |
 | [0022](0022-consentement-lecteurs-tiers.md) | Lecteurs tiers chargés au clic, YouTube sans cookie, éditeur anonyme | accepted | juridique, media, ui, confidentialite |
+| [0023](0023-websub-worker-expose.md) | Détection des directs par WebSub, avec un point d'entrée public du worker | accepted | ingestion, architecture, securite, deploiement |
