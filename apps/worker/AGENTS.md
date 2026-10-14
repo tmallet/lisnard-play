@@ -42,7 +42,8 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
   de l'API YouTube. Une chaîne non suivie n'a aucun effet (ADR 0023).
 - **Ajouter une source** : skill `add-intervention-source`.
 - **Logs** : `log.info|warn|error` (JSON par ligne), jamais de secret dans les
-  données journalisées.
+  données journalisées. Une tâche fréquente qui n'a souvent rien à faire déclare
+  `quiet` (`Task`, `scheduler.ts`) pour ne pas écrire une ligne vide à chaque tour.
 - **Secrets** : `OPENROUTER_API_KEY` et `YOUTUBE_API_KEY` n'existent que dans ce
   service.
 

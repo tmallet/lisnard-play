@@ -144,6 +144,28 @@ dépense sur la clé OpenRouter.
 Sur une base neuve, ni `recompute` ni `media --refresh` ne sont nécessaires :
 chaque contenu est traité directement avec les règles en vigueur.
 
+## Déploiement automatique
+
+Chaque push sur `main` redéploie les services concernés.
+
+- **Source** : le dépôt est relié à Coolify par une GitHub App. Son **Webhook URL**
+  doit être l'adresse publique **en HTTPS** de Coolify, ici
+  `https://coolify.thimal.fr/webhooks/source/github/events`. GitHub ne suit pas les
+  redirections : une adresse en `http://` (redirigée, code 308) ou une adresse IP
+  avec le port 8000 (fermé) font échouer chaque envoi. En cas de doute, regarder
+  **App settings → Advanced → Recent Deliveries** dans GitHub.
+- **Auto deploy** : « Deploy on push (webhooks) », à régler sur chaque service.
+- **Watch Paths** (onglet General), pour ne redéployer que le service touché :
+
+  | Service | Watch Paths |
+  |---------|-------------|
+  | `app` | `apps/app/**`, `packages/**`, `bun.lock`, `package.json` |
+  | `worker` | `apps/worker/**`, `packages/db/**`, `bun.lock`, `package.json` |
+
+- Le déploiement n'attend pas la CI de `main` : ne merger qu'une PR dont la CI est
+  verte. Pendant le redéploiement du worker (une à deux minutes), les notifications
+  WebSub échouent et le hub les renvoie.
+
 ## Mise en production (ordre)
 
 1. **Postgres** : créer le service, noter l'URL interne, activer les sauvegardes.
