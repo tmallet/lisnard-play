@@ -237,7 +237,11 @@ describe('voie rapide et surveillance rapprochée', () => {
       },
       n,
     );
-    expect(stats).toMatchObject({ kept: 1, published: 1 });
+    expect(stats).toMatchObject({
+      kept: 1,
+      published: 1,
+      videos: [{ videoId: 'LiveNow0001', source: official.id, outcome: 'published' }],
+    });
     const saved = await row();
     expect(saved?.liveStatus).toBe('live');
     expect(saved?.status).toBe('published');
@@ -255,6 +259,27 @@ describe('voie rapide et surveillance rapprochée', () => {
       parseNotification(await fixture('websub-deleted.xml')),
     );
     expect((await row())?.liveStatus).toBe('ended');
+  });
+
+  test('chaîne de média : vidéo hors sujet écartée, puis notification répétée inchangée', async () => {
+    const bfm: YoutubeSourceConfig = {
+      ...official,
+      id: 'yt:bfmtv',
+      channelId: 'UCbfm',
+      official: false,
+    };
+    await upsertSources(db, [{ id: bfm.id, kind: 'youtube', name: 'BFMTV', active: true }]);
+    const notify = (videos: unknown[]) =>
+      handleNotification(
+        { db, ctx: youtube(videos), classifier, sources: [official, bfm] },
+        { videos: [{ videoId: 'LiveNow0001', channelId: 'UCbfm' }], deleted: [] },
+      );
+    const offTopic = { ...LIVE, snippet: { ...LIVE.snippet, title: 'Météo', description: '' } };
+    expect((await notify([offTopic])).videos[0]?.outcome).toBe('off_topic');
+    const about = { ...LIVE, snippet: { ...LIVE.snippet, title: 'David Lisnard invité' } };
+    expect((await notify([about])).videos[0]?.outcome).toBe('published');
+    expect((await notify([about])).videos[0]?.outcome).toBe('unchanged');
+    expect((await notify([])).videos[0]?.outcome).toBe('unavailable');
   });
 
   test('chaîne non suivie : aucun appel à l’API, rien d’enregistré', async () => {

@@ -21,18 +21,40 @@ export interface PushDeps {
   media?: MediaContext;
 }
 
+/**
+ * Sort d'une vidéo notifiée, journalisé pour le suivi : `off_topic` (ne mentionne pas
+ * David Lisnard), `unavailable` (absente de l'API : privée ou retirée), `unchanged`
+ * (déjà classée, entrée identique), `pending` (classement en échec, retenté par la boucle).
+ */
+export type PushOutcome =
+  | 'published'
+  | 'rejected'
+  | 'unchanged'
+  | 'pending'
+  | 'off_topic'
+  | 'unavailable';
+
 export interface PushStats {
   notified: number;
   kept: number;
   published: number;
   closed: number;
+  videos: { videoId: string; source: string; outcome: PushOutcome }[];
+  deleted: string[];
 }
 
 export async function handleNotification(
   { db, ctx, classifier, sources, media = {} }: PushDeps,
   n: PushNotification,
 ): Promise<PushStats> {
-  const stats: PushStats = { notified: n.videos.length, kept: 0, published: 0, closed: 0 };
+  const stats: PushStats = {
+    notified: n.videos.length,
+    kept: 0,
+    published: 0,
+    closed: 0,
+    videos: [],
+    deleted: [],
+  };
   const sourceOf = (channelId: string) =>
     sources.find(
       (s): s is YoutubeSourceConfig =>
@@ -42,6 +64,7 @@ export async function handleNotification(
   for (const d of n.deleted) {
     await closeVanished(db, `yt:${d.videoId}`);
     stats.closed += 1;
+    stats.deleted.push(d.videoId);
   }
 
   const videos = n.videos.filter((v) => sourceOf(v.channelId));
@@ -55,15 +78,30 @@ export async function handleNotification(
     const d = details.get(v.videoId);
     const candidate = d ? candidateFromDetails(v.videoId, d) : null;
     // Absente de l'API : vidéo privée ou retirée entre-temps.
+    const report = (outcome: PushOutcome) =>
+      stats.videos.push({ videoId: v.videoId, source: source.id, outcome });
     if (!candidate) {
       await closeVanished(db, `yt:${v.videoId}`);
+      report('unavailable');
       continue;
     }
-    if (!keepCandidate(source, candidate)) continue;
+    if (!keepCandidate(source, candidate)) {
+      report('off_topic');
+      continue;
+    }
     const { id } = await upsertItem(db, { ...candidate, sourceId: source.id });
     stats.kept += 1;
     const classified = await classifyPending(db, classifier, { itemId: id, limit: 1 });
     if (classified.published > 0) stats.published += 1;
+    report(
+      classified.published > 0
+        ? 'published'
+        : classified.rejected > 0
+          ? 'rejected'
+          : classified.failed > 0
+            ? 'pending'
+            : 'unchanged',
+    );
     // Rendu du lecteur : seulement si le contenu est publié et n'en a pas encore.
     await resolvePendingMedia(db, media, 1, id);
   }

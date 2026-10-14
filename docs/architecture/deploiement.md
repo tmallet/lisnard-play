@@ -131,7 +131,13 @@ dépense sur la clé OpenRouter.
      (`https://hooks.lisnardplay.thimal.fr/websub/youtube`) et `WEBSUB_SECRET` ;
    - redéployer, puis vérifier dans les logs `websub : réception active`, puis
      `websub:subscribe` avec `subscribed` égal au nombre de chaînes YouTube actives ;
-   - au premier direct ou à la première vidéo publiée, `websub : notification traitée` ;
+   - à chaque vidéo publiée sur une chaîne suivie, `websub : notification traitée`,
+     avec pour chaque vidéo sa source et son sort (`outcome`) : `published`,
+     `rejected`, `unchanged` (déjà classée), `pending` (classement retenté par la
+     boucle), `off_topic` (chaîne de média, vidéo qui ne mentionne pas David Lisnard)
+     ou `unavailable` (privée ou retirée). `off_topic` est le cas courant ;
+   - `recheck:soon` n'apparaît dans les logs que lorsqu'un direct imminent a été
+     revérifié ;
    - retour arrière : retirer les deux variables. Les abonnements expirent d'eux-mêmes
      au bout de 5 jours.
 

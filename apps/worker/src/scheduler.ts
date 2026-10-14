@@ -12,6 +12,8 @@ export interface Task {
   name: string;
   everyMs: number;
   run: () => Promise<unknown>;
+  /** Résultat sans intérêt à journaliser (tâche fréquente qui n'a rien fait). */
+  quiet?: (result: unknown) => boolean;
 }
 
 /**
@@ -61,6 +63,7 @@ export class Scheduler {
         const start = Date.now();
         try {
           const result = await task.run();
+          if (task.quiet?.(result)) continue;
           log.info('tâche terminée', {
             task: task.name,
             ms: Date.now() - start,

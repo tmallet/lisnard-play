@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, beforeAll, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import { resolve } from 'node:path';
 
 import type { Db } from '@lisnard/db/client';
@@ -316,5 +316,28 @@ describe('planification', () => {
     expect(await scheduler.tick(500)).toEqual([]);
     expect(await scheduler.tick(1000)).toEqual(['rapide', 'en-panne']);
     expect(runs).toEqual(['rapide', 'lente', 'rapide']);
+  });
+
+  test('tâche silencieuse : pas de ligne de journal quand elle n’a rien fait', async () => {
+    const lines: string[] = [];
+    const spy = spyOn(console, 'log').mockImplementation((line: string) => lines.push(line));
+    let rechecked = 0;
+    const scheduler = new Scheduler(
+      [
+        {
+          name: 'recheck:soon',
+          everyMs: 0,
+          run: async () => ({ rechecked }),
+          quiet: (r) => (r as { rechecked: number }).rechecked === 0,
+        },
+      ],
+      100,
+    );
+    await scheduler.tick(0);
+    rechecked = 2;
+    await scheduler.tick(1);
+    spy.mockRestore();
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toContain('"rechecked":2');
   });
 });
