@@ -3,7 +3,13 @@
  * pré-filtre et le seuil d'historique, puis enregistre les candidats (dédoublonnés).
  */
 import type { Db } from '@lisnard/db/client';
-import { listLiveToRecheck, updateLiveStatus, upsertItem } from '@lisnard/db/write';
+import {
+  closeVanished,
+  listLiveSoon,
+  listLiveToRecheck,
+  updateLiveStatus,
+  upsertItem,
+} from '@lisnard/db/write';
 
 import { HISTORY_START } from './config';
 import { errorMessage, log } from './log';
@@ -91,8 +97,12 @@ export async function runBackfill(
  * Une vidéo absente de la réponse (supprimée, passée en privé, direct annulé) n'est plus
  * diffusée : un direct est clos, un direct programmé redevient une vidéo ordinaire.
  */
-export async function recheckLive(db: Db, ctx: SourceContext): Promise<number> {
-  const pending = (await listLiveToRecheck(db)).filter((p) => p.platformId.startsWith('yt:'));
+export async function recheckLive(
+  db: Db,
+  ctx: SourceContext,
+  list: (db: Db) => ReturnType<typeof listLiveToRecheck> = listLiveToRecheck,
+): Promise<number> {
+  const pending = (await list(db)).filter((p) => p.platformId.startsWith('yt:'));
   if (pending.length === 0) return 0;
   const details = await fetchVideoDetails(
     pending.map((p) => p.platformId.slice(3)),
@@ -100,15 +110,20 @@ export async function recheckLive(db: Db, ctx: SourceContext): Promise<number> {
   );
   for (const p of pending) {
     const d = details.get(p.platformId.slice(3));
-    await updateLiveStatus(
-      db,
-      p.platformId,
-      d
-        ? { liveStatus: d.liveStatus, startsAt: d.startsAt, endsAt: d.endsAt }
-        : p.liveStatus === 'live'
-          ? { liveStatus: 'ended', endsAt: new Date() }
-          : { liveStatus: 'none' },
-    );
+    if (d)
+      await updateLiveStatus(db, p.platformId, {
+        liveStatus: d.liveStatus,
+        startsAt: d.startsAt,
+        endsAt: d.endsAt,
+      });
+    else await closeVanished(db, p.platformId);
   }
   return pending.length;
 }
+
+/**
+ * Surveillance rapprochée (design D4) : seuls les directs attendus dans le quart d'heure,
+ * toutes les 30 secondes. Aucun appel à l'API quand aucun n'est concerné.
+ */
+export const recheckSoon = (db: Db, ctx: SourceContext) =>
+  recheckLive(db, ctx, (d) => listLiveSoon(d));

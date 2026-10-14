@@ -16,6 +16,7 @@ Pages détaillées :
 ```
  Sources publiques                 worker (Bun, apps/worker)              Postgres
  ┌──────────────────────┐   ┌──────────────────────────────────────┐   ┌──────────┐
+ │ push WebSub YouTube  │──▶│ voie rapide : vidéo notifiée classée │   │          │
  │ flux RSS YouTube     │──▶│ collecte : pré-filtre « Lisnard »,   │──▶│ source   │
  │ playlist « uploads » │   │   seuil 31/03/2026, dédoublonnage    │   │ item     │
  │ API YouTube Data     │   │ classification : Jev (OpenRouter)    │──▶│ classifi-│
@@ -62,6 +63,7 @@ lisnard-play/
 │  ├─ src/publish.ts      classification, recompute, reclassify
 │  ├─ src/media/          lecture d'URL sécurisée, oEmbed / Open Graph, liens Google News
 │  ├─ src/summaries/      résumés des vidéos : consigne, client OpenRouter (Gemini), tâche
+│  ├─ src/websub/         notifications push YouTube : serveur, abonnements, voie rapide
 │  ├─ src/calibrate.ts    calibration sur eval/reference.jsonl
 │  ├─ src/cli.ts          recompute, reclassify, calibrate, backfill
 │  └─ Dockerfile
@@ -92,7 +94,9 @@ lisnard-play/
 | Tâche | Cadence | Effet |
 |-------|---------|-------|
 | `backfill:youtube` | démarrage, puis 24 h | toutes les vidéos des chaînes officielles depuis le 31/03/2026 (ADR 0018) |
+| `websub:subscribe` | démarrage, puis 24 h | abonnement de chaque chaîne au hub WebSub (si configuré, ADR 0023) |
 | `collect:youtube` | 3 min | flux RSS des chaînes, enrichissement `videos.list`, revérification des directs |
+| `recheck:soon` | 30 s | directs programmés dans le quart d'heure : statut revérifié (aucun appel sinon) |
 | `collect:rss` | 15 min | Google News |
 | `classify` | 30 s | contenus en attente ou modifiés → Jev → décision journalisée |
 | `media` | 30 s | rendu des contenus publiés sans rendu (ils deviennent visibles) |
@@ -100,6 +104,13 @@ lisnard-play/
 
 Une seule instance travaille à la fois (verrou de session Postgres). La
 pulsation (`HEARTBEAT_FILE`) sert de healthcheck.
+
+**Détection des directs** (ADR 0023) : quand `WEBSUB_CALLBACK_URL` et
+`WEBSUB_SECRET` sont définies, le leader démarre un serveur HTTP
+(`/websub/youtube`, port `WEBSUB_PORT`). Une notification signée déclenche,
+hors de la boucle et une à la fois : `videos.list` pour la vidéo, enregistrement,
+classement, rendu du lecteur. Un direct apparaît ainsi en quelques secondes ; l'app
+rafraîchit « En direct » et « À venir » toutes les 30 s et au retour au premier plan.
 
 ## Flux d'une requête web
 

@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:at="http://purl.org/atompub/tombstones/1.0" xmlns="http://www.w3.org/2005/Atom">
+  <at:deleted-entry ref="yt:video:LiveNow0001" when="2026-10-14T19:00:00.000000+00:00">
+    <link href="https://www.youtube.com/watch?v=LiveNow0001"/>
+    <at:by>
+      <name>David Lisnard</name>
+      <uri>https://www.youtube.com/channel/UC2XZY-bjIEmyLZ9MPJQytZg</uri>
+    </at:by>
+  </at:deleted-entry>
+</feed>

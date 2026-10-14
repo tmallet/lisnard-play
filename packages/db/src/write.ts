@@ -2,7 +2,7 @@
  * Écriture (worker uniquement, ADR 0017). Un import de ce module dans packages/api
  * est une erreur de revue.
  */
-import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
+import { and, between, desc, eq, inArray, or, sql } from 'drizzle-orm';
 
 import type { Db } from './client';
 import {
@@ -112,6 +112,48 @@ export async function updateLiveStatus(
     .where(eq(item.platformId, platformId));
 }
 
+/**
+ * Clôt une vidéo que la plateforme a retirée (spec « Statut de diffusion ») : un direct
+ * passe à `ended`, un direct programmé redevient `none`, les autres restent inchangées.
+ */
+export async function closeVanished(db: Db, platformId: string): Promise<void> {
+  await db
+    .update(item)
+    .set({
+      liveStatus: sql`case when ${item.liveStatus} = 'live' then 'ended'::live_status else 'none'::live_status end`,
+      endsAt: sql`case when ${item.liveStatus} = 'live' then now() else ${item.endsAt} end`,
+      updatedAt: sql`now()`,
+    })
+    .where(and(eq(item.platformId, platformId), inArray(item.liveStatus, ['upcoming', 'live'])));
+}
+
+/**
+ * Directs programmés imminents (spec intervention-collection) : début prévu dans les
+ * 15 prochaines minutes, ou passé depuis moins de 30 minutes sans démarrage constaté.
+ */
+export async function listLiveSoon(
+  db: Db,
+  now: Date = new Date(),
+): Promise<{ platformId: string; liveStatus: 'upcoming' | 'live' }[]> {
+  return db
+    .select({
+      platformId: item.platformId,
+      liveStatus: sql<'upcoming' | 'live'>`${item.liveStatus}`,
+    })
+    .from(item)
+    .where(
+      and(
+        eq(item.liveStatus, 'upcoming'),
+        between(
+          item.startsAt,
+          new Date(now.getTime() - 30 * 60_000),
+          new Date(now.getTime() + 15 * 60_000),
+        ),
+      ),
+    )
+    .limit(50);
+}
+
 /** Contenus dont le direct est programmé ou en cours, à revérifier à chaque cycle. */
 export async function listLiveToRecheck(
   db: Db,
@@ -159,6 +201,8 @@ export async function listClassificationTargets(
   db: Db,
   limit: number,
   questionsVersion: number,
+  /** Restreint au contenu donné (voie rapide d'une notification, ADR 0023). */
+  onlyId?: string,
 ): Promise<ClassificationTarget[]> {
   // Dernière empreinte par sous-requête corrélée (index classification_item_created_idx) :
   // pas d'agrégation de tout le journal à chaque cycle.
@@ -181,7 +225,12 @@ export async function listClassificationTargets(
       })
       .from(item)
       .innerJoin(source, eq(item.sourceId, source.id))
-      .where(or(eq(item.status, 'pending'), sql`${lastHash} is distinct from ${hash}`))
+      .where(
+        and(
+          onlyId ? eq(item.id, onlyId) : undefined,
+          or(eq(item.status, 'pending'), sql`${lastHash} is distinct from ${hash}`),
+        ),
+      )
       // Les plus récents d'abord : un direct qui vient d'arriver n'attend pas derrière des
       // contenus anciens dont le classement échoue à chaque cycle.
       .orderBy(desc(item.firstSeenAt))
@@ -249,7 +298,7 @@ export async function setMedia(db: Db, itemId: string, media: MediaRender): Prom
 }
 
 /** Contenus publiés sans rendu média calculé. */
-export async function listPublishedWithoutMedia(db: Db, limit: number) {
+export async function listPublishedWithoutMedia(db: Db, limit: number, onlyId?: string) {
   return db
     .select({
       id: item.id,
@@ -259,7 +308,13 @@ export async function listPublishedWithoutMedia(db: Db, limit: number) {
     })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
-    .where(and(eq(item.status, 'published'), sql`${item.media} is null`))
+    .where(
+      and(
+        onlyId ? eq(item.id, onlyId) : undefined,
+        eq(item.status, 'published'),
+        sql`${item.media} is null`,
+      ),
+    )
     .limit(limit);
 }
 
