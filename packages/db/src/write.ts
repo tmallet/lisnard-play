@@ -540,8 +540,8 @@ const PREFERENCE_COLUMN = {
   new_item: pushSubscription.newItem,
 } as const;
 
-/** Abonnements qui ont choisi ce type de notification. */
-export async function listSubscribers(db: Db, kind: NotificationKind) {
+/** Abonnements qui ont choisi ce type de notification ; tous sans type (envoi de test). */
+export async function listSubscribers(db: Db, kind?: NotificationKind) {
   return db
     .select({
       id: pushSubscription.id,
@@ -550,7 +550,7 @@ export async function listSubscribers(db: Db, kind: NotificationKind) {
       keys: pushSubscription.keys,
     })
     .from(pushSubscription)
-    .where(eq(PREFERENCE_COLUMN[kind], true));
+    .where(kind ? eq(PREFERENCE_COLUMN[kind], true) : undefined);
 }
 
 /** Supprime les abonnements que le service push déclare expirés ou invalides. */

@@ -11,7 +11,7 @@ import webpush from 'web-push';
 
 import { parseNotify } from '../config';
 import { buildMessage } from './send';
-import { notifyPending } from './task';
+import { notifyPending, sendTestNotification } from './task';
 
 const vapidKeys = webpush.generateVAPIDKeys();
 const vapid = { ...vapidKeys, subject: 'mailto:test@example.test' };
@@ -148,6 +148,23 @@ describe('notify', () => {
     expect((await notifyPending(db, { vapid: null, fetch: fetchFn })).sent).toBe(1);
     expect(calls.map((c) => c.url)).toEqual(['https://exp.host/--/api/v2/push/send']);
   });
+});
+
+test('notification de test : envoyée à tous, sans rien journaliser', async () => {
+  await saveSubscription(db, {
+    kind: 'web',
+    endpoint: WEB_A,
+    keys: browserKeys(),
+    preferences: { live: false, reminder: false, newItem: false },
+  });
+  const { calls, fetchFn } = pushServices();
+  expect(await sendTestNotification(db, { vapid, fetch: fetchFn })).toEqual({
+    sent: 1,
+    removed: 0,
+    failed: 0,
+  });
+  expect(calls.map((c) => c.url)).toEqual([WEB_A]);
+  expect(await db.select().from(notificationSent)).toEqual([]);
 });
 
 describe('messages et configuration', () => {

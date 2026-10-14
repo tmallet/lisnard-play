@@ -6,6 +6,7 @@
  *   bun run cli backfill                         rattrape toutes les vidéos des chaînes officielles
  *   bun run cli summarize [--budget N] [--retry]  résume les vidéos jusqu'au plafond du jour (N $)
  *   bun run cli media --refresh [--source ID]    recalcule le rendu des contenus publiés
+ *   bun run cli notify --test                    envoie une notification de test à tous les abonnés
  */
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -24,8 +25,9 @@ import {
 import { createSystemOneClassifier } from './classifier/systemone';
 import { thresholdsFor } from './classifier/thresholds';
 import { runBackfill } from './collect';
-import { requireEnv, SUMMARY_DAILY_BUDGET_USD } from './config';
+import { parseNotify, requireEnv, SUMMARY_DAILY_BUDGET_USD } from './config';
 import { refreshMedia } from './media/task';
+import { sendTestNotification } from './notifications/task';
 import { reclassify, recompute } from './publish';
 import { SOURCES } from './sources.config';
 import { createOpenRouterSummarizer } from './summaries/openrouter';
@@ -41,6 +43,7 @@ const { positionals, values } = parseArgs({
     budget: { type: 'string' },
     retry: { type: 'boolean' },
     refresh: { type: 'boolean' },
+    test: { type: 'boolean' },
     source: { type: 'string' },
   },
 });
@@ -52,6 +55,11 @@ switch (positionals[0]) {
   case 'recompute':
     console.log(await recompute(db));
     break;
+  case 'notify': {
+    if (!values.test) throw new Error('Usage : notify --test');
+    console.log(await sendTestNotification(db, parseNotify(process.env)));
+    break;
+  }
   case 'reclassify': {
     const classifier = createSystemOneClassifier({ apiKey: requireEnv('OPENROUTER_API_KEY') });
     const filter = {

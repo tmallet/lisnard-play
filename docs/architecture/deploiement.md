@@ -153,6 +153,8 @@ dépense sur la clé OpenRouter.
    - app : `VAPID_PUBLIC_KEY` seulement ;
    - redéployer les deux services, ouvrir `https://<domaine>/notifications` dans
      Chrome ou Firefox, activer les notifications ;
+   - dans le terminal du worker, `bun cli.js notify --test` envoie aussitôt une
+     notification de test à tous les abonnés ;
    - au prochain direct ou à la prochaine intervention publiée (si l'option est
      cochée), les logs du worker montrent `tâche terminée` pour `notify` avec
      `events` et `sent`. La tâche n'écrit rien quand il n'y a rien à envoyer.
