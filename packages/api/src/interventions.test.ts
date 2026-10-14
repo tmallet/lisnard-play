@@ -28,7 +28,7 @@ async function seed(
   key: string,
   opts: {
     role?: 'national' | 'mairie';
-    themes?: ('economie' | 'securite' | 'campagne')[];
+    themes?: ('economy' | 'security' | 'campaign')[];
     outcome?: 'published' | 'rejected';
     liveStatus?: 'live' | 'upcoming' | 'none';
     startsAt?: Date;
@@ -83,8 +83,8 @@ beforeAll(async () => {
   await seed('soon', { liveStatus: 'upcoming', startsAt: future(2), publishedAt: day(1) });
   await seed('later', { liveStatus: 'upcoming', startsAt: future(48), publishedAt: day(1) });
   await seed('p1', { publishedAt: day(10) });
-  await seed('p2', { publishedAt: day(11), themes: ['economie', 'securite'] });
-  await seed('p3', { publishedAt: day(12), themes: ['securite'] });
+  await seed('p2', { publishedAt: day(11), themes: ['economy', 'security'] });
+  await seed('p3', { publishedAt: day(12), themes: ['security'] });
   await seed('rejected', { publishedAt: day(13), role: 'mairie', outcome: 'rejected' });
 });
 afterAll(() => drop());
@@ -122,10 +122,10 @@ describe('interventions.list', () => {
   });
 
   test('filtre par thème', async () => {
-    const { items } = await caller().interventions.list({ status: 'past', theme: 'securite' });
+    const { items } = await caller().interventions.list({ status: 'past', theme: 'security' });
     expect(items.map((i) => [i.id, i.themes])).toEqual([
-      [id('p3'), ['securite']],
-      [id('p2'), ['economie', 'securite']],
+      [id('p3'), ['security']],
+      [id('p2'), ['economy', 'security']],
     ]);
   });
 

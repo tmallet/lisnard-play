@@ -8,19 +8,19 @@ visiteur retrouve les prises de position de David Lisnard sur un sujet donné.
 ### Requirement: Liste des thèmes
 Le système DOIT reconnaître exactement sept thèmes, chacun avec un identifiant
 stable et un libellé affiché :
-- `economie` : « Économie » (fiscalité, dépenses publiques, entreprises, emploi,
+- `economy` : « Économie » (fiscalité, dépenses publiques, entreprises, emploi,
   pouvoir d'achat) ;
-- `securite` : « Sécurité » (délinquance, justice, police, ordre public) ;
+- `security` : « Sécurité » (délinquance, justice, police, ordre public) ;
 - `immigration` : « Immigration » ;
 - `education` : « Éducation » (école, jeunesse, enseignement supérieur) ;
 - `institutions` : « Institutions » (État, réforme institutionnelle,
   décentralisation, libertés locales, vie démocratique) ;
 - `international` : « International » (Europe, diplomatie, défense) ;
-- `campagne` : « Vie de campagne » (meetings, déplacements, soutiens,
+- `campaign` : « Vie de campagne » (meetings, déplacements, soutiens,
   organisation de la campagne, sondages commentés par lui).
 
 #### Scenario: Libellés affichés
-- **WHEN** une intervention porte le thème `economie`
+- **WHEN** une intervention porte le thème `economy`
 - **THEN** l'interface l'affiche sous le libellé « Économie »
 
 ### Requirement: Attribution multi-thème
@@ -32,8 +32,8 @@ ou aucun. L'absence de thème NE DOIT PAS empêcher sa publication. Les
 probabilités brutes de chaque thème DOIVENT être journalisées avec la décision.
 
 #### Scenario: Interview sur plusieurs sujets
-- **WHEN** une interview obtient une probabilité au-dessus du seuil pour `economie` et pour `securite`, et en dessous pour les autres thèmes
-- **THEN** l'intervention porte les thèmes `economie` et `securite`
+- **WHEN** une interview obtient une probabilité au-dessus du seuil pour `economy` et pour `security`, et en dessous pour les autres thèmes
+- **THEN** l'intervention porte les thèmes `economy` et `security`
 
 #### Scenario: Aucun thème identifiable
 - **WHEN** aucune probabilité de thème n'atteint le seuil pour une intervention publiable
@@ -53,8 +53,8 @@ interventions publiées qui portent ce thème. Un thème inconnu DOIT être reje
 par une erreur de requête invalide.
 
 #### Scenario: Filtre Sécurité
-- **WHEN** un client demande les interventions passées du thème `securite`
-- **THEN** seules les interventions publiées, passées et portant le thème `securite` sont renvoyées, de la plus récente à la plus ancienne
+- **WHEN** un client demande les interventions passées du thème `security`
+- **THEN** seules les interventions publiées, passées et portant le thème `security` sont renvoyées, de la plus récente à la plus ancienne
 
 #### Scenario: Thème inconnu
 - **WHEN** un client demande le thème `sport`

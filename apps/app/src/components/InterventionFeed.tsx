@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { useTRPC } from '@/lib/trpc';
 
@@ -70,16 +70,24 @@ export function InterventionFeed() {
     ),
   );
 
-  // Chargement continu : la page suivante arrive à l'approche du bas de l'écran.
+  // Chargement continu : la page suivante arrive à l'approche du bas de l'écran. L'appel
+  // est répété à chaque défilement : sans cancelRefetch: false, chaque appel annulerait
+  // et relancerait la requête en cours. Après un échec, on attend un geste explicite.
   useOnEndReached(() => {
-    if (past.hasNextPage && !past.isFetchingNextPage && !past.isError) past.fetchNextPage();
+    if (past.hasNextPage && !past.isFetchingNextPage && !past.isFetchNextPageError)
+      void past.fetchNextPage({ cancelRefetch: false });
   });
 
   const liveItems = live.data?.items ?? [];
   const upcomingItems = upcoming.data?.items ?? [];
   const pastItems = past.data?.pages.flatMap((p) => p.items) ?? [];
   const loading = live.isPending || upcoming.isPending || past.isPending;
-  const failed = live.isError || upcoming.isError || past.isError;
+  // Échec seulement si une section n'a aucune donnée : un rafraîchissement ou une page
+  // suivante en échec n'efface pas ce qui est déjà affiché.
+  const failed =
+    (live.isError && !live.data) ||
+    (upcoming.isError && !upcoming.data) ||
+    (past.isError && !past.data);
 
   return (
     <View className="gap-8">
@@ -108,6 +116,17 @@ export function InterventionFeed() {
                   <InterventionCard key={item.id} item={item} />
                 ))}
               </CardGrid>
+            )}
+            {past.isFetchNextPageError && !past.isFetchingNextPage && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => past.fetchNextPage({ cancelRefetch: false })}
+                className="self-center rounded-full border border-chamois px-5 py-2"
+              >
+                <Text className="font-sans-semibold text-chamois">
+                  Chargement impossible. Réessayer
+                </Text>
+              </Pressable>
             )}
             {past.isFetchingNextPage && (
               <Text

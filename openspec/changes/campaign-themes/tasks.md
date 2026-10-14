@@ -34,6 +34,8 @@
 - [x] 5.7 Accueil : chargement continu des interventions passées (`useOnEndReached`, `ScrollEnd`) à la place du bouton « Voir plus » ; retrait du statut de l'API en bas de l'accueil (demande du porteur du projet)
 - [x] 5.8 Écrans mobiles : retrait du surtitre portant le nom de l’application (demande du porteur du projet, delta `app-shell`)
 
+- [x] 5.9 Corrections de revue : erreurs de l'accueil (une section avec données reste affichée, bouton de nouvel essai pour la page suivante), page suivante demandée une seule fois, index du flux (statut, date, id), noms de thèmes en anglais, calibration sans effet de bord, seuil et garde des thèmes uniques
+
 ## 6. Qualité
 
 - [x] 6.1 Smoke test web : l'intervention de test porte un thème, et `interventions.list` filtré par ce thème la renvoie

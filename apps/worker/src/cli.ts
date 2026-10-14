@@ -91,7 +91,7 @@ switch (positionals[0]) {
     });
     const all = await loadReference(resolve(import.meta.dir, '../eval/reference.jsonl'));
     const cases = values.validated ? all.filter((c) => c.validated) : all;
-    const answers = await collectAnswers(db, classifier, cases);
+    const { answers, official } = await collectAnswers(db, classifier, cases);
     const current = thresholdsFor(classifier.model);
     const pct = (n: number) => `${(n * 100).toFixed(1)} %`;
     console.log(
@@ -102,7 +102,7 @@ switch (positionals[0]) {
       `Exactitude sur ${acc.cases} interventions : rôle ${pct(acc.role)}, type ${pct(acc.kind)}`,
     );
     if (current) {
-      const ev = evaluate(cases, answers, current);
+      const ev = evaluate(cases, answers, current, official);
       console.log(
         `Seuils actuels ${JSON.stringify(current)} : précision ${pct(ev.precision)}, rappel ${pct(ev.recall)} (VP ${ev.tp}, FP ${ev.fp}, FN ${ev.fn}, VN ${ev.tn})`,
       );
@@ -119,7 +119,7 @@ switch (positionals[0]) {
           `  ${t.theme.padEnd(14)} précision ${pct(t.precision)}, rappel ${pct(t.recall)} (VP ${t.tp}, FP ${t.fp}, FN ${t.fn})`,
         );
     }
-    const best = proposeThresholds(cases, answers);
+    const best = proposeThresholds(cases, answers, 0.8, official);
     console.log(
       best
         ? `Proposition (précision max, rappel ≥ 80 %) : ${JSON.stringify(best.thresholds)} → précision ${pct(best.precision)}, rappel ${pct(best.recall)}`

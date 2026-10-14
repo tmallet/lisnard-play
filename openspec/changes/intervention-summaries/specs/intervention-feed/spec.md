@@ -43,7 +43,7 @@ affiché. L'écran DOIT être accessible par une URL web partageable
 - **THEN** la carte affiche l'image et l'accroche de l'éditeur, et son lien ouvre l'article chez l'éditeur
 
 #### Scenario: Thèmes affichés
-- **WHEN** l'utilisateur ouvre une intervention portant les thèmes `economie` et `institutions`
+- **WHEN** l'utilisateur ouvre une intervention portant les thèmes `economy` et `institutions`
 - **THEN** l'écran affiche les libellés « Économie » et « Institutions »
 
 #### Scenario: URL partagée

@@ -5,7 +5,7 @@
 import { and, eq, type SQL, sql } from 'drizzle-orm';
 
 import type { Db } from './client';
-import { item, type MediaRender, type SummaryRecord, source, THEMES, type Theme } from './schema';
+import { isTheme, item, type MediaRender, type SummaryRecord, source, type Theme } from './schema';
 
 export { THEMES, type Theme } from './schema';
 
@@ -123,7 +123,7 @@ function toSummary(row: SummaryRow, now: Date): InterventionSummary {
     outlet: row.outlet,
     kind: row.kind,
     // Valeurs inconnues ignorées : la liste peut évoluer avant un reclassement.
-    themes: row.themes.filter((t): t is Theme => (THEMES as readonly string[]).includes(t)),
+    themes: row.themes.filter(isTheme),
     status: temporalStatus(row, now),
     date: new Date(row.date).toISOString(),
     thumbnailUrl: row.thumbnailUrl,

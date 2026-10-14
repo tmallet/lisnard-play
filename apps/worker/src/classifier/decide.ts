@@ -6,6 +6,7 @@ import {
 } from '@lisnard/db/schema';
 
 import type { Kind, Role } from './questions';
+import { DEFAULT_THEME_THRESHOLD } from './thresholds';
 
 export interface Decision {
   outcome: 'published' | 'rejected';
@@ -24,12 +25,6 @@ export interface DecideOptions {
 
 /** Périmètre de la campagne présidentielle : ni AMF ni mairie (ADR 0020). */
 const PUBLISHABLE_ROLES: readonly Role[] = ['national'];
-
-/**
- * Seuil des thèmes quand la décision journalisée n'en a pas (journal antérieur) et
- * qu'aucun seuil n'est défini pour le modèle : valeur initiale du design D4.
- */
-const DEFAULT_THEME_THRESHOLD = 0.5;
 
 /**
  * Règle de publication (spec intervention-classification, ADR 0018 et 0020) : publié si

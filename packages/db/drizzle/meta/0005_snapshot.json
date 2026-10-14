@@ -1,6 +1,6 @@
 {
-  "id": "40843160-e914-46e6-b118-dc16fd0a852e",
-  "prevId": "ac171201-c534-40e7-928c-4b5773d1e740",
+  "id": "04b8fe06-1615-4bb4-8212-14cced7cc87a",
+  "prevId": "f37d9651-8d17-42e9-822e-2f6faba3dd26",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -283,8 +283,8 @@
           "method": "btree",
           "with": {}
         },
-        "item_status_role_date_idx": {
-          "name": "item_status_role_date_idx",
+        "item_status_date_idx": {
+          "name": "item_status_date_idx",
           "columns": [
             {
               "expression": "status",
@@ -293,15 +293,15 @@
               "nulls": "last"
             },
             {
-              "expression": "role",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
               "expression": "coalesce(\"starts_at\", \"published_at\")",
               "asc": true,
               "isExpression": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
               "nulls": "last"
             }
           ],

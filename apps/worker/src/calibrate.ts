@@ -29,8 +29,12 @@ export interface ReferenceCase {
   synthetic?: boolean;
   state?: ClassifierState;
   validated: boolean;
-  /** Contenu de la chaîne officielle, renseigné par collectAnswers (ADR 0018). */
-  official?: boolean;
+}
+
+export interface CollectedAnswers {
+  answers: Map<string, ClassifierAnswers>;
+  /** Cas de la chaîne officielle : intervention présumée, comme à la publication (ADR 0018). */
+  official: Set<string>;
 }
 
 export async function loadReference(path: string): Promise<ReferenceCase[]> {
@@ -47,15 +51,16 @@ const shouldPublish = (c: ReferenceCase) => c.expected.intervient && c.expected.
 /**
  * Probabilités par cas : dernière décision journalisée avec la version courante des
  * questions, sinon appel au classifieur (cas synthétiques ou non encore classés).
- * Renseigne aussi `official` sur chaque cas présent en base, pour que l'évaluation
- * applique la même présomption d'intervention que la publication (ADR 0018).
+ * Repère aussi les cas de la chaîne officielle, pour que l'évaluation applique la même
+ * présomption d'intervention que la publication (ADR 0018).
  */
 export async function collectAnswers(
   db: Db,
   classifier: Classifier,
   cases: ReferenceCase[],
-): Promise<Map<string, ClassifierAnswers>> {
+): Promise<CollectedAnswers> {
   const answers = new Map<string, ClassifierAnswers>();
+  const official = new Set<string>();
   for (const c of cases) {
     if (!c.synthetic) {
       const [row] = await db
@@ -78,7 +83,7 @@ export async function collectAnswers(
         .where(eq(item.platformId, c.platformId))
         .orderBy(desc(classification.createdAt))
         .limit(1);
-      if (row) c.official = isOfficialSource(row.sourceId);
+      if (row && isOfficialSource(row.sourceId)) official.add(c.platformId);
       if (row?.answers && row.version === QUESTIONS_VERSION) {
         answers.set(c.platformId, row.answers);
         continue;
@@ -96,7 +101,7 @@ export async function collectAnswers(
     }
     if (c.state) answers.set(c.platformId, (await classifier.classify(c.state)).answers);
   }
-  return answers;
+  return { answers, official };
 }
 
 export interface Evaluation {
@@ -122,6 +127,7 @@ export function evaluate(
   cases: ReferenceCase[],
   answers: Map<string, ClassifierAnswers>,
   thresholds: { intervient: number; role: number },
+  official: ReadonlySet<string> = new Set(),
 ): Evaluation {
   const e: Evaluation = {
     thresholds,
@@ -137,7 +143,8 @@ export function evaluate(
     const a = answers.get(c.platformId);
     if (!a) continue;
     const predicted =
-      decide(a, thresholds, { presumeSpeaking: c.official === true }).outcome === 'published';
+      decide(a, thresholds, { presumeSpeaking: official.has(c.platformId) }).outcome ===
+      'published';
     const expected = shouldPublish(c);
     if (predicted && expected) e.tp += 1;
     else if (predicted && !expected) e.fp += 1;
@@ -181,11 +188,12 @@ export function proposeThresholds(
   cases: ReferenceCase[],
   answers: Map<string, ClassifierAnswers>,
   minRecall = 0.8,
+  official: ReadonlySet<string> = new Set(),
 ): Evaluation | null {
   let best: Evaluation | null = null;
   for (let i = 30; i <= 90; i += 5) {
     for (let r = 50; r <= 90; r += 5) {
-      const ev = evaluate(cases, answers, { intervient: i / 100, role: r / 100 });
+      const ev = evaluate(cases, answers, { intervient: i / 100, role: r / 100 }, official);
       if (ev.recall < minRecall) continue;
       if (
         !best ||

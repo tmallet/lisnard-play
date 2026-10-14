@@ -95,13 +95,13 @@ await recordClassification(db, {
     intervient: 1,
     role: { choice: 'national', confidence: 1, probabilities: {} },
     kind: { choice: 'tv', confidence: 1, probabilities: {} },
-    themes: { economie: 0.9 },
+    themes: { economy: 0.9 },
   },
   thresholds: { intervient: 0.75, role: 0.6, theme: 0.5 },
   outcome: 'published',
   role: 'national',
   kind: 'tv',
-  themes: ['economie'],
+  themes: ['economy'],
 });
 await setMedia(db, id, {
   kind: 'embed',
@@ -167,14 +167,14 @@ try {
         result?: { data?: { items?: { id: string; themes: string[] }[] } };
       }
     ).result?.data?.items ?? [];
-  const economie = await byTheme('economie');
+  const economy = await byTheme('economy');
   check(
     'interventions.list filtré par thème : renvoie l’intervention et ses thèmes',
-    economie[0]?.id === id && economie[0]?.themes.join() === 'economie',
+    economy[0]?.id === id && economy[0]?.themes.join() === 'economy',
   );
   check(
     'interventions.list filtré par un autre thème : vide',
-    (await byTheme('securite')).length === 0,
+    (await byTheme('security')).length === 0,
   );
 
   const byId = (await (await fetch(trpcUrl('interventions.byId', { id }))).json()) as {

@@ -14,7 +14,7 @@ const lists: Lists = { live: [], upcoming: [], past: [] };
 
 type Input = { status: keyof Lists; theme?: string };
 // Préfixe « mock » : jest autorise cette variable dans la fabrique de jest.mock.
-const mockPaging = { size: Number.POSITIVE_INFINITY };
+const mockPaging = { size: Number.POSITIVE_INFINITY, failNextPage: false };
 const select = (input: Input) =>
   lists[input.status].filter((i) => !input.theme || (i.themes as string[]).includes(input.theme));
 
@@ -35,6 +35,7 @@ jest.mock('@/lib/trpc', () => ({
           // Pagination simulée : pages de pageSize éléments, curseur = position de départ.
           queryFn: async ({ pageParam }: { pageParam: string | null }) => {
             const start = Number(pageParam ?? 0);
+            if (pageParam && mockPaging.failNextPage) throw new Error('réseau');
             const all = select(input);
             const end = start + mockPaging.size;
             return {
@@ -90,6 +91,7 @@ beforeEach(() => {
   lists.upcoming = [];
   lists.past = [];
   mockPaging.size = Number.POSITIVE_INFINITY;
+  mockPaging.failNextPage = false;
 });
 
 test('aucune intervention : message, sans sections vides', async () => {
@@ -111,7 +113,7 @@ test('un direct en cours : section « En direct » affichée en premier', async 
 });
 
 test('filtre par thème : seules les interventions du thème, filtre signalé actif', async () => {
-  lists.past = [item('eco', 'past', ['economie']), item('secu', 'past', ['securite'])];
+  lists.past = [item('eco', 'past', ['economy']), item('secu', 'past', ['security'])];
   await renderFeed();
   expect(await screen.findByText('Intervention eco')).toBeTruthy();
   await fireEvent.press(screen.getByRole('radio', { name: 'Sécurité' }));
@@ -123,7 +125,7 @@ test('filtre par thème : seules les interventions du thème, filtre signalé ac
 });
 
 test('thème sans intervention : message dédié', async () => {
-  lists.past = [item('eco', 'past', ['economie'])];
+  lists.past = [item('eco', 'past', ['economy'])];
   await renderFeed();
   await screen.findByText('Intervention eco');
   await fireEvent.press(screen.getByRole('radio', { name: 'Immigration' }));
@@ -142,5 +144,24 @@ test('chargement continu : la page suivante arrive en fin de défilement', async
   await act(async () => {
     for (const listener of endListeners) listener();
   });
+  expect(await screen.findByText('Intervention p3')).toBeTruthy();
+});
+
+test('page suivante en échec : la liste reste affichée, on peut réessayer', async () => {
+  mockPaging.size = 2;
+  mockPaging.failNextPage = true;
+  lists.past = [item('p1', 'past'), item('p2', 'past'), item('p3', 'past')];
+  await renderFeed();
+  await screen.findByText('Intervention p2');
+  await act(async () => {
+    for (const listener of endListeners) listener();
+  });
+  const retry = await screen.findByText('Chargement impossible. Réessayer');
+  expect(screen.getByText('Intervention p1')).toBeTruthy();
+  expect(
+    screen.queryByText('Les interventions n’ont pas pu être chargées. Réessayez dans un instant.'),
+  ).toBeNull();
+  mockPaging.failNextPage = false;
+  await fireEvent.press(retry);
   expect(await screen.findByText('Intervention p3')).toBeTruthy();
 });

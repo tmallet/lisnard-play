@@ -2,7 +2,7 @@
  * Classification et publication (spec intervention-classification, ADR 0004, 0005).
  */
 import type { Db } from '@lisnard/db/client';
-import { item, source, THEMES } from '@lisnard/db/schema';
+import { item, source, THEMES, type Theme } from '@lisnard/db/schema';
 import {
   type ClassificationTarget,
   inputHashSql,
@@ -104,9 +104,9 @@ async function classifyOne(
   }
 }
 
-/** Ordre canonique des thèmes (celui de THEMES), pour comparer deux listes. */
-const byThemeOrder = (a: string, b: string) =>
-  (THEMES as readonly string[]).indexOf(a) - (THEMES as readonly string[]).indexOf(b);
+/** Mêmes thèmes, dans l'ordre canonique de THEMES (celui que produit decide). */
+const sameThemes = (decided: readonly Theme[], current: readonly string[]) =>
+  decided.join() === THEMES.filter((t) => current.includes(t)).join();
 
 /** Classe les contenus en attente ou dont l'entrée a changé (cache par empreinte). */
 export async function classifyPending(
@@ -149,8 +149,7 @@ export async function recompute(
     const decision = decide(c.answers, thresholds, {
       presumeSpeaking: isOfficialSource(c.sourceId),
     });
-    const sameThemes = decision.themes.join() === [...c.themes].sort(byThemeOrder).join();
-    if (decision.outcome === c.outcome && sameThemes) continue;
+    if (decision.outcome === c.outcome && sameThemes(decision.themes, c.themes)) continue;
     await recordClassification(db, {
       itemId: c.itemId,
       model: c.model,

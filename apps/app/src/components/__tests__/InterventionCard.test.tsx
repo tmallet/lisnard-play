@@ -38,7 +38,7 @@ test('carte en direct : type « Direct », durée écoulée, thèmes (deux au pl
         status: 'live',
         kind: 'discours',
         date: new Date(Date.now() - 12 * 60_000).toISOString(),
-        themes: ['economie', 'securite', 'campagne'],
+        themes: ['economy', 'security', 'campaign'],
       }}
     />,
   );
