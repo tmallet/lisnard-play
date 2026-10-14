@@ -5,14 +5,15 @@ import { INDEPENDENCE_NOTICE } from '@/config/app';
 import { LegalLink } from './LegalLink';
 
 /**
- * Mention d'indépendance (ADR 0001) et lien vers les mentions légales (ADR 0022). `inset` ajoute la marge latérale quand le pied
+ * Mention d'indépendance (ADR 0001) et lien vers les mentions légales (ADR 0022), sur une
+ * seule ligne quand la largeur le permet. `inset` ajoute la marge latérale quand le pied
  * de page est hors d'un `Screen` (pied de page global du web).
  */
 export function Footer({ inset = false }: { inset?: boolean }) {
   return (
     <View
       role="contentinfo"
-      className={`gap-2 border-blanc/15 border-t py-5 ${inset ? 'px-6' : ''}`}
+      className={`flex-row flex-wrap items-baseline gap-x-4 gap-y-1 border-blanc/15 border-t py-3 ${inset ? 'px-6' : ''}`}
     >
       <Text className="font-sans text-blanc/70 text-sm">{INDEPENDENCE_NOTICE}</Text>
       <LegalLink />
