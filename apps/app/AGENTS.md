@@ -44,7 +44,7 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 | `src/config/join.ts`, `src/components/JoinCta.tsx`, `JoinBar.tsx` | Invitation à adhérer (ADR 0025) : lien de parrainage de l'éditeur, signalé sous le bouton ; accueil et détail |
 | `src/app/(tabs)/campagne.tsx` | Onglet « Campagne » (ADR 0027) : vues « Adhésions » (`MembershipView`) et « Déplacements » (`TravelsView`), choisies par le paramètre `vue` ; `src/app/adhesions.tsx` redirige l'ancienne adresse |
 | `src/components/MembershipChart.tsx`, `TimelineCard.tsx`, `src/lib/timeline.ts` | Courbe des adhésions (ADR 0026) : `react-native-svg`, repères en vues positionnées, géométrie pure et testée dans `timeline.ts` |
-| `src/components/CampaignMap.tsx`, `PlaceCard.tsx`, `src/lib/franceMap.ts`, `assets/france-map.json` | Carte des déplacements (ADR 0027) : fond précalculé par `scripts/build-france-map.ts` (IGN, Licence Ouverte), zones tactiles en vues par-dessus le SVG |
+| `src/components/CampaignMap.tsx`, `PlaceCard.tsx`, `src/lib/franceMap.ts`, `assets/france-map.json` | Carte des déplacements (ADR 0027) : fond précalculé par `scripts/build-france-map.ts` (IGN, Licence Ouverte), zones tactiles en vues par-dessus le SVG ; fiche du lieu ouverte à côté de son repère (`popoverPosition`), dessous sur téléphone |
 | `src/components/PushLifecycle(.web).tsx` | Reconfirme l'abonnement au démarrage ; sur mobile, ouvre l'intervention touchée dans une notification |
 | `src/app/manifest+api.ts`, `public/` | Manifeste web (installation sur l'écran d'accueil, condition des notifications sur iPhone), icônes, service worker |
 | `src/global.css` | Tailwind + Uniwind + tokens de la charte |

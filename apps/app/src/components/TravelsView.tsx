@@ -41,11 +41,12 @@ export function TravelsView() {
           places={places}
           selectedKey={selectedKey}
           onSelect={(p) => setSelectedKey(p.key)}
-        />
+          onClose={() => setSelectedKey(null)}
+        >
+          {selected ? <PlaceCard place={selected} onClose={() => setSelectedKey(null)} /> : null}
+        </CampaignMap>
       ) : null}
-      {selected ? (
-        <PlaceCard place={selected} />
-      ) : places.length > 0 ? (
+      {!selected && places.length > 0 ? (
         <Text className="font-sans text-blanc/70 text-sm">
           Touchez un lieu pour voir ses interventions.
         </Text>
