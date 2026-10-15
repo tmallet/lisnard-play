@@ -15,6 +15,7 @@ import {
   notificationSent,
   type PlaceRecord,
   pushSubscription,
+  quote,
   type SummaryRecord,
   source,
   summarySpend,
@@ -390,12 +391,43 @@ export async function listSummaryTargets(
     .limit(limit);
 }
 
-/** Enregistre un résumé (ou son absence motivée) et remet le compteur d'échecs à zéro. */
-export async function recordSummary(db: Db, itemId: string, summary: SummaryRecord) {
-  await db
-    .update(item)
-    .set({ summary, summaryAttempts: 0, summaryRetryAt: null })
-    .where(eq(item.id, itemId));
+export interface QuoteInput {
+  text: string;
+  startS: number;
+  theme: string | null;
+}
+
+/**
+ * Enregistre un résumé (ou son absence motivée) et remet le compteur d'échecs à zéro.
+ * Remplace aussi les citations de l'intervention, dans une même
+ * transaction (spec intervention-quotes) : un résumé sans citation les efface.
+ */
+export async function recordSummary(
+  db: Db,
+  itemId: string,
+  summary: SummaryRecord,
+  quotes: QuoteInput[] = [],
+) {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(item)
+      .set({ summary, summaryAttempts: 0, summaryRetryAt: null })
+      .where(eq(item.id, itemId));
+    await tx.delete(quote).where(eq(quote.itemId, itemId));
+    // Minutage unique par intervention : une citation au même instant est ignorée.
+    const unique = quotes.filter((q, i) => quotes.findIndex((o) => o.startS === q.startS) === i);
+    if (unique.length > 0)
+      await tx.insert(quote).values(
+        unique.map((q, position) => ({
+          itemId,
+          position,
+          text: q.text,
+          search: sql`lp_normalize(${q.text})`,
+          startS: q.startS,
+          theme: q.theme,
+        })),
+      );
+  });
 }
 
 /**

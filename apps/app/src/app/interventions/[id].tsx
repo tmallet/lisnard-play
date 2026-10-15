@@ -1,13 +1,15 @@
 import { useQuery } from '@tanstack/react-query';
 import { TRPCClientError } from '@trpc/client';
-import { Link, Stack, useLocalSearchParams } from 'expo-router';
-import { Linking, Platform, Pressable, Text, View } from 'react-native';
+import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
+import { useRef, useState } from 'react';
+import { Linking, Platform, Pressable, type ScrollView, Text, View } from 'react-native';
 
 import { JoinCta } from '@/components/JoinCta';
 import { LinkCard } from '@/components/LinkCard';
 import { LiveBadge } from '@/components/LiveBadge';
 import { PageHead } from '@/components/PageHead';
 import { PlayerConsent } from '@/components/PlayerConsent';
+import { QuotesBlock } from '@/components/QuotesBlock';
 import { Screen } from '@/components/Screen';
 import { SummaryBlock } from '@/components/SummaryBlock';
 import { WebChrome } from '@/components/WebChrome';
@@ -22,7 +24,19 @@ import { fontFamily } from '@/theme/fonts';
  * la route dynamique est pré-rendue comme gabarit (ADR 0011).
  */
 export default function InterventionDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, t } = useLocalSearchParams<{ id: string; t?: string }>();
+  const startS = t !== undefined && /^\d+$/.test(t) ? Number(t) : undefined;
+  // Écouter une citation : le lecteur se lance au moment voulu (spec intervention-quotes).
+  const [playRequest, setPlayRequest] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const play = (seconds: number) => {
+    router.setParams({ t: String(seconds) });
+    setPlayRequest((n) => n + 1);
+    if (Platform.OS === 'web')
+      document.getElementById('lecteur')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Mobile : le lecteur est en haut de l'écran, sous le titre.
+    else scrollRef.current?.scrollTo({ y: 0, animated: true });
+  };
   const trpc = useTRPC();
   const { data, error, isPending, refetch } = useQuery(
     trpc.interventions.byId.queryOptions({ id: String(id) }, { retry: false }),
@@ -46,7 +60,7 @@ export default function InterventionDetail() {
           headerTitleStyle: { fontFamily: fontFamily.semibold },
         }}
       />
-      <Screen>
+      <Screen scrollRef={scrollRef}>
         <PageHead title={data?.title ?? 'Intervention'} description={description ?? undefined} />
         {isPending ? (
           <Text className="font-sans text-base text-blanc/70">Chargement…</Text>
@@ -90,12 +104,16 @@ export default function InterventionDetail() {
               {whenLabel(data.status, data.date, now)}
             </Text>
             {data.media.kind === 'embed' ? (
-              <PlayerConsent
-                embedUrl={data.media.embedUrl}
-                provider={data.media.provider}
-                title={data.title}
-                posterUrl={data.thumbnailUrl}
-              />
+              <View nativeID="lecteur">
+                <PlayerConsent
+                  embedUrl={data.media.embedUrl}
+                  provider={data.media.provider}
+                  title={data.title}
+                  posterUrl={data.thumbnailUrl}
+                  startS={startS}
+                  playRequest={playRequest}
+                />
+              </View>
             ) : (
               <LinkCard
                 // URL de l'éditeur pour un article relayé par Google News (ADR 0021).
@@ -106,6 +124,9 @@ export default function InterventionDetail() {
               />
             )}
             {data.summary ? <SummaryBlock {...data.summary} /> : null}
+            {data.media.kind === 'embed' ? (
+              <QuotesBlock itemId={data.id} title={data.title} quotes={data.quotes} onPlay={play} />
+            ) : null}
             {description ? (
               <Text className="font-sans text-base text-blanc/85 leading-relaxed">
                 {description}

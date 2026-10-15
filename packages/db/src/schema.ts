@@ -12,6 +12,7 @@ import {
   primaryKey,
   text,
   timestamp,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -291,6 +292,33 @@ export const notificationSent = pgTable(
   },
   (t) => [primaryKey({ columns: [t.itemId, t.kind] })],
 );
+
+/**
+ * Citations horodatées d'une vidéo (spec intervention-quotes, ADR 0028), produites avec
+ * le résumé et remplacées avec lui. `search` : texte normalisé par `lp_normalize`
+ * (minuscules, sans accents), indexé en plein texte français (migration 0012).
+ */
+export const quote = pgTable(
+  'quote',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => item.id, { onDelete: 'cascade' }),
+    position: integer('position').notNull(),
+    text: text('text').notNull(),
+    search: text('search').notNull(),
+    startS: integer('start_s').notNull(),
+    theme: text('theme'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('quote_item_start_unique').on(t.itemId, t.startS),
+    index('quote_item_position_idx').on(t.itemId, t.position),
+  ],
+);
+
+export type Quote = typeof quote.$inferSelect;
 
 export type PushSubscription = typeof pushSubscription.$inferSelect;
 export type NotificationKind = (typeof notificationKind.enumValues)[number];

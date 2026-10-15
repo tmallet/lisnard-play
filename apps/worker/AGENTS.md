@@ -38,7 +38,8 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 - **Classifieur** : modèle épinglé (instantané daté). Changer les questions
   impose d'incrémenter `QUESTIONS_VERSION` et de recalibrer. Skill `classifier-jev`.
 - **Résumés** : modèle épinglé ; changer la consigne impose d'incrémenter
-  `PROMPT_VERSION` et de faire relire un échantillon. Jamais de résumé d'un article
+  `PROMPT_VERSION` et de faire relire un échantillon. Les citations horodatées
+  viennent du même appel et sont remplacées avec le résumé (ADR 0028). Jamais de résumé d'un article
   de presse ni de lecture de son texte : pour un éditeur, `safeFetchText` avec
   `headOnly` (ADR 0021).
 - **WebSub** : ne rien lire d'une notification avant d'avoir vérifié sa signature, et

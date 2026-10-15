@@ -3,6 +3,7 @@ import { health } from './routers/health';
 import { interventionsRouter } from './routers/interventions';
 import { membershipRouter } from './routers/membership';
 import { notificationsRouter } from './routers/notifications';
+import { quotesRouter, searchRouter } from './routers/quotes';
 import { createCallerFactory, router } from './trpc';
 
 export const appRouter = router({
@@ -11,6 +12,8 @@ export const appRouter = router({
   notifications: notificationsRouter,
   membership: membershipRouter,
   campaign: campaignRouter,
+  quotes: quotesRouter,
+  search: searchRouter,
 });
 
 export type AppRouter = typeof appRouter;

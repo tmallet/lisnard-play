@@ -5,7 +5,15 @@
 import { and, desc, eq, type SQL, sql } from 'drizzle-orm';
 
 import type { Db } from './client';
-import { isTheme, item, type MediaRender, type SummaryRecord, source, type Theme } from './schema';
+import {
+  isTheme,
+  item,
+  type MediaRender,
+  quote,
+  type SummaryRecord,
+  source,
+  type Theme,
+} from './schema';
 
 export { THEMES, type Theme } from './schema';
 
@@ -30,8 +38,16 @@ export interface PublicSummary {
   points: string[];
 }
 
+/** Citation horodatée d'une vidéo (spec intervention-quotes). */
+export interface PublicQuote {
+  text: string;
+  startS: number;
+  theme: string | null;
+}
+
 export interface InterventionDetail extends InterventionSummary {
   description: string;
+  quotes: PublicQuote[];
   url: string;
   media: MediaRender;
   summary: PublicSummary | null;
@@ -175,6 +191,92 @@ export async function listTimelineItems(db: Db): Promise<TimelineItem[]> {
   }));
 }
 
+/** Visible : publiée, dotée d'un rendu et pas reprise d'un autre article. */
+const visibleItem = sql`${item.status} = 'published' and ${item.media} is not null and ${item.duplicateOf} is null`;
+
+/** Citation trouvée, avec ce qu'il faut pour l'afficher hors de son intervention. */
+export interface QuoteHit extends PublicQuote {
+  itemId: string;
+  title: string;
+  outlet: string;
+  /** Vidéo de la chaîne de David Lisnard : le média n'est pas répété après son nom. */
+  official: boolean;
+  /** Jour de l'intervention, heure de Paris. */
+  day: string;
+}
+
+const quoteHitColumns = {
+  text: quote.text,
+  startS: quote.startS,
+  theme: quote.theme,
+  itemId: item.id,
+  title: item.title,
+  outlet: summaryColumns.outlet,
+  official: source.official,
+  day: sql<string>`to_char(${sortDate} at time zone 'Europe/Paris', 'YYYY-MM-DD')`,
+};
+
+/** Citation d'une intervention à ce minutage, à 5 secondes près (page d'une citation). */
+export async function getQuoteAt(db: Db, itemId: string, startS: number): Promise<QuoteHit | null> {
+  if (!UUID.test(itemId)) return null;
+  const [row] = await db
+    .select(quoteHitColumns)
+    .from(quote)
+    .innerJoin(item, eq(quote.itemId, item.id))
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(and(eq(item.id, itemId), visibleItem, sql`abs(${quote.startS} - ${startS}) <= 5`))
+    .orderBy(sql`abs(${quote.startS} - ${startS})`)
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Recherche plein texte en français, sans accents (spec intervention-quotes) : citations
+ * d'abord, classées par pertinence, puis interventions par titre et résumé.
+ */
+export async function search(
+  db: Db,
+  q: string,
+  limit = 20,
+): Promise<{ quotes: QuoteHit[]; interventions: InterventionSummary[] }> {
+  const query = sql`websearch_to_tsquery('french', lp_normalize(${q}))`;
+  const quoteVector = sql`to_tsvector('french', ${quote.search})`;
+  // Même expression que l'index item_search_idx (migration 0013).
+  const itemVector = sql`to_tsvector('french', lp_normalize(${item.title} || ' ' || coalesce(${item.summary}->>'text', '')))`;
+  const [quotes, items] = await Promise.all([
+    db
+      .select({ ...quoteHitColumns, search: quote.search })
+      .from(quote)
+      .innerJoin(item, eq(quote.itemId, item.id))
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(and(visibleItem, sql`${quoteVector} @@ ${query}`))
+      .orderBy(desc(sql`ts_rank(${quoteVector}, ${query})`), desc(sortDate))
+      // Marge pour les doublons retirés ci-dessous.
+      .limit(limit * 2),
+    db
+      .select(summaryColumns)
+      .from(item)
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(and(visibleItem, sql`${itemVector} @@ ${query}`))
+      .orderBy(desc(sql`ts_rank(${itemVector}, ${query})`), desc(sortDate))
+      .limit(limit),
+  ]);
+  const now = new Date();
+  // Une même émission publiée deux fois donne la même phrase : on garde la mieux classée.
+  const seen = new Set<string>();
+  const unique = quotes.flatMap(({ search: key, ...hit }) => {
+    // Texte déjà normalisé par lp_normalize ; la ponctuation est ignorée.
+    const words = key.replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    if (seen.has(words)) return [];
+    seen.add(words);
+    return [hit];
+  });
+  return {
+    quotes: unique.slice(0, limit),
+    interventions: items.map((row) => toSummary(row as SummaryRow, now)),
+  };
+}
+
 /** Intervention placée sur la carte des déplacements (spec intervention-places). */
 export interface PlacedIntervention {
   id: string;
@@ -278,26 +380,37 @@ export async function getPublishedById(
   now = new Date(),
 ): Promise<InterventionDetail | null> {
   if (!UUID.test(id)) return null;
-  const [row] = await db
-    .select({
-      ...summaryColumns,
-      description: item.description,
-      sourceKind: source.kind,
-      official: source.official,
-      url: item.url,
-      media: item.media,
-      summary: item.summary,
-    })
-    .from(item)
-    .innerJoin(source, eq(item.sourceId, source.id))
-    .where(and(eq(item.id, id), sql`${item.status} = 'published'`, sql`${item.media} is not null`))
-    .limit(1);
+  const [[row], quotes] = await Promise.all([
+    db
+      .select({
+        ...summaryColumns,
+        description: item.description,
+        sourceKind: source.kind,
+        official: source.official,
+        url: item.url,
+        media: item.media,
+        summary: item.summary,
+      })
+      .from(item)
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(
+        and(eq(item.id, id), sql`${item.status} = 'published'`, sql`${item.media} is not null`),
+      )
+      .limit(1),
+    // En parallèle : ignorées si l'intervention n'est pas visible.
+    db
+      .select({ text: quote.text, startS: quote.startS, theme: quote.theme })
+      .from(quote)
+      .where(eq(quote.itemId, id))
+      .orderBy(quote.startS),
+  ]);
   if (!row) return null;
   return {
     ...toSummary(row as SummaryRow, now),
     // Description d'une vidéo YouTube : seulement pour la chaîne officielle. Celle d'une
     // chaîne de média parle de toute l'émission (liens, autres invités), pas de lui.
     description: row.sourceKind === 'youtube' && !row.official ? '' : row.description,
+    quotes,
     url: row.url,
     media: row.media as MediaRender,
     summary: toPublicSummary(row.summary),

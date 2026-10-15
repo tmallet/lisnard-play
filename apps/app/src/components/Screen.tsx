@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, type RefObject, useState } from 'react';
 import { Platform, RefreshControl, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,6 +15,8 @@ interface ScreenProps {
   footer?: boolean;
   /** Zone de contenu élargie sur tablette (grille de l'accueil) ; sinon colonne de lecture. */
   wide?: boolean;
+  /** Accès au défilement (remonter vers le lecteur, par exemple). */
+  scrollRef?: RefObject<ScrollView | null>;
 }
 
 /**
@@ -27,7 +29,7 @@ interface ScreenProps {
  * - Fin de défilement signalée au contenu (chargement continu du flux, ScrollEnd).
  * - Tirer pour actualiser : relance les requêtes affichées par l'écran.
  */
-export function Screen({ children, footer = true, wide = false }: ScreenProps) {
+export function Screen({ children, footer = true, wide = false, scrollRef }: ScreenProps) {
   const insets = useSafeAreaInsets();
   const scrollEnd = useScrollEndSource();
   const queryClient = useQueryClient();
@@ -48,6 +50,7 @@ export function Screen({ children, footer = true, wide = false }: ScreenProps) {
       >
         <ScrollView
           {...scrollEnd.scrollProps}
+          ref={scrollRef}
           testID="screen-scroll"
           refreshControl={
             <RefreshControl

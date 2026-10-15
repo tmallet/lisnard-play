@@ -34,6 +34,10 @@ Postgres intégré à Bun (`drizzle-orm/bun-sql`). Vue d'ensemble :
 - **Résumés** : `item.summary` ne garde que le dernier résumé, car aucune décision
   n'en dépend. `read` n'en expose que `{ text, points }`, et seulement si
   `kind = 'ok'` (ADR 0021).
+- **Citations** : table `quote`, remplacée avec le résumé dans la même transaction
+  (`recordSummary`). La recherche s'appuie sur `lp_normalize` (fonction SQL immuable,
+  sans extension `unaccent`) : garder la même expression que les index de la
+  migration 0013, sinon ils ne servent plus (ADR 0028).
 - **Visibilité** : `read` exige `status = 'published'` **et** `media is not null`.
 - **Pool** : un seul client par processus. Côté API route, il est mis en cache
   sur `globalThis`, car le module est réévalué à chaque rechargement en
