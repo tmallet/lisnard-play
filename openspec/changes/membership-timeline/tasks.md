@@ -18,7 +18,12 @@
 - [x] 3.5 Page `(tabs)/adhesions` : total, mise à jour, source, phrase de prudence, état de repli ; onglet dans `NAV_ITEMS`
 - [x] 3.6 Vérification visuelle sur téléphone et ordinateur (captures)
 
-## 4. Qualité et documentation
+## 4. Corrections ajoutées en cours de revue
+
+- [x] 4a.1 Entités HTML nommées décodées dans les aperçus ; réparation des aperçus enregistrés au démarrage du worker ; tests
+- [x] 4a.2 Reprises d'articles : colonne `item.duplicate_of` (migration 0009), `markPressDuplicates` au démarrage et après chaque collecte RSS, reprises exclues du flux, du graphique, des notifications et du classement ; tests
+
+## 5. Qualité et documentation
 
 - [x] 4.1 Smoke web : `/adhesions` pré-rendue, `membership.timeline` servie depuis des fixtures (`MEMBERSHIP_SOURCE_URL`)
 - [x] 4.2 ADR 0026, index des ADR

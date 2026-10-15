@@ -237,6 +237,8 @@ export async function listClassificationTargets(
       .where(
         and(
           onlyId ? eq(item.id, onlyId) : undefined,
+          // Une reprise d'article n'est ni classée ni affichée.
+          sql`${item.duplicateOf} is null`,
           or(eq(item.status, 'pending'), sql`${lastHash} is distinct from ${hash}`),
         ),
       )
@@ -322,6 +324,7 @@ export async function listPublishedWithoutMedia(db: Db, limit: number, onlyId?: 
         onlyId ? eq(item.id, onlyId) : undefined,
         eq(item.status, 'published'),
         sql`${item.media} is null`,
+        sql`${item.duplicateOf} is null`,
       ),
     )
     .limit(limit);
@@ -481,7 +484,7 @@ export async function listNotificationEvents(db: Db): Promise<NotificationEvent[
       .from(item)
       .innerJoin(source, eq(item.sourceId, source.id))
       .where(and(eq(item.status, 'published'), where, notSent(kind)));
-  const visible = sql`${item.media} is not null`;
+  const visible = sql`(${item.media} is not null and ${item.duplicateOf} is null)`;
   const [live, reminder, newItem] = await Promise.all([
     event(
       'live',
@@ -573,4 +576,30 @@ export async function purgeStaleSubscriptions(db: Db): Promise<number> {
     .where(sql`${pushSubscription.confirmedAt} < now() - interval '13 months'`)
     .returning({ id: pushSubscription.id });
   return rows.length;
+}
+
+// --- Reprises d'articles (spec intervention-collection, « Dédoublonnage ») ---
+
+/** Articles de presse, pour repérer les reprises d'une même dépêche par plusieurs médias. */
+export async function listPressItems(db: Db) {
+  return db
+    .select({
+      id: item.id,
+      title: item.title,
+      publishedAt: item.publishedAt,
+      firstSeenAt: item.firstSeenAt,
+      visible: sql<boolean>`(${item.status} = 'published' and ${item.media} is not null)`,
+      duplicateOf: item.duplicateOf,
+    })
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(eq(source.kind, 'rss'))
+    .orderBy(item.firstSeenAt, item.id);
+}
+
+export async function setDuplicateOf(db: Db, id: string, canonicalId: string | null) {
+  await db
+    .update(item)
+    .set({ duplicateOf: canonicalId, updatedAt: sql`now()` })
+    .where(eq(item.id, id));
 }

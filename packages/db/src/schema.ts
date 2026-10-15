@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   boolean,
   customType,
   date,
@@ -158,6 +159,13 @@ export const item = pgTable(
     summaryAttempts: integer('summary_attempts').notNull().default(0),
     /** Pas de nouvel essai de résumé avant cette date (attente croissante après un échec). */
     summaryRetryAt: timestamp('summary_retry_at', { withTimezone: true }),
+    /**
+     * Reprise d'un article déjà enregistré (même titre, autre média) : masquée partout,
+     * gardée pour la traçabilité (spec intervention-collection, « Dédoublonnage »).
+     */
+    duplicateOf: uuid('duplicate_of').references((): AnyPgColumn => item.id, {
+      onDelete: 'set null',
+    }),
     firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

@@ -32,6 +32,13 @@ adhésions par jour contre une médiane de 55).
   graphique du total et des interventions.
 
 ### Modified Capabilities
+- `intervention-collection` : les reprises d'une même dépêche par plusieurs médias
+  (même titre, moins de trois jours d'écart) sont masquées, ajouté en cours de revue.
+
+- **Corrections ajoutées en cours de revue** :
+  - décodage complet des entités HTML des aperçus (« Actualit&eacute;s ») ;
+  - masquage des reprises d'articles (colonne `item.duplicate_of`, migration 0009),
+    visibles en double dans la liste « +N ».
 
 ## Impact
 

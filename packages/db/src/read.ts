@@ -160,7 +160,13 @@ export async function listTimelineItems(db: Db): Promise<TimelineItem[]> {
     })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
-    .where(and(eq(item.status, 'published'), sql`${item.media} is not null`))
+    .where(
+      and(
+        eq(item.status, 'published'),
+        sql`${item.media} is not null`,
+        sql`${item.duplicateOf} is null`,
+      ),
+    )
     .orderBy(sortDate, item.id);
   return rows.map(({ liveStatus, ...row }) => ({
     ...row,
@@ -180,6 +186,8 @@ export async function listPublished(
   const conditions: SQL[] = [
     sql`${item.status} = 'published'`,
     sql`${item.media} is not null`,
+    // Reprise d'un article déjà listé (spec intervention-collection, « Dédoublonnage »).
+    sql`${item.duplicateOf} is null`,
     statusCondition(status, now),
   ];
   if (theme) conditions.push(sql`${item.themes} @> array[${theme}]::text[]`);

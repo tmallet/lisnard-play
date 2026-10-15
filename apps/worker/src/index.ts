@@ -19,6 +19,7 @@ import {
   SUMMARY_DAILY_BUDGET_USD,
   TICK_MS,
 } from './config';
+import { markPressDuplicates } from './dedupe';
 import { log } from './log';
 import { repairMediaEntities, resolvePendingMedia } from './media/task';
 import { notifyPending } from './notifications/task';
@@ -60,6 +61,10 @@ await upsertSources(
     official: s.kind === 'youtube' && s.official === true,
   })),
 );
+
+// Reprises d'articles déjà enregistrées (même titre, plusieurs médias).
+const duplicates = await markPressDuplicates(db);
+log.info('reprises d’articles masquées', { duplicates });
 
 // Aperçus enregistrés avant le décodage complet des entités HTML (sans appel réseau).
 const repaired = await repairMediaEntities(db);
@@ -105,12 +110,15 @@ const tasks: Task[] = [
   {
     name: 'collect:rss',
     everyMs: CADENCE_MS.rss,
-    run: () =>
-      runCollection(
+    // Les reprises sont rattachées avant le classement : elles ne coûtent aucun appel.
+    run: async () => ({
+      ...(await runCollection(
         db,
         SOURCES.filter((s) => s.kind === 'rss'),
         ctx,
-      ),
+      )),
+      duplicates: await markPressDuplicates(db),
+    }),
   },
   {
     name: 'classify',
