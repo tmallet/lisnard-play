@@ -85,6 +85,20 @@
       "when": 1792061264717,
       "tag": "0011_item_place_attempts",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792065438654,
+      "tag": "0012_quote",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792065439242,
+      "tag": "0013_quote_search",
+      "breakpoints": true
     }
   ]
 }

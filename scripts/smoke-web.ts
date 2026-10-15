@@ -109,15 +109,20 @@ await setMedia(db, id, {
   provider: 'youtube',
   embedUrl: 'https://www.youtube.com/embed/smoke-1',
 });
-await recordSummary(db, id, {
-  kind: 'ok',
-  text: 'Résumé de test.',
-  points: ['point de test'],
-  model: 'smoke',
-  promptVersion: 0,
-  generatedAt: new Date().toISOString(),
-  cost: 0,
-});
+await recordSummary(
+  db,
+  id,
+  {
+    kind: 'ok',
+    text: 'Résumé de test.',
+    points: ['point de test'],
+    model: 'smoke',
+    promptVersion: 0,
+    generatedAt: new Date().toISOString(),
+    cost: 0,
+  },
+  [{ text: 'Il faut réformer l’école dès le primaire.', startS: 125, theme: 'education' }],
+);
 
 // Source des adhésions factice (ADR 0026) : le smoke test n'appelle jamais le site du parti.
 const membershipFixture = Bun.serve({
@@ -233,6 +238,25 @@ try {
     'interventions.byId : résumé exposé, sans donnée interne',
     byId.result?.data?.summary?.text === 'Résumé de test.' &&
       !JSON.stringify(byId.result?.data?.summary).includes('smoke'),
+  );
+
+  // Citations et recherche (spec intervention-quotes, ADR 0028).
+  const quotePage = await fetch(`${BASE}/interventions/${id}/citation/125`);
+  check('/interventions/<id>/citation/<t> : HTTP 200 (URL partageable)', quotePage.status === 200);
+  checkPage('/interventions/<id>/citation/<t>', await quotePage.text(), null, INDEPENDENCE_NOTICE);
+  const quoteAt = (await (await fetch(trpcUrl('quotes.at', { id, t: 127 }))).json()) as {
+    result?: { data?: { startS?: number } | null };
+  };
+  check(
+    'quotes.at : citation trouvée à quelques secondes près',
+    quoteAt.result?.data?.startS === 125,
+  );
+  const found = (await (await fetch(trpcUrl('search.query', { q: 'ECOLE primaire' }))).json()) as {
+    result?: { data?: { quotes?: { itemId: string }[] } };
+  };
+  check(
+    'search.query : sans accents ni casse, renvoie la citation',
+    found.result?.data?.quotes?.[0]?.itemId === id,
   );
 
   // Notifications (spec push-notifications, ADR 0024).

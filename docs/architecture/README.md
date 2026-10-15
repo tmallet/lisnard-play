@@ -42,7 +42,8 @@ lisnard-play/
 │  │  ├─ _layout.tsx      racine : CSS, polices, ApiProvider, Stack, thème de navigation
 │  │  ├─ +html.tsx        document HTML web (lang, balises communes)
 │  │  ├─ (tabs)/          accueil (flux d'interventions) et à-propos
-│  │  ├─ interventions/[id].tsx   détail (rendu côté client, ADR 0011)
+│  │  ├─ interventions/[id].tsx   détail (rendu côté client, ADR 0011), `?t=` pour un minutage
+│  │  ├─ interventions/[id]/citation/[t].tsx   page d'une citation (ADR 0028)
 │  │  ├─ +not-found.tsx   404
 │  │  └─ api/trpc/[trpc]+api.ts   point d'accès tRPC (connexion Postgres partagée)
 │  ├─ src/components/     Screen, WebChrome, AppNavigation, InterventionFeed,
@@ -83,6 +84,7 @@ lisnard-play/
 |-------|------|-------------|
 | `source` | Sources configurées, recopiées depuis `sources.config.ts` | `id` (« yt:bfmtv »), `kind`, `name`, `active` |
 | `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `duplicate_of` (reprise d'un article déjà enregistré, masquée partout), `place` (lieu du déplacement, ou son absence), `media` (rendu, dont l'URL de l'éditeur pour un article Google News), `summary` (résumé ou motif d'absence), `duration_s` |
+| `quote` | Citations horodatées d'une vidéo, remplacées avec son résumé (ADR 0028) | `item_id` (cascade), `start_s` (unique par vidéo), `text`, `search` (texte normalisé par `lp_normalize`, index plein texte français) ; un index plein texte couvre aussi titre et résumé de `item` |
 | `push_subscription` | Abonnements aux notifications, **écrits par l'API** (ADR 0024) | `kind` (`web` / `expo`), `endpoint` unique (adresse Web Push ou jeton Expo), `keys`, préférences `live` / `reminder` / `new_item`, `confirmed_at` (purge à 13 mois) |
 | `notification_sent` | Envois effectués, un par intervention et par type | clé (`item_id`, `kind`), `recipients` |
 | `classification` | Journal des décisions, en ajout seul | `model` (instantané servi), `questions_version`, `input_hash`, `answers` (probabilités brutes), `thresholds`, `outcome` |
@@ -139,7 +141,8 @@ SDK 58. Sur mobile, le client appelle `${EXPO_PUBLIC_API_URL}/api/trpc`.
   dans `push_subscription`, ADR 0024), `membership.timeline` (adhérents de Nouvelle
   Énergie lus sur le site du parti avec un cache de 90 s, et interventions posées sur la
   courbe ; aucune copie en base, ADR 0026), `campaign.places` (déplacements regroupés
-  par lieu pour la carte, ADR 0027). Les éléments exposent
+  par lieu pour la carte, ADR 0027), `quotes.at` (citation à 5 s près) et
+  `search.query` (citations puis interventions, cache d'une minute, ADR 0028). Les éléments exposent
   `themes` ; le rôle n'est pas exposé, puisque tout contenu publié est
   `national` (ADR 0020).
 - Le client importe uniquement le type `AppRouter`. Garde-fou de typage :

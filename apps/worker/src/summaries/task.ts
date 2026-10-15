@@ -110,6 +110,7 @@ export async function summarizePending(
         output.speaks
           ? record({ kind: 'ok', text: output.summary, points: output.points, model, cost })
           : record({ kind: 'none', reason: 'not_speaking', model, cost }),
+        output.speaks ? output.quotes : [],
       );
       if (output.speaks) stats.summarized += 1;
       else stats.notSpeaking += 1;

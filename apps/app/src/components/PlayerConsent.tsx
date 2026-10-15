@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 
 import { largeThumbnail, playerUrl, providerLabel } from '@/lib/format';
@@ -14,14 +14,30 @@ export function PlayerConsent({
   provider,
   title,
   posterUrl,
+  startS,
+  playRequest = 0,
 }: {
   embedUrl: string;
   provider: string;
   title: string;
   posterUrl: string | null;
+  /** Moment de départ (citation, `?t=` dans l'adresse). */
+  startS?: number;
+  /**
+   * Incrémenté quand l'utilisateur demande à écouter un passage : ce geste vaut
+   * consentement, la mention des cookies figurant à côté du bouton (ADR 0022).
+   */
+  playRequest?: number;
 }) {
   const [accepted, setAccepted] = useState(false);
-  if (accepted) return <MediaEmbed embedUrl={playerUrl(embedUrl)} title={title} />;
+  useEffect(() => {
+    if (playRequest > 0) setAccepted(true);
+  }, [playRequest]);
+  if (accepted) {
+    const url = playerUrl(embedUrl, startS);
+    // Clé = URL : un nouveau moment de départ recharge le lecteur.
+    return <MediaEmbed key={url} embedUrl={url} title={title} />;
+  }
   const name = providerLabel(provider);
   return (
     <Pressable

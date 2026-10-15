@@ -16,10 +16,10 @@ une vidéo (ADR 0021, spec `intervention-summaries`). Code :
   accepte les URL YouTube. La vidéo est passée par URL (contenu `video_url`) :
   elle n'est jamais téléchargée (ADR 0007).
 - **Sortie structurée** (`response_format: json_schema`) :
-  `{ speaks, summary, points }`, validée par `parseSummaryOutput`.
+  `{ speaks, summary, points, quotes }`, validée par `parseSummaryOutput`.
 - **Clé** : `OPENROUTER_API_KEY`, la même que pour Jev, réservée au worker.
 
-## Consigne (`prompt.ts`, version 3)
+## Consigne (`prompt.ts`, version 4)
 
 - Français, factuel, neutre, propos attribués (« Il estime que… »).
 - Longueur proportionnée à la vidéo : trois ou quatre phrases pour un extrait de
@@ -30,12 +30,33 @@ une vidéo (ADR 0021, spec `intervention-summaries`). Code :
 - Ni opinion, ni citation de plus de quinze mots, ni information absente de la
   vidéo.
 - `speaks: false` si David Lisnard ne s'exprime pas : rien n'est affiché.
+- **Citations** (ADR 0028) : trois à huit phrases de David Lisnard, mot pour mot,
+  40 mots au plus, avec leur minutage (`MM:SS` ou `H:MM:SS`) et un thème.
+
+## Citations horodatées
+
+- **Validation** (`parseQuotes`) : minutage lisible et inférieur à la durée de la
+  vidéo, 60 mots au plus, ni texte ni minutage en double, huit au plus. Une citation
+  invalide est écartée sans faire échouer le résumé.
+- **Stockage** : table `quote` (`item_id`, `start_s`, `text`, `search`,
+  `theme`), remplacée en même temps que le résumé dans une transaction
+  (`recordSummary`). Rien n'est gardé si `speaks` est faux.
+- **Recherche** : plein texte Postgres en français sur `lp_normalize(texte)` (minuscules,
+  sans accents ; migration 0013), citations d'abord, puis titres et résumés. Une même
+  phrase publiée dans deux vidéos ne sort qu'une fois.
+- **Fiabilité** : transcription automatique. L'écran invite à écouter le passage, et le
+  lecteur démarre deux secondes avant le minutage.
+- **Échantillon vérifié** (2026-10-15, dix vidéos, 0,21 $) : phrases fidèles, thèmes
+  pertinents ; deux montages d'une même émission donnent des minutages cohérents
+  (10:41 et 10:56).
 
 Historique :
 - **v1** (trois phrases au plus) : jugée trop courte par le porteur du projet le
   2026-10-13 ;
 - **v2** : texte actuel ;
-- **v3** : même texte, mais modèle Flash pour les vidéos longues.
+- **v3** : même texte, mais modèle Flash pour les vidéos longues ;
+- **v4** : ajout des citations horodatées (ADR 0028). Régénérer tout l'historique
+  coûte environ 4 $ (0,02 $ par vidéo en moyenne).
 
 Toute modification du texte ou du schéma incrémente `PROMPT_VERSION`. Les
 résumés existants sont alors régénérés au fil des cycles, les plus récents
@@ -83,6 +104,7 @@ Ils ne reçoivent aucun résumé, à cause du droit voisin des éditeurs
 | Besoin | Commande (depuis la racine) |
 |--------|-----------------------------|
 | Rattraper les vidéos sans résumé, au-delà du plafond par défaut | `bun apps/worker/src/cli.ts summarize --budget 5` |
+| Régénérer l'historique après un changement de consigne (citations comprises) | `bun apps/worker/src/cli.ts summarize --budget 6` |
 | Relancer les résumés abandonnés après des échecs | `bun apps/worker/src/cli.ts summarize --retry` |
 | Reprendre les cartes des articles Google News | `bun apps/worker/src/cli.ts media --refresh --source rss:google-news` |
 

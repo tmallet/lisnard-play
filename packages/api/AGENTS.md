@@ -10,7 +10,7 @@ Le client n'importe que le **type** `AppRouter`.
 | `src/trpc.ts` | `initTRPC` : `router`, `publicProcedure`, `createCallerFactory`, `errorFormatter` |
 | `src/context.ts` | `createContext({ req?, version, isDev, db? })` : `db` est la connexion en lecture (absente si `DATABASE_URL` n'est pas défini) |
 | `src/root.ts` | `appRouter` (assemblage des procédures), `AppRouter`, `createCaller` |
-| `src/routers/*.ts` | Une procédure ou un sous-routeur par domaine : `health`, `interventions` (`list`, `byId`), `notifications` (`config`, `subscribe`, `update`, `unsubscribe`), `membership` (`timeline`), `campaign` (`places`) |
+| `src/routers/*.ts` | Une procédure ou un sous-routeur par domaine : `health`, `interventions` (`list`, `byId`), `notifications` (`config`, `subscribe`, `update`, `unsubscribe`), `membership` (`timeline`), `campaign` (`places`), `quotes` (`at`), `search` (`query`, cache d'une minute) |
 | `src/index.ts` | API publique du package |
 
 ## Conventions

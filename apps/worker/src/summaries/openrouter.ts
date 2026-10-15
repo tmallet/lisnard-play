@@ -28,10 +28,49 @@ export class InvalidSummaryResponse extends Error {
   }
 }
 
+export interface QuoteOutput {
+  text: string;
+  startS: number;
+  theme: string | null;
+}
+
 export interface SummaryOutput {
   speaks: boolean;
   summary: string;
   points: string[];
+  quotes: QuoteOutput[];
+}
+
+/** « 12:34 » ou « 1:02:03 » en secondes ; null si le format est inattendu. */
+export function parseTimestamp(value: string): number | null {
+  const parts = value.trim().split(':');
+  if (parts.length < 2 || parts.length > 3 || parts.some((p) => !/^\d{1,2}$/.test(p))) return null;
+  const [s = 0, m = 0, h = 0] = parts.map(Number).reverse();
+  if (s >= 60 || (parts.length === 3 && m >= 60)) return null;
+  return h * 3600 + m * 60 + s;
+}
+
+const MAX_QUOTE_WORDS = 60;
+
+/**
+ * Citations valides seulement (ADR 0028) : minutage lisible et dans la vidéo, texte non
+ * vide et pas trop long, sans doublon ; au plus 8. Une citation invalide est ignorée
+ * sans invalider le résumé.
+ */
+function parseQuotes(raw: unknown, durationS: number | null): QuoteOutput[] {
+  if (!Array.isArray(raw)) return [];
+  const quotes: QuoteOutput[] = [];
+  for (const q of raw as Record<string, unknown>[]) {
+    const text = typeof q?.text === 'string' ? q.text.trim() : '';
+    const startS = typeof q?.start === 'string' ? parseTimestamp(q.start) : null;
+    if (!text || startS === null) continue;
+    if (text.split(/\s+/).length > MAX_QUOTE_WORDS) continue;
+    if (durationS !== null && startS > durationS) continue;
+    if (quotes.some((o) => o.text === text || o.startS === startS)) continue;
+    const theme = typeof q.theme === 'string' && q.theme !== 'none' ? q.theme : null;
+    quotes.push({ text, startS, theme });
+  }
+  return quotes.slice(0, 8);
 }
 
 export interface SummaryResult {
@@ -61,17 +100,27 @@ interface ApiResponse {
 const MAX_SUMMARY_CHARS = 2500;
 
 /** Valide la sortie du modèle ; toute forme inattendue est une erreur (nouvelle tentative). */
-export function parseSummaryOutput(content: string | undefined): SummaryOutput {
-  const data = JSON.parse(content ?? '') as Partial<SummaryOutput>;
+export function parseSummaryOutput(
+  content: string | undefined,
+  durationS: number | null = null,
+): SummaryOutput {
+  const data = JSON.parse(content ?? '') as Partial<Omit<SummaryOutput, 'quotes'>> & {
+    quotes?: unknown;
+  };
   if (typeof data.speaks !== 'boolean') throw new Error('réponse invalide : speaks');
-  if (!data.speaks) return { speaks: false, summary: '', points: [] };
+  if (!data.speaks) return { speaks: false, summary: '', points: [], quotes: [] };
   const summary = typeof data.summary === 'string' ? data.summary.trim() : '';
   const points = Array.isArray(data.points)
     ? data.points.filter((p): p is string => typeof p === 'string' && p.trim() !== '')
     : [];
   if (!summary || summary.length > MAX_SUMMARY_CHARS) throw new Error('réponse invalide : summary');
   if (points.length === 0) throw new Error('réponse invalide : points');
-  return { speaks: true, summary, points: points.slice(0, 6).map((p) => p.trim()) };
+  return {
+    speaks: true,
+    summary,
+    points: points.slice(0, 6).map((p) => p.trim()),
+    quotes: parseQuotes(data.quotes, durationS),
+  };
 }
 
 /**
@@ -120,7 +169,7 @@ export function createOpenRouterSummarizer(options: {
       try {
         return {
           model: body.model ?? model,
-          output: parseSummaryOutput(body.choices?.[0]?.message?.content),
+          output: parseSummaryOutput(body.choices?.[0]?.message?.content, target.durationS),
           cost,
         };
       } catch (error) {

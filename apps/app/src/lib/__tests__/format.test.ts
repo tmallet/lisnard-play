@@ -1,9 +1,11 @@
 import {
+  formatTimestamp,
   kindLabelFor,
   largeThumbnail,
   liveSince,
   playerUrl,
   providerLabel,
+  quoteSource,
   repeatsTitle,
   whenLabel,
 } from '../format';
@@ -78,5 +80,26 @@ describe('lecteur après consentement', () => {
       'https://geo.dailymotion.com/player.html?video=x1&autoplay=1',
     );
     expect(providerLabel('youtube')).toBe('YouTube');
+  });
+});
+
+describe('citations horodatées', () => {
+  it('lance YouTube deux secondes avant le minutage, jamais avant le début', () => {
+    expect(playerUrl('https://www.youtube.com/embed/abc', 641)).toContain('start=639');
+    expect(playerUrl('https://www.youtube.com/embed/abc', 1)).toContain('start=0');
+    expect(playerUrl('https://geo.dailymotion.com/player.html?video=x1', 641)).not.toContain(
+      'start=',
+    );
+  });
+
+  it('écrit le minutage en minutes, ou en heures au-delà', () => {
+    expect(formatTimestamp(5)).toBe('0:05');
+    expect(formatTimestamp(754)).toBe('12:34');
+    expect(formatTimestamp(3723)).toBe('1:02:03');
+  });
+
+  it('ne répète pas son nom pour sa propre chaîne', () => {
+    expect(quoteSource({ outlet: 'David Lisnard', official: true })).toBe('sa chaîne');
+    expect(quoteSource({ outlet: 'BFMTV', official: false })).toBe('BFMTV');
   });
 });

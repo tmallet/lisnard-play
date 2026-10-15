@@ -122,12 +122,31 @@ export function kindLabelFor(status: 'live' | 'upcoming' | 'past', kind: string 
  * confidentialité renforcée (youtube-nocookie.com) et lecture automatique, le clic
  * tenant lieu d'action de lecture.
  */
-export function playerUrl(embedUrl: string): string {
+/** Le lecteur démarre un peu avant une citation, pour ne pas couper le début de la phrase. */
+const START_LEAD_S = 2;
+
+/** URL du lecteur, lancé aussitôt, éventuellement à un moment donné (citations, ADR 0028). */
+export function playerUrl(embedUrl: string, startS?: number): string {
   const url = new URL(embedUrl);
+  const youtube = url.pathname.startsWith('/embed/') && url.hostname.endsWith('youtube.com');
   if (url.hostname === 'www.youtube.com' && url.pathname.startsWith('/embed/'))
     url.hostname = 'www.youtube-nocookie.com';
   url.searchParams.set('autoplay', '1');
+  if (startS !== undefined && youtube)
+    url.searchParams.set('start', String(Math.max(0, Math.floor(startS) - START_LEAD_S)));
   return url.toString();
+}
+
+/** Contexte d'une citation : « sa chaîne » pour la chaîne officielle, sinon le média. */
+export const quoteSource = (q: { outlet: string; official: boolean }) =>
+  q.official ? 'sa chaîne' : q.outlet;
+
+/** Minutage lisible : « 12:34 », « 1:02:03 ». */
+export function formatTimestamp(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = String(seconds % 60).padStart(2, '0');
+  return h > 0 ? `${h}:${String(m).padStart(2, '0')}:${s}` : `${m}:${s}`;
 }
 
 const PROVIDER_LABELS: Record<string, string> = { youtube: 'YouTube', dailymotion: 'Dailymotion' };

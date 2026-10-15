@@ -27,6 +27,7 @@ const SPEAKS: SummaryOutput = {
   speaks: true,
   summary: 'Il estime que les devoirs à la maison doivent revenir.',
   points: ['devoirs', 'école'],
+  quotes: [],
 };
 
 /** Résumeur factice : réponse selon le titre, coût fixe ; peut échouer à la demande. */
@@ -39,7 +40,7 @@ class FakeSummarizer implements Summarizer {
     this.calls += 1;
     if (this.failing) throw new Error('indisponible');
     const output = target.title.includes('muet')
-      ? { speaks: false, summary: '', points: [] }
+      ? { speaks: false, summary: '', points: [], quotes: [] }
       : SPEAKS;
     return { model: this.model, output, cost: this.cost };
   }
@@ -56,10 +57,39 @@ describe('sortie du modèle', () => {
       speaks: false,
       summary: '',
       points: [],
+      quotes: [],
     });
     expect(() => parseSummaryOutput('pas du JSON')).toThrow();
     expect(() => parseSummaryOutput('{"speaks":true,"summary":"","points":["a"]}')).toThrow();
     expect(() => parseSummaryOutput('{"speaks":true,"summary":"Il dit.","points":[]}')).toThrow();
+  });
+
+  test('citations : minutage converti, invalides et doublons écartés, bornées par la durée', () => {
+    const output = parseSummaryOutput(
+      JSON.stringify({
+        ...SPEAKS,
+        quotes: [
+          { text: 'L’État profond, c’est Bercy.', start: '12:34', theme: 'economy' },
+          { text: 'Au-delà d’une heure.', start: '1:02:03', theme: 'none' },
+          { text: 'Minutage illisible.', start: 'vers la fin', theme: 'none' },
+          { text: 'Après la fin de la vidéo.', start: '59:00', theme: 'none' },
+          { text: 'L’État profond, c’est Bercy.', start: '13:00', theme: 'economy' },
+          { text: '', start: '01:00', theme: 'none' },
+        ],
+      }),
+      3900,
+    );
+    expect(output.quotes).toEqual([
+      { text: 'L’État profond, c’est Bercy.', startS: 754, theme: 'economy' },
+      { text: 'Au-delà d’une heure.', startS: 3723, theme: null },
+      { text: 'Après la fin de la vidéo.', startS: 3540, theme: null },
+    ]);
+    expect(
+      parseSummaryOutput(
+        JSON.stringify({ ...SPEAKS, quotes: [{ text: 'x', start: '70:00', theme: 'none' }] }),
+        600,
+      ).quotes,
+    ).toEqual([]);
   });
 
   test('client : modèle épinglé, Google AI Studio, vidéo par URL, sortie structurée', async () => {
