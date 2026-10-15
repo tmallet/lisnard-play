@@ -76,7 +76,10 @@ interventions d'un thème : « Tout » puis les sept thèmes, dans l'ordre de la
 `intervention-themes`. Le filtre DOIT rester utilisable sur un écran de
 téléphone : sur une seule ligne qui défile horizontalement, ou sur plusieurs
 lignes. La section « En direct » DOIT se signaler visuellement par la couleur
-émeraude de la charte.
+émeraude de la charte. Au-dessus du filtre, un champ de recherche DOIT permettre de
+chercher dans les citations, titres et résumés (spec `intervention-quotes`) ; il
+DOIT tenir sur une ligne, pour ne pas repousser les interventions sous la ligne de
+flottaison d'un téléphone.
 
 #### Scenario: Direct en cours sur l'accueil
 - **WHEN** une intervention est en cours de diffusion
@@ -101,6 +104,10 @@ lignes. La section « En direct » DOIT se signaler visuellement par la couleur
 #### Scenario: Thème sans intervention
 - **WHEN** l'utilisateur choisit un thème qui ne compte aucune intervention
 - **THEN** la section « Passées » affiche un message indiquant qu'aucune intervention ne correspond à ce thème
+
+#### Scenario: Recherche depuis l'accueil
+- **WHEN** l'utilisateur saisit « Bercy » dans le champ de recherche de l'accueil et valide
+- **THEN** les résultats de la recherche s'affichent, citations d'abord
 
 ### Requirement: Écran de détail
 Un écran de détail DOIT afficher le titre, le média, la date, le type, les thèmes
