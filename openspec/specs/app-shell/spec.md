@@ -41,8 +41,12 @@ mention « Initiative indépendante de soutiens. Ce site ne dépend ni de Nouvel
 Énergie ni de David Lisnard. »
 
 #### Scenario: Mention sur le web
-- **WHEN** une page quelconque est affichée sur le web
-- **THEN** la mention d'indépendance est visible dans le pied de page
+- **WHEN** une page quelconque est affichée sur le web, à partir d'une largeur de tablette
+- **THEN** la mention d'indépendance est visible dans le pied de page, fixe en bas de l'écran
+
+#### Scenario: Mention sur le web, téléphone
+- **WHEN** une page quelconque est affichée sur le web à une largeur de téléphone
+- **THEN** la mention d'indépendance et le lien vers les mentions légales sont affichés en petit en tête du contenu, et le pied de page complet termine la page au lieu de rester fixe
 
 #### Scenario: Mention sur mobile
 - **WHEN** un écran quelconque est affiché sur iOS ou Android
@@ -112,8 +116,9 @@ présents.
 
 ### Requirement: Mentions légales et confidentialité
 L'application DOIT proposer une page « Mentions légales et confidentialité »,
-accessible sans interaction préalable depuis le pied de page de chaque écran et
-depuis l'écran « À propos », et sur le web à l'adresse `/mentions-legales`. Elle
+accessible sans interaction préalable depuis le pied de page de chaque écran (sur
+le web à une largeur de téléphone, depuis la mention en tête du contenu) et depuis
+l'écran « À propos », et sur le web à l'adresse `/mentions-legales`. Elle
 DOIT indiquer :
 - que l'éditeur, personne physique non professionnelle, reste anonyme et que
   ses coordonnées ont été communiquées à l'hébergeur ;
