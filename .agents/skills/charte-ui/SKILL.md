@@ -55,8 +55,9 @@ ni de nom de police en dur, jamais de valeur dérivée (opacité, teinte) hors
   `highlight` met **un seul** mot ou groupe de mots en chamois.
   `<Title highlight="David Lisnard">Toutes les interventions de David Lisnard</Title>`
 - `Footer` : mention d'indépendance. Sur le web, pied de page global fixe dès `md`
-  (`WebChrome.web.tsx`) ; sur téléphone, il termine le défilement et `IndependenceNote`
-  rappelle la mention en tête de contenu (`Screen.web.tsx`). Sur mobile, `Screen` l'ajoute en bas de chaque
+  (`WebChrome.web.tsx`) ; sur téléphone, pas de pied de page : `IndependenceNote`
+  affiche la mention et le lien légal en tête de contenu (`Screen.web.tsx`), sauf avec
+  `<Screen footer={false}>` pour un écran qui affiche déjà la mention. Sur mobile, `Screen` l'ajoute en bas de chaque
   écran.
 - `Screen` : conteneur de page. Sur mobile, il dessine dégradé, surtitre avec le
   nom et pied de page ; sur le web, défilement et largeur maximale `max-w-3xl`.

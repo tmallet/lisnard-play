@@ -46,7 +46,7 @@ mention « Initiative indépendante de soutiens. Ce site ne dépend ni de Nouvel
 
 #### Scenario: Mention sur le web, téléphone
 - **WHEN** une page quelconque est affichée sur le web à une largeur de téléphone
-- **THEN** la mention d'indépendance et le lien vers les mentions légales sont affichés en petit en tête du contenu, et le pied de page complet termine la page au lieu de rester fixe
+- **THEN** la mention d'indépendance et le lien vers les mentions légales sont affichés une seule fois, en petit en tête du contenu, sans pied de page fixe ; un écran qui affiche déjà la mention dans son contenu (« À propos », mentions légales) ne la répète pas
 
 #### Scenario: Mention sur mobile
 - **WHEN** un écran quelconque est affiché sur iOS ou Android
