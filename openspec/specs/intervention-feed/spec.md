@@ -105,7 +105,10 @@ lignes. La section « En direct » DOIT se signaler visuellement par la couleur
 ### Requirement: Écran de détail
 Un écran de détail DOIT afficher le titre, le média, la date, le type, les thèmes
 et la description d'une intervention, ainsi que son résumé sous le lecteur quand il
-existe (spec `intervention-summaries`). Pour un rendu `embed`, il affiche le
+existe (spec `intervention-summaries`). La description d'une vidéo YouTube NE DOIT
+être affichée que si la vidéo vient de la chaîne officielle de David Lisnard : celle
+d'une chaîne de média décrit l'émission entière (liens, autres invités, publicités).
+Pour un rendu `embed`, il affiche le
 lecteur intégré et un lien vers la source. Pour un rendu `link`, il affiche une
 carte qui ouvre la source dans le navigateur, chez l'éditeur quand l'URL de
 celui-ci est connue : la carte tient lieu de lien vers la source. Il DOIT
@@ -118,6 +121,14 @@ affiché. L'écran DOIT être accessible par une URL web partageable
 #### Scenario: Ouvrir une intervention vidéo
 - **WHEN** l'utilisateur ouvre une intervention dont le rendu est `embed`
 - **THEN** le lecteur intégré s'affiche, ainsi qu'un lien vers la source d'origine
+
+#### Scenario: Vidéo d'une chaîne de média
+- **WHEN** l'utilisateur ouvre une vidéo de BFMTV ou du Crayon
+- **THEN** la description YouTube de la vidéo n'est pas affichée
+
+#### Scenario: Vidéo de la chaîne officielle
+- **WHEN** l'utilisateur ouvre une vidéo de la chaîne de David Lisnard
+- **THEN** sa description YouTube est affichée
 
 #### Scenario: Article dont la description répète le titre
 - **WHEN** l'utilisateur ouvre un article dont la description et le titre Open Graph reprennent le titre suivi du nom du média
