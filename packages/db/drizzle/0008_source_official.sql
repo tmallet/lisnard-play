@@ -1,0 +1,1 @@
+ALTER TABLE "source" ADD COLUMN "official" boolean DEFAULT false NOT NULL;

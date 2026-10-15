@@ -38,7 +38,7 @@ Pages détaillées :
 ```
 lisnard-play/
 ├─ apps/app/              @lisnard/app : Expo Router (web, iOS, Android) + API routes
-│  ├─ src/app/            routes
+│  ├─ src/app/            routes (onglets : accueil, adhésions, à propos)
 │  │  ├─ _layout.tsx      racine : CSS, polices, ApiProvider, Stack, thème de navigation
 │  │  ├─ +html.tsx        document HTML web (lang, balises communes)
 │  │  ├─ (tabs)/          accueil (flux d'interventions) et à-propos
@@ -134,7 +134,9 @@ SDK 58. Sur mobile, le client appelle `${EXPO_PUBLIC_API_URL}/api/trpc`.
 - Procédures : `health`, `interventions.list` (statut, thème, curseur,
   `limit ≤ 50`), `interventions.byId` (`NOT_FOUND`), `notifications.config`,
   `notifications.subscribe` / `update` / `unsubscribe` (seules écritures de l'API,
-  dans `push_subscription`, ADR 0024). Les éléments exposent
+  dans `push_subscription`, ADR 0024), `membership.timeline` (adhérents de Nouvelle
+  Énergie lus sur le site du parti avec un cache de 90 s, et interventions posées sur la
+  courbe ; aucune copie en base, ADR 0026). Les éléments exposent
   `themes` ; le rôle n'est pas exposé, puisque tout contenu publié est
   `national` (ADR 0020).
 - Le client importe uniquement le type `AppRouter`. Garde-fou de typage :

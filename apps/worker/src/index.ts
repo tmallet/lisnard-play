@@ -52,7 +52,13 @@ while (!lock.acquired) {
 await runMigrations(db);
 await upsertSources(
   db,
-  SOURCES.map(({ id, kind, name, active }) => ({ id, kind, name, active })),
+  SOURCES.map((s) => ({
+    id: s.id,
+    kind: s.kind,
+    name: s.name,
+    active: s.active,
+    official: s.kind === 'youtube' && s.official === true,
+  })),
 );
 
 const ctx: SourceContext = {

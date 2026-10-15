@@ -130,6 +130,45 @@ function toSummary(row: SummaryRow, now: Date): InterventionSummary {
   };
 }
 
+/** Intervention posée sur le graphique des adhésions (spec membership-timeline). */
+export interface TimelineItem {
+  id: string;
+  /** Jour de l'intervention, heure de Paris (AAAA-MM-JJ). */
+  day: string;
+  title: string;
+  outlet: string;
+  thumbnailUrl: string | null;
+  /** Vidéo de la chaîne officielle de David Lisnard : miniature sur le graphique. */
+  official: boolean;
+  live: boolean;
+}
+
+/**
+ * Toutes les interventions publiées et visibles, dans l'ordre chronologique, réduites
+ * à ce que le graphique affiche (environ 220 lignes).
+ */
+export async function listTimelineItems(db: Db): Promise<TimelineItem[]> {
+  const rows = await db
+    .select({
+      id: item.id,
+      day: sql<string>`to_char(${sortDate} at time zone 'Europe/Paris', 'YYYY-MM-DD')`,
+      title: item.title,
+      outlet: summaryColumns.outlet,
+      thumbnailUrl: summaryColumns.thumbnailUrl,
+      official: source.official,
+      liveStatus: item.liveStatus,
+    })
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(and(eq(item.status, 'published'), sql`${item.media} is not null`))
+    .orderBy(sortDate, item.id);
+  return rows.map(({ liveStatus, ...row }) => ({
+    ...row,
+    // Un direct en cours ou terminé reste signalé comme direct sur le graphique.
+    live: liveStatus === 'live' || liveStatus === 'ended',
+  }));
+}
+
 /** Liste paginée par curseur des interventions publiées (spec intervention-feed). */
 export async function listPublished(
   db: Db,

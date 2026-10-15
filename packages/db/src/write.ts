@@ -25,6 +25,7 @@ export interface SourceRecord {
   kind: 'youtube' | 'rss';
   name: string;
   active: boolean;
+  official?: boolean;
 }
 
 /** Recopie les sources de la configuration du worker (idempotent). */
@@ -32,10 +33,15 @@ export async function upsertSources(db: Db, sources: SourceRecord[]): Promise<vo
   if (sources.length === 0) return;
   await db
     .insert(source)
-    .values(sources)
+    .values(sources.map((s) => ({ ...s, official: s.official ?? false })))
     .onConflictDoUpdate({
       target: source.id,
-      set: { kind: sql`excluded.kind`, name: sql`excluded.name`, active: sql`excluded.active` },
+      set: {
+        kind: sql`excluded.kind`,
+        name: sql`excluded.name`,
+        active: sql`excluded.active`,
+        official: sql`excluded.official`,
+      },
     });
 }
 

@@ -36,12 +36,14 @@ y figurer, posées sur la courbe au jour où elles ont eu lieu :
   miniature ;
 - toute autre intervention, par un point ;
 - un direct, par un liseré distinct ;
-- plusieurs interventions du même jour, empilées sans se recouvrir.
+- plusieurs interventions du même jour, empilées sans se recouvrir ; au-delà de cinq,
+  un repère « +N » regroupe les autres, en gardant visibles les vidéos officielles.
 
 Toucher ou survoler un repère DOIT afficher le titre, le média, la date et le total
 d'adhérents de ce jour, avec un lien vers la page de l'intervention. Le graphique DOIT
-garder une échelle lisible (environ 10 px par jour) et défiler horizontalement, en
-s'ouvrant sur les jours les plus récents.
+garder une échelle lisible (au moins la taille d'un rond par jour) et défiler
+horizontalement, en s'ouvrant sur les jours les plus récents. Toucher un repère « +N »
+DOIT afficher la liste des interventions qu'il regroupe, avec un lien vers chacune.
 
 #### Scenario: Vidéo officielle
 - **WHEN** une vidéo de la chaîne officielle a été publiée le 8 octobre
@@ -50,6 +52,10 @@ s'ouvrant sur les jours les plus récents.
 #### Scenario: Journée chargée
 - **WHEN** cinq interventions ont eu lieu le même jour
 - **THEN** cinq repères distincts sont empilés au-dessus du point de ce jour
+
+#### Scenario: Journée très chargée
+- **WHEN** dix-huit interventions ont eu lieu le même jour
+- **THEN** quatre repères et un repère « +14 » sont empilés, et le « +14 » liste les quatorze autres
 
 #### Scenario: Ouverture d'une intervention
 - **WHEN** l'utilisateur touche un repère puis le lien de la carte

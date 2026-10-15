@@ -70,15 +70,18 @@ chaîne officielle, avec au plus 5 vidéos officielles et 18 interventions par j
 
 - **Jours** : l'historique est coupé au jour de la plus ancienne intervention. Le jour
   en cours est ajouté avec le total en direct s'il manque dans l'historique.
-- **Fuseau horaire** : celui du « jour » de la source est à vérifier pendant
-  l'implémentation. Si c'est UTC, on le documente et on rattache l'intervention au jour
-  UTC, pour que les deux séries restent cohérentes.
+- **Fuseau horaire** : la source ne le précise pas. Son historique est recalculé vers
+  3 h UTC (5 h à Paris), ce qui correspond à la clôture d'une journée française. On
+  retient donc le jour de Paris pour les deux séries (`listTimelineItems`, `parisDay`).
+  Un décalage éventuel ne déplacerait un repère que d'un jour.
 
 ### D4 — Graphique (apps/app)
 
 - **Dépendance** : `react-native-svg`, ajoutée par `bunx expo install`. Elle dessine
   la courbe, l'aire, la grille et les étiquettes de mois, sur le web comme sur mobile.
-- **Échelle** : 10 px par jour. La largeur est `max(largeur visible, jours × 10)`.
+- **Échelle** : 24 px par jour, ajustée pendant l'implémentation : à 10 px, les ronds
+  de 22 px se chevauchaient d'un jour à l'autre. La largeur est
+  `max(largeur visible, jours × 24)`.
   Une `ScrollView` horizontale, ouverte en fin de période (`scrollToEnd` après la mise
   en page), sert de conteneur.
 - **Hauteur et axe vertical** : environ 280 px de hauteur. L'axe vertical part d'un
@@ -86,16 +89,19 @@ chaîne officielle, avec au plus 5 vidéos officielles et 18 interventions par j
   étiquettes (par exemple « 40 k ») sont fixées à gauche, hors du défilement.
 - **Repères** : des vues positionnées par-dessus le SVG, plus simples à toucher et à
   styliser que du SVG.
-  - Vidéo officielle : rond de 24 px avec la miniature YouTube en petite taille
+  - Vidéo officielle : rond de 22 px avec la miniature YouTube en petite taille
     (`default.jpg`, environ 4 Ko) et un liseré chamois.
   - Autre intervention : point chamois de 8 px.
   - Direct : liseré émeraude.
   - Même jour : empilement vertical au-dessus du point de la courbe, au pas de la
-    taille du repère, le plus récent en haut. Le calcul se fait dans une fonction pure
-    `layoutMarkers`, testée à part.
+    taille du repère, le plus récent en haut. Au-delà de 5 repères, les vidéos
+    officielles restent visibles en priorité ; le reste forme un repère « +N », qui
+    affiche la liste du jour (une journée a compté 18 interventions). Le calcul se
+    fait dans une fonction pure, `layoutTimeline`, testée à part.
 - **Carte** : sous le graphique, avec la miniature, le titre, le média, la date, le
-  total ce jour-là et un lien « Voir l'intervention ». Elle se met à jour au toucher,
-  et au survol sur le web. Par défaut, elle montre l'intervention la plus récente.
+  total ce jour-là et un lien « Voir l'intervention » (pour « +N », la liste des
+  interventions du jour). Elle se met à jour au toucher, et au survol sur le web. Avant
+  toute sélection, une indication invite à toucher un repère.
 - **En-tête de page** : total en grand, « mis à jour à … », « Source : Nouvelle
   Énergie ».
   - Si les données datent d'une valeur de repli : « données du … (source

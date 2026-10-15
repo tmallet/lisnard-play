@@ -33,6 +33,10 @@ Le client n'importe que le **type** `AppRouter`.
   (`isPushServiceUrl`) est refusée : le worker ne doit jamais appeler d'autre hôte.
   Un nouvel abonnement est limité par adresse IP (`allowNewSubscription`, adresse lue
   par `clientIp` dans `X-Forwarded-For`) ; une confirmation ne l'est jamais.
+- **Données d'adhésion** (`src/membership/source.ts`, ADR 0026) : seule lecture HTTP
+  sortante de l'API, vers une adresse fixe, validée par zod, avec un cache de 90 s
+  et un repli sur la dernière valeur valide. Les tests injectent une source factice
+  (`ctx.membership`).
 - Pas de secret dans ce package tant qu'il est servi par l'app. Les secrets
   d'ingestion restent dans le worker (ADR 0011).
 
