@@ -183,8 +183,10 @@ dépense sur la clé OpenRouter.
     - vérifier : plus d'en-tête `X-Robots-Tag`, `robots.txt` contient
       `Sitemap: https://play.projetlisnard.fr/sitemap.xml`, et `/sitemap.xml` liste les
       interventions en adresses `https://play.projetlisnard.fr/…` ;
-    - Google Search Console : propriété `play.projetlisnard.fr` (validation par un
-      enregistrement DNS TXT), puis **Sitemaps** → `sitemap.xml`.
+    - Google Search Console : propriété « Préfixe d'URL » `https://play.projetlisnard.fr/`,
+      validée par le fichier `apps/app/public/google2fcb3d6622939462.html` (ne jamais le
+      retirer : Google revérifie, et la propriété serait perdue), puis **Sitemaps** →
+      `sitemap.xml`.
 
 Sur une base neuve, ni `recompute` ni `media --refresh` ne sont nécessaires :
 chaque contenu est traité directement avec les règles en vigueur.
