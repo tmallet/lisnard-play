@@ -391,7 +391,6 @@ export async function listSummaryTargets(
     .limit(limit);
 }
 
-/** Enregistre un résumé (ou son absence motivée) et remet le compteur d'échecs à zéro. */
 export interface QuoteInput {
   text: string;
   startS: number;
@@ -399,7 +398,8 @@ export interface QuoteInput {
 }
 
 /**
- * Enregistre le résumé et remplace les citations de l'intervention, dans une même
+ * Enregistre un résumé (ou son absence motivée) et remet le compteur d'échecs à zéro.
+ * Remplace aussi les citations de l'intervention, dans une même
  * transaction (spec intervention-quotes) : un résumé sans citation les efface.
  */
 export async function recordSummary(

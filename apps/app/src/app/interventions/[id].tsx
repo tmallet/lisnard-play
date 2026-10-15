@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { TRPCClientError } from '@trpc/client';
 import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
-import { Linking, Platform, Pressable, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Linking, Platform, Pressable, type ScrollView, Text, View } from 'react-native';
 
 import { JoinCta } from '@/components/JoinCta';
 import { LinkCard } from '@/components/LinkCard';
@@ -28,11 +28,14 @@ export default function InterventionDetail() {
   const startS = t !== undefined && /^\d+$/.test(t) ? Number(t) : undefined;
   // Écouter une citation : le lecteur se lance au moment voulu (spec intervention-quotes).
   const [playRequest, setPlayRequest] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
   const play = (seconds: number) => {
     router.setParams({ t: String(seconds) });
     setPlayRequest((n) => n + 1);
     if (Platform.OS === 'web')
       document.getElementById('lecteur')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    // Mobile : le lecteur est en haut de l'écran, sous le titre.
+    else scrollRef.current?.scrollTo({ y: 0, animated: true });
   };
   const trpc = useTRPC();
   const { data, error, isPending, refetch } = useQuery(
@@ -57,7 +60,7 @@ export default function InterventionDetail() {
           headerTitleStyle: { fontFamily: fontFamily.semibold },
         }}
       />
-      <Screen>
+      <Screen scrollRef={scrollRef}>
         <PageHead title={data?.title ?? 'Intervention'} description={description ?? undefined} />
         {isPending ? (
           <Text className="font-sans text-base text-blanc/70">Chargement…</Text>

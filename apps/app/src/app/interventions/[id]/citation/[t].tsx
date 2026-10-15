@@ -21,10 +21,11 @@ import { fontFamily } from '@/theme/fonts';
  */
 export default function QuotePage() {
   const { id, t } = useLocalSearchParams<{ id: string; t: string }>();
-  const startS = /^\d+$/.test(String(t)) ? Number(t) : 0;
+  const valid = /^\d+$/.test(String(t));
+  const startS = valid ? Number(t) : 0;
   const trpc = useTRPC();
   const quote = useQuery(
-    trpc.quotes.at.queryOptions({ id: String(id), t: startS }, { retry: false }),
+    trpc.quotes.at.queryOptions({ id: String(id), t: startS }, { retry: false, enabled: valid }),
   );
   const detail = useQuery(
     trpc.interventions.byId.queryOptions({ id: String(id) }, { retry: false }),
@@ -32,6 +33,8 @@ export default function QuotePage() {
   const [playRequest, setPlayRequest] = useState(0);
   const [copied, setCopied] = useState(false);
 
+  // Minutage illisible : l'intervention, sans deviner de passage.
+  if (!valid) return <Redirect href={`/interventions/${String(id)}`} />;
   if (quote.isSuccess && quote.data === null)
     return <Redirect href={`/interventions/${String(id)}?t=${startS}`} />;
 

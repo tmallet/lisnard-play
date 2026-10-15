@@ -245,7 +245,7 @@ export async function search(
   const itemVector = sql`to_tsvector('french', lp_normalize(${item.title} || ' ' || coalesce(${item.summary}->>'text', '')))`;
   const [quotes, items] = await Promise.all([
     db
-      .select(quoteHitColumns)
+      .select({ ...quoteHitColumns, search: quote.search })
       .from(quote)
       .innerJoin(item, eq(quote.itemId, item.id))
       .innerJoin(source, eq(item.sourceId, source.id))
@@ -264,11 +264,12 @@ export async function search(
   const now = new Date();
   // Une même émission publiée deux fois donne la même phrase : on garde la mieux classée.
   const seen = new Set<string>();
-  const unique = quotes.filter((hit) => {
-    const key = hit.text.toLowerCase().replace(/\W+/gu, ' ').trim();
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
+  const unique = quotes.flatMap(({ search: key, ...hit }) => {
+    // Texte déjà normalisé par lp_normalize ; la ponctuation est ignorée.
+    const words = key.replace(/[^\p{L}\p{N}]+/gu, ' ').trim();
+    if (seen.has(words)) return [];
+    seen.add(words);
+    return [hit];
   });
   return {
     quotes: unique.slice(0, limit),
@@ -379,31 +380,37 @@ export async function getPublishedById(
   now = new Date(),
 ): Promise<InterventionDetail | null> {
   if (!UUID.test(id)) return null;
-  const [row] = await db
-    .select({
-      ...summaryColumns,
-      description: item.description,
-      sourceKind: source.kind,
-      official: source.official,
-      url: item.url,
-      media: item.media,
-      summary: item.summary,
-    })
-    .from(item)
-    .innerJoin(source, eq(item.sourceId, source.id))
-    .where(and(eq(item.id, id), sql`${item.status} = 'published'`, sql`${item.media} is not null`))
-    .limit(1);
+  const [[row], quotes] = await Promise.all([
+    db
+      .select({
+        ...summaryColumns,
+        description: item.description,
+        sourceKind: source.kind,
+        official: source.official,
+        url: item.url,
+        media: item.media,
+        summary: item.summary,
+      })
+      .from(item)
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(
+        and(eq(item.id, id), sql`${item.status} = 'published'`, sql`${item.media} is not null`),
+      )
+      .limit(1),
+    // En parallèle : ignorées si l'intervention n'est pas visible.
+    db
+      .select({ text: quote.text, startS: quote.startS, theme: quote.theme })
+      .from(quote)
+      .where(eq(quote.itemId, id))
+      .orderBy(quote.startS),
+  ]);
   if (!row) return null;
   return {
     ...toSummary(row as SummaryRow, now),
     // Description d'une vidéo YouTube : seulement pour la chaîne officielle. Celle d'une
     // chaîne de média parle de toute l'émission (liens, autres invités), pas de lui.
     description: row.sourceKind === 'youtube' && !row.official ? '' : row.description,
-    quotes: await db
-      .select({ text: quote.text, startS: quote.startS, theme: quote.theme })
-      .from(quote)
-      .where(eq(quote.itemId, id))
-      .orderBy(quote.startS),
+    quotes,
     url: row.url,
     media: row.media as MediaRender,
     summary: toPublicSummary(row.summary),

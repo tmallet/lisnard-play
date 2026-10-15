@@ -2,6 +2,8 @@
  * Client des résumés : Gemini via OpenRouter (ADR 0021). La vidéo YouTube est passée
  * par URL (contenu video_url) ; la réponse est une sortie structurée validée ici.
  */
+import { isTheme } from '@lisnard/db/schema';
+
 import {
   SUMMARY_MODEL,
   SUMMARY_SCHEMA,
@@ -44,7 +46,10 @@ export interface SummaryOutput {
 /** « 12:34 » ou « 1:02:03 » en secondes ; null si le format est inattendu. */
 export function parseTimestamp(value: string): number | null {
   const parts = value.trim().split(':');
-  if (parts.length < 2 || parts.length > 3 || parts.some((p) => !/^\d{1,2}$/.test(p))) return null;
+  if (parts.length < 2 || parts.length > 3) return null;
+  // Minutes sur trois chiffres en MM:SS (« 105:20 ») : vidéos de plus de 99 minutes.
+  const lead = parts.length === 2 ? /^\d{1,3}$/ : /^\d{1,2}$/;
+  if (!lead.test(parts[0] ?? '') || parts.slice(1).some((p) => !/^\d{2}$/.test(p))) return null;
   const [s = 0, m = 0, h = 0] = parts.map(Number).reverse();
   if (s >= 60 || (parts.length === 3 && m >= 60)) return null;
   return h * 3600 + m * 60 + s;
@@ -67,7 +72,7 @@ function parseQuotes(raw: unknown, durationS: number | null): QuoteOutput[] {
     if (text.split(/\s+/).length > MAX_QUOTE_WORDS) continue;
     if (durationS !== null && startS > durationS) continue;
     if (quotes.some((o) => o.text === text || o.startS === startS)) continue;
-    const theme = typeof q.theme === 'string' && q.theme !== 'none' ? q.theme : null;
+    const theme = typeof q.theme === 'string' && isTheme(q.theme) ? q.theme : null;
     quotes.push({ text, startS, theme });
   }
   return quotes.slice(0, 8);

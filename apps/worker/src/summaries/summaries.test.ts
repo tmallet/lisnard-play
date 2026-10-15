@@ -16,6 +16,7 @@ import {
   createOpenRouterSummarizer,
   InvalidSummaryResponse,
   parseSummaryOutput,
+  parseTimestamp,
   type Summarizer,
   type SummaryOutput,
   SummaryServiceUnavailable,
@@ -75,6 +76,7 @@ describe('sortie du modèle', () => {
           { text: 'Après la fin de la vidéo.', start: '59:00', theme: 'none' },
           { text: 'L’État profond, c’est Bercy.', start: '13:00', theme: 'economy' },
           { text: '', start: '01:00', theme: 'none' },
+          { text: 'Thème inconnu.', start: '20:00', theme: 'Economy' },
         ],
       }),
       3900,
@@ -83,7 +85,10 @@ describe('sortie du modèle', () => {
       { text: 'L’État profond, c’est Bercy.', startS: 754, theme: 'economy' },
       { text: 'Au-delà d’une heure.', startS: 3723, theme: null },
       { text: 'Après la fin de la vidéo.', startS: 3540, theme: null },
+      { text: 'Thème inconnu.', startS: 1200, theme: null },
     ]);
+    expect(parseTimestamp('105:20')).toBe(6320);
+    expect(parseTimestamp('1:5:00')).toBeNull();
     expect(
       parseSummaryOutput(
         JSON.stringify({ ...SPEAKS, quotes: [{ text: 'x', start: '70:00', theme: 'none' }] }),

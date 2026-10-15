@@ -35,8 +35,8 @@ export function PlayerConsent({
   }, [playRequest]);
   if (accepted) {
     const url = playerUrl(embedUrl, startS);
-    // Clé = URL : un nouveau moment de départ recharge le lecteur.
-    return <MediaEmbed key={url} embedUrl={url} title={title} />;
+    // Nouveau moment de départ ou nouvelle demande d'écoute : le lecteur repart du passage.
+    return <MediaEmbed key={`${url}#${playRequest}`} embedUrl={url} title={title} />;
   }
   const name = providerLabel(provider);
   return (
