@@ -72,3 +72,45 @@ test('détail : description YouTube seulement pour la chaîne officielle', async
     'Abonnez-vous, retrouvez nos autres invités…',
   );
 });
+
+test('lieux : seuls les déplacements situés en France figurent sur la carte', async () => {
+  const { listPlaces } = await import('./read');
+  const { listPlaceTargets, recordPlace } = await import('./write');
+  const base = { model: 'm', promptVersion: 1, generatedAt: '2026-10-15T00:00:00Z', cost: 0 };
+  const targets = await listPlaceTargets(db, 1, 50);
+  expect(targets.length).toBeGreaterThan(0);
+  const [a, b, c] = targets;
+  if (!a || !b || !c) throw new Error('données de test insuffisantes');
+  await recordPlace(db, a.id, {
+    ...base,
+    onSite: true,
+    label: 'Saint-Raphaël (Var)',
+    city: 'Saint-Raphaël',
+    lat: 43.42,
+    lon: 6.77,
+    approximate: false,
+  });
+  await recordPlace(db, b.id, {
+    ...base,
+    onSite: false,
+    label: null,
+    city: null,
+    lat: null,
+    lon: null,
+    approximate: false,
+  });
+  await recordPlace(db, c.id, {
+    ...base,
+    onSite: true,
+    label: 'Bruxelles',
+    city: null,
+    lat: null,
+    lon: null,
+    approximate: false,
+  });
+  const places = await listPlaces(db);
+  expect(places.map((p) => p.city)).toEqual(['Saint-Raphaël']);
+  // Déjà traités pour la version 1 : plus ciblés ; une nouvelle consigne les reprend.
+  expect((await listPlaceTargets(db, 1, 50)).map((t) => t.id)).not.toContain(a.id);
+  expect((await listPlaceTargets(db, 2, 50)).map((t) => t.id)).toContain(a.id);
+});

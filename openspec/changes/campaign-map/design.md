@@ -41,8 +41,8 @@ Bayeux, Cannes), et une majorité de plateaux et d'extraits sans lieu pertinent.
 
 - **Consigne** (`prompt.ts`, `PLACE_PROMPT_VERSION`) : à partir du titre, du média
   et de la description, en français, répondre en JSON selon un `json_schema`.
-  - Champs : `on_site`, `place` (texte), `precision` (`city`, `department`, `region`,
-    `country`, `none`).
+  - Champs : `on_site`, `city` (commune, ou ville principale de la zone),
+    `department`, `precision` (`city`, `department`, `region`, `country`, `none`).
   - Consignes explicites :
     - le lieu de l'intervention, pas le sujet ;
     - les plateaux et studios donnent `on_site: false` ;
@@ -63,9 +63,13 @@ Bayeux, Cannes), et une majorité de plateaux et d'extraits sans lieu pertinent.
 - **Commune** : `https://api-adresse.data.gouv.fr/search/?q=<lieu>&type=municipality&limit=1`.
   Le résultat est retenu si son score dépasse 0,6. On garde le nom de la commune, le
   département et les coordonnées.
-- **Région ou département** : une table intégrée au worker donne leurs centres
-  (13 régions de métropole, 5 d'outre-mer, et les départements). Le résultat est
-  marqué `approximate: true`.
+- **Région ou département** : le modèle donne la ville principale de la zone
+  (« en Alsace » → Strasbourg), géolocalisée comme une commune et marquée
+  `approximate: true`. Les anciennes régions sont ainsi couvertes sans table de
+  centres à maintenir.
+- **Requête** : la commune seule, avec `limit=5`. Ajouter le département à la
+  requête fait chuter le score. Le département sert ensuite à départager les
+  homonymes, grâce au champ `context` de la réponse.
 - **Pays étranger, ou rien de trouvé** : lieu gardé sans coordonnées.
 - **Sécurité** : appel par le `fetch` du worker, vers une adresse fixe. Le lieu
   extrait n'est qu'un paramètre de requête, jamais une URL : pas de risque de SSRF
@@ -88,11 +92,12 @@ Bayeux, Cannes), et une majorité de plateaux et d'extraits sans lieu pertinent.
 
 ### D5 — Carte (app)
 
-- **Fond** : `src/assets/france-regions.json`, avec les contours des régions
+- **Fond** : `assets/france-map.json`, avec les contours des régions
   simplifiés (Admin Express, IGN, licence ouverte 2.0, environ 40 Ko).
   - Il est précalculé en chemins SVG et projeté par un script
     (`scripts/build-france-map.ts`), pour ne rien projeter à l'exécution.
-  - Projection Lambert-93 pour la métropole.
+  - Projection équirectangulaire corrigée de la latitude moyenne, suffisante à
+    l'échelle de la France et reproductible sans dépendance.
   - Encarts : Guadeloupe, Martinique, Guyane, La Réunion, Mayotte.
 - **Repères** :
   - cercle chamois, rayon de 5 à 14 px selon la racine du nombre d'interventions ;

@@ -13,6 +13,7 @@ import {
   type MediaRender,
   type NotificationKind,
   notificationSent,
+  type PlaceRecord,
   pushSubscription,
   type SummaryRecord,
   source,
@@ -625,4 +626,35 @@ export async function setDuplicateOf(db: Db, id: string, canonicalId: string | n
     .update(item)
     .set({ duplicateOf: canonicalId, updatedAt: sql`now()` })
     .where(eq(item.id, id));
+}
+
+// --- Lieux des déplacements (spec intervention-places, ADR 0027) ---
+
+/** Interventions visibles dont le lieu reste à déterminer pour cette version de consigne. */
+export async function listPlaceTargets(db: Db, promptVersion: number, limit: number) {
+  return db
+    .select({
+      id: item.id,
+      title: item.title,
+      description: item.description,
+      outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+      sourceKind: source.kind,
+      kind: item.kind,
+    })
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(
+      and(
+        eq(item.status, 'published'),
+        sql`${item.media} is not null`,
+        sql`${item.duplicateOf} is null`,
+        sql`(${item.place} is null or (${item.place}->>'promptVersion')::int <> ${promptVersion})`,
+      ),
+    )
+    .orderBy(desc(item.firstSeenAt))
+    .limit(limit);
+}
+
+export async function recordPlace(db: Db, itemId: string, place: PlaceRecord): Promise<void> {
+  await db.update(item).set({ place, updatedAt: sql`now()` }).where(eq(item.id, itemId));
 }

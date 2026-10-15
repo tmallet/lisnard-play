@@ -46,7 +46,7 @@ ils écraseraient la carte sans rien raconter.
 - **API** : procédure `campaign.places`.
 - **App** : route `(tabs)/campagne` avec ses deux vues, redirection de
   `/adhesions`, composant `CampaignMap` (`react-native-svg`), contours des régions
-  dans `src/assets/`.
+  dans `assets/france-map.json`.
 - **Pare-feu** : `api-adresse.data.gouv.fr`.
 - ADR concernés : 0001 (charte), 0017 (frontière d'écriture, lectures externes),
   0020 (périmètre), 0021 (résumés, budget), 0022 (confidentialité), 0026.

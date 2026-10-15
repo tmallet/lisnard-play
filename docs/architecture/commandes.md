@@ -35,6 +35,7 @@ devcontainer, qui fournit Postgres : voir [devcontainer.md](devcontainer.md).
 | `bun run format` | Formate tout le dépôt (Biome) |
 | `bun run smoke:web` | Export de production, serveur Bun et base jetable, puis vérifications HTTP sans JavaScript |
 | `bunx web-push generate-vapid-keys` | Génère la paire de clés des notifications web (une fois par environnement, ADR 0024) |
+| `bun scripts/build-france-map.ts <régions métropole> <régions avec outre-mer>` | Régénère le fond de carte `apps/app/assets/france-map.json` à partir des GeoJSON de france-geojson (IGN, Licence Ouverte) |
 | `bun run docs:check` | Cohérence des ADR, de l'index, des liens, des skills, des versions d'outils et des Dockerfiles |
 
 Options du smoke test : `SMOKE_PORT` (8091 par défaut), `SKIP_EXPORT=1` pour

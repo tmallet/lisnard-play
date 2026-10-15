@@ -23,6 +23,8 @@ import { markPressDuplicates, RECENT_MS } from './dedupe';
 import { log } from './log';
 import { repairMediaEntities, resolvePendingMedia } from './media/task';
 import { notifyPending } from './notifications/task';
+import { createOpenRouterLocator } from './places/locate';
+import { locatePending } from './places/task';
 import { classifyPending } from './publish';
 import { Scheduler, type Task, tryAcquireLeaderLock } from './scheduler';
 import type { SourceContext } from './sources/types';
@@ -78,6 +80,7 @@ const ctx: SourceContext = {
 
 const classifier = createSystemOneClassifier({ apiKey: requireEnv('OPENROUTER_API_KEY') });
 const summarizer = createOpenRouterSummarizer({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+const locator = createOpenRouterLocator({ apiKey: requireEnv('OPENROUTER_API_KEY') });
 
 const tasks: Task[] = [
   {
@@ -145,6 +148,20 @@ const tasks: Task[] = [
     name: 'notify:purge',
     everyMs: CADENCE_MS.purgeSubscriptions,
     run: async () => ({ purged: await purgeStaleSubscriptions(db) }),
+  },
+  {
+    // Lieu des déplacements : plafond de dépense partagé avec les résumés (ADR 0027).
+    name: 'places',
+    everyMs: CADENCE_MS.places,
+    run: () => locatePending(db, locator, { dailyBudget: SUMMARY_DAILY_BUDGET_USD }),
+    quiet: (r) => {
+      const { located, failed, budgetReached } = r as {
+        located: number;
+        failed: number;
+        budgetReached: boolean;
+      };
+      return located === 0 && failed === 0 && !budgetReached;
+    },
   },
   {
     name: 'summarize',

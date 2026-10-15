@@ -12,6 +12,7 @@ import { resolve } from 'node:path';
 import { createTestDb } from '../packages/db/src/testing';
 import {
   recordClassification,
+  recordPlace,
   recordSummary,
   setMedia,
   upsertItem,
@@ -125,6 +126,19 @@ const membershipFixture = Bun.serve({
     new URL(req.url).pathname.endsWith('/historique.json')
       ? Response.json({ jours: [{ jour: '2026-06-01', adherents: 20000 }] })
       : Response.json({ adherents: 20500, mis_a_jour: '2026-06-02T08:00:00.000Z' }),
+});
+
+await recordPlace(db, id, {
+  onSite: true,
+  label: 'Saint-Raphaël, Var',
+  city: 'Saint-Raphaël',
+  lat: 43.4427,
+  lon: 6.7685,
+  approximate: false,
+  model: 'smoke',
+  promptVersion: 0,
+  generatedAt: new Date().toISOString(),
+  cost: 0,
 });
 
 const server = Bun.spawn(['bun', 'server.ts'], {
@@ -282,10 +296,26 @@ try {
       ).status === 200,
   );
 
-  // Adhésions (spec membership-timeline).
-  const membershipPage = await fetch(`${BASE}/adhesions`);
-  check('/adhesions : HTTP 200', membershipPage.status === 200);
-  checkPage('/adhesions', await membershipPage.text(), pageTitle('Adhésions'), INDEPENDENCE_NOTICE);
+  // Onglet Campagne (specs membership-timeline, intervention-places).
+  const campaignPage = await fetch(`${BASE}/campagne`);
+  check('/campagne : HTTP 200', campaignPage.status === 200);
+  checkPage('/campagne', await campaignPage.text(), pageTitle('Campagne'), INDEPENDENCE_NOTICE);
+  check(
+    '/campagne?vue=deplacements : HTTP 200',
+    (await fetch(`${BASE}/campagne?vue=deplacements`)).status === 200,
+  );
+  check(
+    '/adhesions (ancienne adresse) : servie, redirige côté client',
+    (await fetch(`${BASE}/adhesions`)).status === 200,
+  );
+  const places = (await (await fetch(`${BASE}/api/trpc/campaign.places`)).json()) as {
+    result?: { data?: { places?: { label: string; interventions: { id: string }[] }[] } };
+  };
+  check(
+    'campaign.places : lieu regroupé avec son intervention',
+    places.result?.data?.places?.[0]?.label === 'Saint-Raphaël' &&
+      places.result.data.places[0].interventions[0]?.id === id,
+  );
   const timeline = (await (await fetch(`${BASE}/api/trpc/membership.timeline`)).json()) as {
     result?: {
       data?: { total?: { members?: number }; interventions?: { id: string }[]; days?: unknown[] };
