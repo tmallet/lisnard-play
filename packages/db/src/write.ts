@@ -464,7 +464,57 @@ export interface NotificationEvent {
   kind: NotificationKind;
   title: string;
   outlet: string;
+  /** Chaîne officielle de David Lisnard. */
+  official: boolean;
+  sourceKind: 'youtube' | 'rss';
+  /** Type d'intervention (`presse`, `tv`…), pour « dans » ou « sur » le média. */
+  interventionKind: string | null;
+  startsAt: Date | null;
+  durationS: number | null;
+  thumbnailUrl: string | null;
+  /** Texte du résumé, s'il existe (spec intervention-summaries). */
+  summaryText: string | null;
 }
+
+/** Colonnes d'un événement à notifier (contenu du message, design D1). */
+const eventColumns = (kind: NotificationKind) => ({
+  itemId: item.id,
+  kind: sql<NotificationKind>`${kind}::notification_kind`,
+  title: item.title,
+  outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+  official: source.official,
+  sourceKind: source.kind,
+  interventionKind: item.kind,
+  startsAt: item.startsAt,
+  durationS: item.durationS,
+  thumbnailUrl: sql<string | null>`coalesce(${item.thumbnailUrl}, ${item.media}->'og'->>'image')`,
+  summaryText: sql<
+    string | null
+  >`case when ${item.summary}->>'kind' = 'ok' then ${item.summary}->>'text' end`,
+});
+
+/**
+ * Dernière intervention visible, mise en forme comme une nouvelle intervention : sert à
+ * la notification de test, pour vérifier le rendu réel sur un appareil.
+ */
+export async function latestNotificationSample(db: Db): Promise<NotificationEvent | null> {
+  const [row] = await db
+    .select(eventColumns('new_item'))
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(
+      and(
+        eq(item.status, 'published'),
+        sql`${item.media} is not null and ${item.duplicateOf} is null`,
+      ),
+    )
+    .orderBy(desc(item.firstSeenAt))
+    .limit(1);
+  return row ?? null;
+}
+
+/** Délai maximal d'attente du résumé avant de notifier une nouvelle vidéo. */
+const SUMMARY_WAIT = sql`interval '10 minutes'`;
 
 /**
  * Événements à notifier qui ne l'ont pas encore été (design D5) : passage en direct,
@@ -476,12 +526,7 @@ export async function listNotificationEvents(db: Db): Promise<NotificationEvent[
     sql`not exists (select 1 from ${notificationSent} n where n.item_id = ${item.id} and n.kind = ${kind})`;
   const event = (kind: NotificationKind, where: SQL) =>
     db
-      .select({
-        itemId: item.id,
-        kind: sql<NotificationKind>`${kind}::notification_kind`,
-        title: item.title,
-        outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
-      })
+      .select(eventColumns(kind))
       .from(item)
       .innerJoin(source, eq(item.sourceId, source.id))
       .where(and(eq(item.status, 'published'), where, notSent(kind)));
@@ -511,6 +556,9 @@ export async function listNotificationEvents(db: Db): Promise<NotificationEvent[
         inArray(item.liveStatus, ['none', 'ended']),
         sql`${item.firstSeenAt} > now() - ${NOTIFY_WINDOW}`,
         sql`not exists (select 1 from ${notificationSent} n where n.item_id = ${item.id} and n.kind in ('live', 'reminder'))`,
+        // Une vidéo attend son résumé (ou son absence constatée), 10 minutes au plus ;
+        // un article de presse n'a pas de résumé (ADR 0021) et part aussitôt.
+        sql`(${source.kind} <> 'youtube' or ${item.summary} is not null or ${item.firstSeenAt} <= now() - ${SUMMARY_WAIT})`,
       ) as SQL,
     ),
   ]);

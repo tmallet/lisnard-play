@@ -21,6 +21,7 @@ self.addEventListener('push', (event) => {
       renotify: Boolean(data.tag),
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
+      image: data.image,
       lang: 'fr',
       data: { url: data.url || '/' },
     }),

@@ -102,7 +102,7 @@ lisnard-play/
 | `collect:youtube` | 3 min | flux RSS des chaînes, enrichissement `videos.list`, revérification des directs |
 | `recheck:soon` | 30 s | directs programmés dans le quart d'heure : statut revérifié (aucun appel sinon) |
 | `collect:rss` | 15 min | Google News |
-| `notify` | 30 s (et après la voie rapide WebSub) | notifications : début de direct, rappel à 15 min, nouvelle intervention (ADR 0024) |
+| `notify` | 30 s (et après la voie rapide WebSub) | notifications : début de direct, rappel à 15 min, nouvelle intervention, une vidéo attendant son résumé 10 min au plus ; titre court avec emoji, titre de l'intervention et première phrase du résumé dans le texte (ADR 0024) |
 | `places` | 5 min | lieu des déplacements : modèle sur titre et description, puis Base adresse nationale ; plafond partagé avec les résumés (ADR 0027) |
 | `notify:purge` | 24 h | abonnements sans confirmation depuis 13 mois |
 | `classify` | 30 s | contenus en attente ou modifiés → Jev → décision journalisée |
