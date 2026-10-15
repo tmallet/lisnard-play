@@ -41,8 +41,12 @@ mention « Initiative indépendante de soutiens. Ce site ne dépend ni de Nouvel
 Énergie ni de David Lisnard. »
 
 #### Scenario: Mention sur le web
-- **WHEN** une page quelconque est affichée sur le web
-- **THEN** la mention d'indépendance est visible dans le pied de page
+- **WHEN** une page quelconque est affichée sur le web, à partir d'une largeur de tablette
+- **THEN** la mention d'indépendance est visible dans le pied de page, fixe en bas de l'écran
+
+#### Scenario: Mention sur le web, téléphone
+- **WHEN** une page quelconque est affichée sur le web à une largeur de téléphone
+- **THEN** la mention d'indépendance et le lien vers les mentions légales sont affichés une seule fois, en petit en tête du contenu, sans pied de page fixe ; un écran qui affiche déjà la mention dans son contenu (« À propos », mentions légales) ne la répète pas
 
 #### Scenario: Mention sur mobile
 - **WHEN** un écran quelconque est affiché sur iOS ou Android
@@ -112,8 +116,9 @@ présents.
 
 ### Requirement: Mentions légales et confidentialité
 L'application DOIT proposer une page « Mentions légales et confidentialité »,
-accessible sans interaction préalable depuis le pied de page de chaque écran et
-depuis l'écran « À propos », et sur le web à l'adresse `/mentions-legales`. Elle
+accessible sans interaction préalable depuis le pied de page de chaque écran (sur
+le web à une largeur de téléphone, depuis la mention en tête du contenu) et depuis
+l'écran « À propos », et sur le web à l'adresse `/mentions-legales`. Elle
 DOIT indiquer :
 - que l'éditeur, personne physique non professionnelle, reste anonyme et que
   ses coordonnées ont été communiquées à l'hébergeur ;
@@ -125,6 +130,8 @@ DOIT indiquer :
   jeton fourni par le service push, préférences), leur finalité, leur
   transmission aux services push du navigateur ou de la plateforme, et leur
   suppression au désabonnement ou après 13 mois sans confirmation ;
+- que le bouton d'adhésion est un lien de parrainage de l'éditeur vers le site de
+  Nouvelle Énergie, qui ne fait de ce site ni un site du parti ni un site officiel ;
 - le dépôt de cookies par les lecteurs tiers, seulement après l'action du
   visiteur, avec un lien vers les règles de confidentialité de Google ;
 - les droits des personnes et la possibilité de saisir la CNIL.
@@ -140,4 +147,31 @@ DOIT indiquer :
 #### Scenario: Notifications
 - **WHEN** un visiteur ouvre la page des mentions légales
 - **THEN** il y trouve les données conservées pour les notifications et leur durée de conservation
+
+#### Scenario: Lien d'adhésion
+- **WHEN** un visiteur ouvre la page des mentions légales
+- **THEN** il y apprend que le bouton d'adhésion est un lien de parrainage de l'éditeur
+
+### Requirement: Invitation à adhérer
+L'accueil et la page d'une intervention, après son contenu, DOIVENT proposer un
+encart d'invitation à adhérer à Nouvelle Énergie. Sur l'accueil, l'invitation DOIT
+être visible sans défiler sans masquer la première intervention : sur téléphone, un
+bandeau fin au-dessus des interventions passées ; dès deux colonnes, un encart après
+la première rangée de cartes. L'encart DOIT :
+- ouvrir le site d'adhésion du parti hors de l'application (nouvel onglet sur le
+  web, navigateur sur mobile) ;
+- indiquer qu'il mène au site du parti et qu'il s'agit d'un lien de parrainage de
+  l'éditeur, auquel l'adhésion sera rattachée ;
+- n'utiliser que la charte de l'application, sans logo ni visuel du parti, et ne
+  pas masquer la mention d'indépendance.
+
+Aucun traceur NE DOIT être ajouté au lien ni au clic.
+
+#### Scenario: Depuis une intervention
+- **WHEN** un visiteur arrive en bas de la page d'une intervention
+- **THEN** il voit « Vous partagez ces idées ? » et un bouton « Adhérer à Nouvelle Énergie » qui ouvre le site d'adhésion
+
+#### Scenario: Transparence du parrainage
+- **WHEN** un visiteur lit l'encart
+- **THEN** il est informé que le lien est un lien de parrainage de l'éditeur du site
 

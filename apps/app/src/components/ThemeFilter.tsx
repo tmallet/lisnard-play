@@ -25,7 +25,7 @@ export function ThemeFilter({
     <View
       accessibilityRole="radiogroup"
       accessibilityLabel="Filtrer par thème"
-      className="flex-row flex-wrap gap-2"
+      className="flex-row flex-wrap gap-1.5 md:gap-2"
     >
       {OPTIONS.map((option) => {
         const selected = option.value === value;
@@ -35,10 +35,10 @@ export function ThemeFilter({
             accessibilityRole="radio"
             accessibilityState={{ selected }}
             onPress={() => onChange(option.value)}
-            className={`rounded-full border px-4 py-1.5 ${selected ? 'border-chamois bg-chamois' : 'border-blanc/30 active:bg-blanc/10'}`}
+            className={`rounded-full border px-2.5 py-1 md:px-4 md:py-1.5 ${selected ? 'border-chamois bg-chamois' : 'border-blanc/30 active:bg-blanc/10'}`}
           >
             <Text
-              className={`font-sans-semibold text-sm ${selected ? 'text-bleu-sombre' : 'text-blanc'}`}
+              className={`font-sans-semibold text-xs md:text-sm ${selected ? 'text-bleu-sombre' : 'text-blanc'}`}
             >
               {option.label}
             </Text>

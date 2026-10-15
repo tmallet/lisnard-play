@@ -8,7 +8,14 @@ import { ScrollEndProvider } from '../ScrollEnd';
 // L'invitation aux notifications a ses propres tests (usePushAvailability).
 jest.mock('../NotifyInvite', () => ({ NotifyInvite: () => null }));
 // L'invitation à adhérer est testée à part (JoinCta.test.tsx).
-jest.mock('../JoinCta', () => ({ JoinCta: () => null }));
+jest.mock('../JoinCta', () => {
+  const { Text } = require('react-native');
+  return { JoinCta: () => <Text>Encart adhésion</Text> };
+});
+jest.mock('../JoinBar', () => {
+  const { Text } = require('react-native');
+  return { JoinBar: () => <Text>Bandeau adhésion</Text> };
+});
 jest.mock('expo-router', () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
@@ -149,6 +156,34 @@ test('chargement continu : la page suivante arrive en fin de défilement', async
     for (const listener of endListeners) listener();
   });
   expect(await screen.findByText('Intervention p3')).toBeTruthy();
+});
+
+test('invitation à adhérer : bandeau sur téléphone, puis après la première rangée (2 ou 3 cartes)', async () => {
+  lists.past = Array.from({ length: 5 }, (_, i) => item(`p${i + 1}`, 'past'));
+  await renderFeed();
+  await screen.findByText('Intervention p5');
+  const text = JSON.stringify(screen.toJSON());
+  const positions = [...text.matchAll(/Encart adhésion|Intervention p\d/g)].map((m) => m[0]);
+  // Une variante par largeur ; chacune n'est visible qu'à la sienne (classes md: et lg:).
+  expect(positions).toEqual([
+    'Intervention p1',
+    'Intervention p2',
+    'Encart adhésion',
+    'Intervention p3',
+    'Encart adhésion',
+    'Intervention p4',
+    'Intervention p5',
+  ]);
+  // Téléphone : bandeau au-dessus des cartes.
+  expect(text.indexOf('Bandeau adhésion')).toBeLessThan(text.indexOf('Intervention p1'));
+});
+
+test('invitation à adhérer : une variante par largeur même avec une seule passée', async () => {
+  lists.past = [item('p1', 'past')];
+  await renderFeed();
+  await screen.findByText('Intervention p1');
+  expect(screen.getAllByText('Encart adhésion')).toHaveLength(2);
+  expect(screen.getByText('Bandeau adhésion')).toBeTruthy();
 });
 
 test('page suivante en échec : la liste reste affichée, on peut réessayer', async () => {

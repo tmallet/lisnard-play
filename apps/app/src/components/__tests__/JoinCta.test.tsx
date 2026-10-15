@@ -3,6 +3,7 @@ import { Linking } from 'react-native';
 
 import { JOIN } from '@/config/join';
 
+import { JoinBar } from '../JoinBar';
 import { JoinCta } from '../JoinCta';
 
 test('invitation : ouvre le lien d’adhésion et signale le parrainage', async () => {
@@ -14,4 +15,20 @@ test('invitation : ouvre le lien d’adhésion et signale le parrainage', async 
   expect(open).toHaveBeenCalledWith(JOIN.url);
   // Aucun paramètre de suivi ajouté au lien (ADR 0025).
   expect(JOIN.url).not.toMatch(/utm_|fbclid|gclid/);
+});
+
+test('bandeau (accueil sur téléphone) : parrainage signalé, ouvre le lien', async () => {
+  const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+  await render(<JoinBar />);
+  expect(screen.getByText(JOIN.disclosureShort)).toBeTruthy();
+  await fireEvent.press(screen.getByText(`${JOIN.buttonShort} ↗`));
+  expect(open).toHaveBeenCalledWith(JOIN.url);
+});
+
+test('encart compact (accueil) : parrainage toujours signalé, bouton court', async () => {
+  const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+  await render(<JoinCta compact />);
+  expect(screen.getByText(JOIN.disclosureShort)).toBeTruthy();
+  await fireEvent.press(screen.getByText(`${JOIN.buttonShort} ↗`));
+  expect(open).toHaveBeenCalledWith(JOIN.url);
 });

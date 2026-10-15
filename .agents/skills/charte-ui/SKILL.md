@@ -54,8 +54,10 @@ ni de nom de police en dur, jamais de valeur dérivée (opacité, teinte) hors
 - `Title` : titre de page, en Montserrat 800 et en majuscules. La prop
   `highlight` met **un seul** mot ou groupe de mots en chamois.
   `<Title highlight="David Lisnard">Toutes les interventions de David Lisnard</Title>`
-- `Footer` : mention d'indépendance. Sur le web, elle est dans le pied de page
-  global (`AppNavigation.web.tsx`). Sur mobile, `Screen` l'ajoute en bas de chaque
+- `Footer` : mention d'indépendance. Sur le web, pied de page global fixe dès `md`
+  (`WebChrome.web.tsx`) ; sur téléphone, pas de pied de page : `IndependenceNote`
+  affiche la mention et le lien légal en tête de contenu (`Screen.web.tsx`), sauf avec
+  `<Screen footer={false}>` pour un écran qui affiche déjà la mention. Sur mobile, `Screen` l'ajoute en bas de chaque
   écran.
 - `Screen` : conteneur de page. Sur mobile, il dessine dégradé, surtitre avec le
   nom et pied de page ; sur le web, défilement et largeur maximale `max-w-3xl`.
@@ -65,6 +67,10 @@ ni de nom de police en dur, jamais de valeur dérivée (opacité, teinte) hors
 - `JoinCta` : invitation à adhérer à Nouvelle Énergie (ADR 0025), sur l'accueil et le
   détail. Charte de l'app seulement, jamais de logo ni de visuel du parti ; la mention
   du parrainage reste sous le bouton. Lien et textes : `src/config/join.ts`.
+  Sur l'accueil : sur téléphone, `JoinBar` (bandeau fin au-dessus des passées) ; dès
+  `md`, `<JoinCta compact />` après la première rangée de la grille (`<GridRow>` :
+  rangée pleine). L'invitation doit rester visible sans défiler, sous ou à côté de la
+  première vidéo.
 
 ## Accessibilité (spec app-shell)
 

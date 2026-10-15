@@ -60,7 +60,11 @@ export function WebChrome({ children }: { children: ReactNode }) {
       <View role="main" className="flex-1">
         {children}
       </View>
-      <Footer inset />
+      {/* Pied de page fixe dès la largeur md ; sur téléphone, il est en fin de défilement
+          et la mention est rappelée en tête de contenu (Screen.web.tsx). */}
+      <View className="hidden md:flex">
+        <Footer inset />
+      </View>
     </View>
   );
 }

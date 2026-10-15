@@ -57,7 +57,7 @@ export default function LegalNotice() {
           headerTitleStyle: { fontFamily: fontFamily.semibold },
         }}
       />
-      <Screen>
+      <Screen footer={false}>
         <PageHead
           title="Mentions légales et confidentialité"
           description={`Éditeur, hébergeur et données personnelles de ${APP_NAME}.`}
