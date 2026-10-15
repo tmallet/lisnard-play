@@ -5,7 +5,6 @@
  */
 
 import { isPushServiceUrl } from '@lisnard/db/subscriptions';
-import type { NotificationEvent } from '@lisnard/db/write';
 import webpush from 'web-push';
 
 import { errorMessage, log } from '../log';
@@ -25,23 +24,10 @@ export interface PushMessage {
   itemId: string;
   /** Une notification plus récente sur la même intervention remplace la précédente. */
   tag: string;
+  /** Grande image (Android, Chrome, Edge ; ignorée par iOS). */
+  image?: string;
   urgent: boolean;
   ttlSeconds: number;
-}
-
-const TITLE_PREFIX = { live: 'En direct', reminder: 'Dans 15 min', new_item: 'Nouveau' } as const;
-
-export function buildMessage(event: NotificationEvent): PushMessage {
-  const urgent = event.kind !== 'new_item';
-  return {
-    title: `${TITLE_PREFIX[event.kind]} : ${event.title}`,
-    body: event.outlet,
-    url: `/interventions/${event.itemId}`,
-    itemId: event.itemId,
-    tag: event.itemId,
-    urgent,
-    ttlSeconds: urgent ? 3600 : 6 * 3600,
-  };
 }
 
 export interface Recipient {
@@ -69,6 +55,7 @@ export async function sendWeb(
       body: message.body,
       url: message.url,
       tag: message.tag,
+      image: message.image,
     }),
     {
       vapidDetails: vapid,
@@ -119,6 +106,7 @@ export async function sendExpo(
             title: message.title,
             body: message.body,
             data: { url: message.url, itemId: message.itemId },
+            ...(message.image ? { richContent: { image: message.image } } : {}),
             sound: 'default',
             channelId: 'interventions',
             priority: message.urgent ? 'high' : 'default',

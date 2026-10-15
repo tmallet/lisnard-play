@@ -24,7 +24,7 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 | `src/text.ts` | `decodeEntities` : entités HTML numériques et nommées (accents, guillemets typographiques), sensibles à la casse ; une entité inconnue reste telle quelle |
 | `src/summaries/` | `prompt.ts` (consigne, `PROMPT_VERSION`, `SUMMARY_MODEL`), `openrouter.ts` (client Gemini, validation), `task.ts` (sélection, budget, échecs). Voir `docs/architecture/resumes.md` |
 | `src/websub/` | `server.ts` (vérification du hub, signature HMAC, corps borné, file sérielle), `subscribe.ts` (abonnements), `handle.ts` (voie rapide : enregistrement, classement, rendu) |
-| `src/notifications/` | `send.ts` (messages, Web Push chiffré par `web-push`, Expo Push), `task.ts` (`notifyPending` : réservation puis envoi, abonnements expirés supprimés) |
+| `src/notifications/` | `message.ts` (titres par type avec emoji, texte, image, titres en capitales réécrits), `send.ts` (Web Push chiffré par `web-push`, Expo Push), `task.ts` (`notifyPending` : réservation puis envoi, abonnements expirés supprimés) |
 | `src/calibrate.ts`, `eval/reference.jsonl` | Calibration sur le jeu de référence validé |
 | `src/cli.ts` | `backfill`, `calibrate`, `recompute`, `reclassify` |
 

@@ -5,12 +5,13 @@ import type { Db } from '@lisnard/db/client';
 import { item, notificationSent, pushSubscription } from '@lisnard/db/schema';
 import { saveSubscription } from '@lisnard/db/subscriptions';
 import { createTestDb } from '@lisnard/db/testing';
+import type { NotificationEvent } from '@lisnard/db/write';
 import { setMedia, upsertItem, upsertSources } from '@lisnard/db/write';
 import { eq, sql } from 'drizzle-orm';
 import webpush from 'web-push';
 
 import { parseNotify } from '../config';
-import { buildMessage } from './send';
+import { buildMessage, formatDuration, readableTitle, summaryLead } from './message';
 import { notifyPending, sendTestNotification } from './task';
 
 const vapidKeys = webpush.generateVAPIDKeys();
@@ -102,7 +103,13 @@ describe('notify', () => {
     expect(web?.headers.Urgency).toBe('high');
     const expo = calls.find((c) => c.url.startsWith('https://exp.host/'));
     expect(expo?.body).toMatchObject([
-      { to: EXPO, title: 'En direct : Meeting', data: { url: `/interventions/${id}` } },
+      {
+        to: EXPO,
+        title: '🔴 David Lisnard est en direct',
+        // Source de test non officielle : le média suit le titre.
+        body: 'Meeting · David Lisnard',
+        data: { url: `/interventions/${id}` },
+      },
     ]);
 
     // Second passage : rien à envoyer.
@@ -119,7 +126,12 @@ describe('notify', () => {
       keys: browserKeys(),
       preferences: { live: true, reminder: true, newItem: true },
     });
-    await publish('Interview');
+    const interview = await publish('Interview');
+    // Vidéo sans résumé : notifiée après dix minutes d'attente.
+    await db
+      .update(item)
+      .set({ firstSeenAt: sql`now() - interval '11 minutes'` })
+      .where(eq(item.id, interview));
     const { calls, fetchFn } = pushServices();
     await notifyPending(db, { vapid, fetch: fetchFn });
     expect(calls.map((c) => c.url)).toEqual([WEB_B]);
@@ -185,15 +197,85 @@ test('notification de test : envoyée à tous, sans rien journaliser', async () 
 });
 
 describe('messages et configuration', () => {
-  test('titres par type', () => {
-    const e = { itemId: 'x', title: 'Meeting', outlet: 'BFMTV' };
-    expect(buildMessage({ ...e, kind: 'live' }).title).toBe('En direct : Meeting');
-    expect(buildMessage({ ...e, kind: 'reminder' }).title).toBe('Dans 15 min : Meeting');
-    expect(buildMessage({ ...e, kind: 'new_item' })).toMatchObject({
-      title: 'Nouveau : Meeting',
-      body: 'BFMTV',
-      urgent: false,
-    });
+  const event = (over: Partial<NotificationEvent> = {}): NotificationEvent => ({
+    itemId: 'x',
+    kind: 'new_item',
+    title: 'Meeting',
+    outlet: 'David Lisnard',
+    official: true,
+    sourceKind: 'youtube',
+    interventionKind: 'stream',
+    startsAt: null,
+    durationS: null,
+    thumbnailUrl: null,
+    summaryText: null,
+    ...over,
+  });
+
+  test('titres : court, emoji par type, « dans » pour la presse', () => {
+    expect(buildMessage(event({ kind: 'live' })).title).toBe('🔴 David Lisnard est en direct');
+    expect(buildMessage(event({ kind: 'reminder' })).title).toBe(
+      '⏰ Dans 15 min : David Lisnard en direct',
+    );
+    expect(buildMessage(event()).title).toBe('🎥 Nouvelle vidéo de David Lisnard');
+    expect(
+      buildMessage(event({ official: false, outlet: 'BFMTV', interventionKind: 'tv' })).title,
+    ).toBe('📰 David Lisnard sur BFMTV');
+    expect(
+      buildMessage(
+        event({
+          official: false,
+          outlet: 'Le Figaro',
+          interventionKind: 'presse',
+          sourceKind: 'rss',
+        }),
+      ).title,
+    ).toBe('📰 David Lisnard dans Le Figaro');
+  });
+
+  test('texte : titre lisible, durée, première phrase du résumé ; image en grand format', () => {
+    const message = buildMessage(
+      event({
+        title: 'GARAGES À VÉLO OBLIGATOIRES',
+        durationS: 125,
+        summaryText: 'Il dénonce une norme absurde. Il propose de la supprimer.',
+        thumbnailUrl: 'https://i.ytimg.com/vi/abc/hqdefault.jpg',
+      }),
+    );
+    expect(message.body).toBe('Garages à vélo obligatoires · 2 min\nIl dénonce une norme absurde.');
+    expect(message.image).toBe('https://i.ytimg.com/vi/abc/hq720.jpg');
+  });
+
+  test('rappel : média et heure de Paris ; direct : marque « EN DIRECT » retirée du titre', () => {
+    const reminder = buildMessage(
+      event({
+        kind: 'reminder',
+        official: false,
+        outlet: 'BFMTV',
+        title: 'Face à Face',
+        startsAt: new Date('2026-10-13T06:30:00Z'),
+      }),
+    );
+    expect(reminder.body).toBe('Face à Face · BFMTV · à 8 h 30');
+    expect(
+      buildMessage(
+        event({ kind: 'live', title: '🔴 EN DIRECT I Meeting de David Lisnard en Alsace' }),
+      ).body,
+    ).toBe('Meeting de David Lisnard en Alsace');
+  });
+
+  test('titres en capitales réécrits, sigles conservés ; casse mixte inchangée', () => {
+    expect(readableTitle('LE RN ET LFI FACE À BFMTV')).toBe('Le RN et LFI face à BFMTV');
+    expect(readableTitle('Garages à vélo : « On marche sur la tête »')).toBe(
+      'Garages à vélo : « On marche sur la tête »',
+    );
+    expect(readableTitle('IA')).toBe('IA');
+  });
+
+  test('durée et première phrase', () => {
+    expect(formatDuration(45)).toBe('45 s');
+    expect(formatDuration(3900)).toBe('1 h 05');
+    expect(summaryLead('A'.repeat(200))).toHaveLength(140);
   });
 
   test('VAPID : absent, complet, ou incomplet (arrêt)', () => {

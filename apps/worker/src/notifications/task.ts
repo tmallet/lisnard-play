@@ -6,20 +6,15 @@ import type { Db } from '@lisnard/db/client';
 import {
   claimNotification,
   deleteSubscriptionsById,
+  latestNotificationSample,
   listNotificationEvents,
   listSubscribers,
   setNotificationRecipients,
 } from '@lisnard/db/write';
 
 import { errorMessage, log } from '../log';
-import {
-  buildMessage,
-  type Delivery,
-  type PushMessage,
-  sendExpo,
-  sendWeb,
-  type VapidConfig,
-} from './send';
+import { buildMessage } from './message';
+import { type Delivery, type PushMessage, sendExpo, sendWeb, type VapidConfig } from './send';
 
 export interface NotifyDeps {
   vapid: VapidConfig | null;
@@ -96,23 +91,21 @@ export async function notifyPending(db: Db, deps: NotifyDeps): Promise<NotifySta
 
 /**
  * Notification de test envoyée à tous les abonnés, quelles que soient leurs préférences
- * (`cli notify --test`) : vérifie la chaîne d'envoi sans attendre un événement.
+ * (`cli notify --test`) : la dernière intervention publiée, au format réel, pour
+ * vérifier la chaîne d'envoi et le rendu sur l'appareil sans attendre un événement.
  */
-export function sendTestNotification(db: Db, deps: NotifyDeps) {
-  return listSubscribers(db).then((subscribers) =>
-    deliver(
-      db,
-      subscribers,
-      {
-        title: 'Test : les notifications fonctionnent',
+export async function sendTestNotification(db: Db, deps: NotifyDeps) {
+  const sample = await latestNotificationSample(db);
+  const message = sample
+    ? { ...buildMessage(sample), tag: 'test', ttlSeconds: 300 }
+    : {
+        title: '🔔 Les notifications fonctionnent',
         body: 'Vous serez prévenu au début du prochain direct.',
         url: '/',
         itemId: 'test',
         tag: 'test',
         urgent: true,
         ttlSeconds: 300,
-      },
-      deps,
-    ),
-  );
+      };
+  return deliver(db, await listSubscribers(db), message, deps);
 }

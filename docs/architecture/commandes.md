@@ -51,7 +51,7 @@ réutiliser `apps/app/dist`.
 | `bun apps/worker/src/cli.ts reclassify [--model M] [--version N]` | Reclasse en rappelant le modèle |
 | `bun apps/worker/src/cli.ts summarize [--budget N] [--retry]` | Résume les vidéos jusqu'au plafond du jour (N $) ; `--retry` relance les abandons |
 | `bun apps/worker/src/cli.ts places [--budget N]` | Détermine d'un coup le lieu de toutes les interventions en attente (historique après déploiement), dans la limite du plafond du jour ou de N $ |
-| `bun apps/worker/src/cli.ts notify --test` | Envoie une notification de test à tous les abonnés (vérifie les clés VAPID et la chaîne d'envoi) |
+| `bun apps/worker/src/cli.ts notify --test` | Envoie à tous les abonnés la dernière intervention publiée, au format réel des notifications (vérifie les clés VAPID, la chaîne d'envoi et le rendu sur l'appareil) |
 | `bun apps/worker/src/cli.ts media --refresh [--source ID]` | Recalcule le rendu des contenus publiés (cartes des articles Google News) |
 
 Procédures du classifieur : [classifier.md](classifier.md). Résumés : [resumes.md](resumes.md).

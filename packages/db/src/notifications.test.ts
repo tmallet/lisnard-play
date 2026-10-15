@@ -111,10 +111,51 @@ describe('événements à notifier', () => {
       { liveStatus: 'upcoming', startsAt: new Date(Date.now() + 5 * 60_000) },
       { media: false },
     );
-    await add('Video');
+    const video = await add('Video');
+    // Vidéo résumée : elle n'attend plus.
+    await db
+      .update(item)
+      .set({
+        summary: {
+          kind: 'ok',
+          text: 'Résumé. Suite.',
+          points: [],
+          model: 'm',
+          promptVersion: 1,
+          generatedAt: '',
+          cost: 0,
+        },
+      })
+      .where(eq(item.id, video));
     await add('Pending', {}, { published: false });
     await add('NoMedia', {}, { media: false });
     expect(await kinds()).toEqual(['Live:live', 'Soon:reminder', 'Video:new_item']);
+  });
+
+  test('nouvelle vidéo : attend son résumé, dix minutes au plus ; texte du résumé fourni', async () => {
+    const video = await add('Video');
+    expect(await kinds()).toEqual([]);
+    await db
+      .update(item)
+      .set({ firstSeenAt: sql`now() - interval '11 minutes'` })
+      .where(eq(item.id, video));
+    expect(await kinds()).toEqual(['Video:new_item']);
+    await db
+      .update(item)
+      .set({
+        summary: {
+          kind: 'ok',
+          text: 'Il propose X. Puis Y.',
+          points: [],
+          model: 'm',
+          promptVersion: 1,
+          generatedAt: '',
+          cost: 0,
+        },
+      })
+      .where(eq(item.id, video));
+    const [event] = await listNotificationEvents(db);
+    expect(event).toMatchObject({ summaryText: 'Il propose X. Puis Y.', sourceKind: 'youtube' });
   });
 
   test('un seul envoi par événement ; la rediffusion d’un direct annoncé n’est pas « nouvelle »', async () => {
