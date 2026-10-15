@@ -20,6 +20,9 @@ export default function Membership() {
     trpc.membership.timeline.queryOptions(undefined, { refetchInterval: 120_000 }),
   );
   const [selected, setSelected] = useState<Marker | null>(null);
+  // Un repère cliqué reste sélectionné : survoler d'autres repères en allant vers le
+  // lien de la carte ne doit pas la changer.
+  const [pinned, setPinned] = useState(false);
   const data = timeline.data;
 
   return (
@@ -57,7 +60,13 @@ export default function Membership() {
             days={data.days}
             interventions={data.interventions}
             selectedKey={selected?.key ?? null}
-            onSelect={setSelected}
+            onPress={(marker) => {
+              setSelected(marker);
+              setPinned(true);
+            }}
+            onHover={(marker) => {
+              if (!pinned) setSelected(marker);
+            }}
           />
           {selected ? (
             <TimelineCard marker={selected} />

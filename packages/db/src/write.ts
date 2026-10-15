@@ -580,8 +580,11 @@ export async function purgeStaleSubscriptions(db: Db): Promise<number> {
 
 // --- Reprises d'articles (spec intervention-collection, « Dédoublonnage ») ---
 
-/** Articles de presse, pour repérer les reprises d'une même dépêche par plusieurs médias. */
-export async function listPressItems(db: Db) {
+/**
+ * Articles de presse, pour repérer les reprises d'une même dépêche par plusieurs médias.
+ * `since` restreint aux articles publiés depuis cette date (cycle courant).
+ */
+export async function listPressItems(db: Db, since?: Date) {
   return db
     .select({
       id: item.id,
@@ -593,8 +596,28 @@ export async function listPressItems(db: Db) {
     })
     .from(item)
     .innerJoin(source, eq(item.sourceId, source.id))
-    .where(eq(source.kind, 'rss'))
+    .where(and(eq(source.kind, 'rss'), since ? sql`${item.publishedAt} >= ${since}` : undefined))
     .orderBy(item.firstSeenAt, item.id);
+}
+
+/** Contenus dont le titre ou la description contient encore une entité HTML. */
+export async function listItemsWithEntities(db: Db) {
+  const entity = '&(#x[0-9a-f]+|#[0-9]+|[a-z][a-z0-9]*);';
+  return db
+    .select({ id: item.id, title: item.title, description: item.description })
+    .from(item)
+    .where(or(sql`${item.title} ~* ${entity}`, sql`${item.description} ~* ${entity}`));
+}
+
+export async function setItemText(
+  db: Db,
+  id: string,
+  text: { title: string; description: string },
+) {
+  await db
+    .update(item)
+    .set({ ...text, updatedAt: sql`now()` })
+    .where(eq(item.id, id));
 }
 
 export async function setDuplicateOf(db: Db, id: string, canonicalId: string | null) {

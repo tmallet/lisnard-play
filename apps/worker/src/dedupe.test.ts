@@ -74,9 +74,27 @@ test('reprises d’une même dépêche : une seule reste visible, les autres son
   expect(await markPressDuplicates(db)).toBe(1);
 });
 
+test('titre générique : deux articles distincts restent visibles', async () => {
+  await article('a', 'Entretien avec David Lisnard', 'Le Point', '2026-10-13T08:00:00Z');
+  await article('b', 'Entretien avec David Lisnard', 'Le Figaro', '2026-10-14T08:00:00Z');
+  expect(await markPressDuplicates(db)).toBe(0);
+  expect((await listPublished(db, { status: 'past', limit: 50 })).items).toHaveLength(2);
+});
+
 test('l’article gardé est de préférence déjà visible ; la reprise n’est pas classée', async () => {
-  const pending = await article('a', 'Même titre', 'Yahoo Finance', '2026-10-13T08:00:00Z', false);
-  const visible = await article('b', 'Même titre', 'Capital', '2026-10-13T09:00:00Z');
+  const pending = await article(
+    'a',
+    'Le même titre repris par plusieurs médias',
+    'Yahoo Finance',
+    '2026-10-13T08:00:00Z',
+    false,
+  );
+  const visible = await article(
+    'b',
+    'Le même titre repris par plusieurs médias',
+    'Capital',
+    '2026-10-13T09:00:00Z',
+  );
   await markPressDuplicates(db);
   const { items } = await listPublished(db, { status: 'past', limit: 50 });
   expect(items.map((i) => i.id)).toEqual([visible]);

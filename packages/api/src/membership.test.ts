@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 import { createContext } from './context';
 import { CACHE_MS, createMembershipSource, RETRY_MS } from './membership/source';
 import { createCaller } from './root';
-import { parisDay } from './routers/membership';
+import { cachedTimelineItems, parisDay, TIMELINE_ITEMS_MS } from './routers/membership';
 
 const TOTAL = { adherents: 59523, mis_a_jour: '2026-10-15T08:05:23.281Z', source: 'NE' };
 const HISTORY = {
@@ -131,6 +131,22 @@ describe('membership.timeline', () => {
       source: 'Nouvelle Énergie',
       total: { members: 59523 },
     });
+  });
+
+  test('interventions du graphique : une requête par minute au plus', async () => {
+    // Après le cache rempli par le test précédent (horloge réelle).
+    const t0 = Date.now() + 10 * TIMELINE_ITEMS_MS;
+    const first = await cachedTimelineItems(db, t0);
+    await upsertItem(db, {
+      sourceId: 'yt:dl',
+      platformId: 'yt:b',
+      url: 'https://www.youtube.com/watch?v=b',
+      title: 'Nouvelle',
+      description: '',
+      publishedAt: new Date('2026-10-07T10:00:00Z'),
+    });
+    expect(await cachedTimelineItems(db, t0 + TIMELINE_ITEMS_MS - 1)).toBe(first);
+    expect(await cachedTimelineItems(db, t0 + TIMELINE_ITEMS_MS + 1)).not.toBe(first);
   });
 
   test('jour de Paris', () => {

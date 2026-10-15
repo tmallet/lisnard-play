@@ -68,6 +68,26 @@ test('journée chargée : vidéos officielles d’abord, le reste dans « +N »,
   expect(more?.type === 'more' && more.items.length + shown.length).toBe(items.length);
 });
 
+test('total inchangé : échelle valide, sans valeur NaN', () => {
+  const flat = [
+    { day: '2026-10-01', members: 20000 },
+    { day: '2026-10-02', members: 20000 },
+  ];
+  const layout = layoutTimeline(flat, [it('a', '2026-10-01')], 0);
+  expect(layout?.line).not.toContain('NaN');
+  expect(layout?.markers[0]?.y).not.toBeNaN();
+});
+
+test('petite variation : graduations exactes, toutes différentes', () => {
+  const close = [
+    { day: '2026-10-01', members: 59520 },
+    { day: '2026-10-02', members: 59610 },
+  ];
+  const labels = layoutTimeline(close, [], 0)?.ticks.map((t) => t.label) ?? [];
+  expect(new Set(labels).size).toBe(labels.length);
+  expect(labels.some((l) => l.includes('k'))).toBe(false);
+});
+
 test('miniature petite taille pour les ronds', () => {
   expect(smallThumbnail('https://i.ytimg.com/vi/abc/hqdefault.jpg')).toBe(
     'https://i.ytimg.com/vi/abc/default.jpg',

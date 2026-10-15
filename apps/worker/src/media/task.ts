@@ -1,7 +1,9 @@
 import type { Db } from '@lisnard/db/client';
 import {
+  listItemsWithEntities,
   listPublishedForMediaRefresh,
   listPublishedWithoutMedia,
+  setItemText,
   setMedia,
 } from '@lisnard/db/write';
 
@@ -29,12 +31,19 @@ export async function resolvePendingMedia(
 }
 
 /**
- * Répare, sans appel réseau, les aperçus enregistrés avant le décodage complet des
- * entités HTML (« Actualit&eacute;s » → « Actualités ») : titre, site et description
- * Open Graph. Idempotent ; ne touche que les rendus qui contiennent encore une entité.
+ * Répare, sans appel réseau, les textes enregistrés avant le décodage complet des
+ * entités HTML (« Actualit&eacute;s » → « Actualités ») : titre et description des
+ * contenus, titre, site et description des aperçus Open Graph. Idempotent ; ne touche
+ * que ce qui contient encore une entité.
  */
 export async function repairMediaEntities(db: Db): Promise<number> {
   let repaired = 0;
+  for (const row of await listItemsWithEntities(db)) {
+    const text = { title: decodeEntities(row.title), description: decodeEntities(row.description) };
+    if (text.title === row.title && text.description === row.description) continue;
+    await setItemText(db, row.id, text);
+    repaired += 1;
+  }
   for (const target of await listPublishedForMediaRefresh(db)) {
     const media = target.media;
     if (media?.kind !== 'link') continue;

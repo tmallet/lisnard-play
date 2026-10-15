@@ -19,7 +19,7 @@ import {
   SUMMARY_DAILY_BUDGET_USD,
   TICK_MS,
 } from './config';
-import { markPressDuplicates } from './dedupe';
+import { markPressDuplicates, RECENT_MS } from './dedupe';
 import { log } from './log';
 import { repairMediaEntities, resolvePendingMedia } from './media/task';
 import { notifyPending } from './notifications/task';
@@ -117,7 +117,8 @@ const tasks: Task[] = [
         SOURCES.filter((s) => s.kind === 'rss'),
         ctx,
       )),
-      duplicates: await markPressDuplicates(db),
+      // Au démarrage, tout l'historique ; ensuite, les articles récents seulement.
+      duplicates: await markPressDuplicates(db, { since: new Date(Date.now() - RECENT_MS) }),
     }),
   },
   {

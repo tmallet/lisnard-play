@@ -54,7 +54,7 @@ export interface Layout {
   /** Tracé SVG de la courbe et de l'aire sous elle. */
   line: string;
   area: string;
-  ticks: { y: number; label: string }[];
+  ticks: { value: number; y: number; label: string }[];
   months: { x: number; label: string }[];
   markers: Marker[];
 }
@@ -71,6 +71,7 @@ const shortNumber = new Intl.NumberFormat('fr-FR', {
   notation: 'compact',
   maximumFractionDigits: 1,
 });
+const fullNumber = new Intl.NumberFormat('fr-FR');
 const monthFormat = new Intl.DateTimeFormat('fr-FR', { month: 'short', timeZone: 'UTC' });
 
 export const markerSize = (item: TimelineIntervention) =>
@@ -131,7 +132,8 @@ export function layoutTimeline(
   const members = days.map((d) => d.members);
   const step = niceStep(Math.max(...members) - Math.min(...members));
   const yMin = Math.floor(Math.min(...members) / step) * step;
-  const yMax = Math.ceil(Math.max(...members) / step) * step || yMin + step;
+  // Série plate (total inchangé) : au moins un pas de hauteur, sinon division par zéro.
+  const yMax = Math.max(Math.ceil(Math.max(...members) / step) * step, yMin + step);
   const height = top + PLOT_HEIGHT + AXIS_HEIGHT;
   const width = Math.max(minWidth, (days.length - 1) * DAY_PX + 2 * SIDE);
   const dx = days.length > 1 ? (width - 2 * SIDE) / (days.length - 1) : 0;
@@ -144,7 +146,10 @@ export function layoutTimeline(
   const area = `${line} L${x(days.length - 1).toFixed(1)},${bottom} L${x(0).toFixed(1)},${bottom} Z`;
 
   const ticks: Layout['ticks'] = [];
-  for (let m = yMin; m <= yMax; m += step) ticks.push({ y: y(m), label: shortNumber.format(m) });
+  // Libellé compact (« 60 k ») seulement si le pas le permet, sinon le nombre exact :
+  // deux graduations voisines ne doivent jamais afficher la même valeur.
+  const tickLabel = (m: number) => (step >= 1000 ? shortNumber.format(m) : fullNumber.format(m));
+  for (let m = yMin; m <= yMax; m += step) ticks.push({ value: m, y: y(m), label: tickLabel(m) });
 
   const months = days.flatMap((d, i) =>
     i === 0 || d.day.endsWith('-01')

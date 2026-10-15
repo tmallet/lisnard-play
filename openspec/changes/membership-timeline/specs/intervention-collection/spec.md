@@ -10,7 +10,9 @@ ses métadonnées sans créer de doublon. Les articles de presse au titre identi
 publiés à moins de trois jours d'écart par des médias différents, sont des reprises
 d'une même dépêche : un seul DOIT rester visible (de préférence un article déjà
 affiché), les autres DOIVENT être masqués partout (flux, graphique des adhésions,
-notifications) et ne pas être envoyés au classifieur, sans être supprimés.
+notifications) et ne pas être envoyés au classifieur, sans être supprimés. Un titre
+de moins de six mots (« Entretien avec David Lisnard ») est trop générique pour
+conclure à une reprise : les articles qui le partagent restent tous visibles.
 
 #### Scenario: Vidéo vue deux fois
 - **WHEN** une vidéo déjà enregistrée réapparaît dans une collecte ultérieure
@@ -19,6 +21,10 @@ notifications) et ne pas être envoyés au classifieur, sans être supprimés.
 #### Scenario: Dépêche reprise par plusieurs médias
 - **WHEN** BFM et Orange Actualités publient le même jour un article au même titre
 - **THEN** un seul des deux apparaît dans l'application
+
+#### Scenario: Titre générique
+- **WHEN** deux médias publient à un jour d'écart un article intitulé « Entretien avec David Lisnard »
+- **THEN** les deux restent visibles
 
 #### Scenario: Même titre à un mois d'écart
 - **WHEN** deux articles portent le même titre à un mois d'intervalle

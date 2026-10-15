@@ -33,7 +33,7 @@ test('réparation des aperçus enregistrés : décodés une fois, sans appel ré
     sourceId: 'rss:gn',
     platformId: 'gn:1',
     url: 'https://news.google.com/x',
-    title: 'Budget',
+    title: 'L&rsquo;&Eacute;tat profond',
     description: '',
     publishedAt: new Date(),
   });
@@ -43,7 +43,9 @@ test('réparation des aperçus enregistrés : décodés une fois, sans appel ré
     url: 'https://actu.orange.fr/x',
     og: { title: 'L&rsquo;&Eacute;tat', siteName: 'Orange Actualit&eacute;s' },
   });
-  expect(await repairMediaEntities(db)).toBe(1);
+  expect(await repairMediaEntities(db)).toBe(2); // titre du contenu et aperçu
+  const [stored] = await db.select({ title: item.title }).from(item).where(eq(item.id, id));
+  expect(stored?.title).toBe('L’État profond');
   const [row] = await db.select({ media: item.media }).from(item).where(eq(item.id, id));
   expect(row?.media).toEqual({
     kind: 'link',

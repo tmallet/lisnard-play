@@ -22,15 +22,22 @@ export function MembershipChart({
   days,
   interventions,
   selectedKey,
-  onSelect,
+  onPress,
+  onHover,
 }: {
   days: Day[];
   interventions: TimelineIntervention[];
   selectedKey: string | null;
-  onSelect: (marker: Marker) => void;
+  /** Toucher ou cliquer : sélection fixée. */
+  onPress: (marker: Marker) => void;
+  /** Survol (web) : aperçu, tant qu'aucun repère n'a été cliqué. */
+  onHover: (marker: Marker) => void;
 }) {
   const [visibleWidth, setVisibleWidth] = useState(0);
   const scroll = useRef<ScrollView>(null);
+  // Ouverture sur les jours récents, une seule fois : un rafraîchissement ou une rotation
+  // ne doit pas ramener à la fin un lecteur remonté dans le temps.
+  const openedAtEnd = useRef(false);
   const layout = layoutTimeline(days, interventions, Math.max(visibleWidth - AXIS_WIDTH, 0));
 
   return (
@@ -44,7 +51,7 @@ export function MembershipChart({
           <View style={{ width: AXIS_WIDTH, height: layout.height }}>
             {layout.ticks.map((tick) => (
               <Text
-                key={tick.label}
+                key={tick.value}
                 className="absolute right-1.5 font-sans text-blanc/70 text-xs"
                 style={{ top: tick.y - 8 }}
               >
@@ -57,9 +64,11 @@ export function MembershipChart({
             horizontal
             showsHorizontalScrollIndicator
             // Après la mise en page : sur le web, un défilement immédiat serait ignoré.
-            onContentSizeChange={() =>
-              requestAnimationFrame(() => scroll.current?.scrollToEnd({ animated: false }))
-            }
+            onContentSizeChange={(width) => {
+              if (openedAtEnd.current || width <= 0) return;
+              openedAtEnd.current = true;
+              requestAnimationFrame(() => scroll.current?.scrollToEnd({ animated: false }));
+            }}
           >
             <View style={{ width: layout.width, height: layout.height }}>
               <Svg width={layout.width} height={layout.height}>
@@ -71,7 +80,7 @@ export function MembershipChart({
                 </Defs>
                 {layout.ticks.map((tick) => (
                   <Line
-                    key={tick.label}
+                    key={tick.value}
                     x1={0}
                     x2={layout.width}
                     y1={tick.y}
@@ -97,7 +106,8 @@ export function MembershipChart({
                   key={marker.key}
                   marker={marker}
                   selected={marker.key === selectedKey}
-                  onSelect={onSelect}
+                  onPress={onPress}
+                  onHover={onHover}
                 />
               ))}
             </View>
@@ -111,11 +121,13 @@ export function MembershipChart({
 function MarkerView({
   marker,
   selected,
-  onSelect,
+  onPress,
+  onHover,
 }: {
   marker: Marker;
   selected: boolean;
-  onSelect: (marker: Marker) => void;
+  onPress: (marker: Marker) => void;
+  onHover: (marker: Marker) => void;
 }) {
   const { size } = marker;
   const item = marker.type === 'item' ? marker.item : null;
@@ -129,8 +141,8 @@ function MarkerView({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      onPress={() => onSelect(marker)}
-      onHoverIn={() => onSelect(marker)}
+      onPress={() => onPress(marker)}
+      onHoverIn={() => onHover(marker)}
       hitSlop={4}
       style={{
         position: 'absolute',

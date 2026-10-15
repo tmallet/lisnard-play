@@ -21,6 +21,7 @@
 ## 4. Corrections ajoutées en cours de revue
 
 - [x] 4a.1 Entités HTML nommées décodées dans les aperçus ; réparation des aperçus enregistrés au démarrage du worker ; tests
+- [x] 4a.3 Suites de la revue : échelle valide pour un total inchangé, graduations distinctes, ouverture en fin de période une seule fois, sélection fixée au clic, titres génériques exclus des reprises, recherche des reprises limitée aux 10 derniers jours après le démarrage, titres des contenus réparés, interventions du graphique gardées une minute par l'API
 - [x] 4a.2 Reprises d'articles : colonne `item.duplicate_of` (migration 0009), `markPressDuplicates` au démarrage et après chaque collecte RSS, reprises exclues du flux, du graphique, des notifications et du classement ; tests
 
 ## 5. Qualité et documentation
