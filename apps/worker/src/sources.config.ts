@@ -100,6 +100,14 @@ export const SOURCES: SourceConfig[] = [
     active: true,
   },
   {
+    // Média en ligne (entretiens, débats) : @lecrayonmedia, vérifié le 2026-10-15.
+    id: 'yt:le-crayon',
+    kind: 'youtube',
+    name: 'Le Crayon',
+    channelId: 'UCbXWhsd805LfcbAy7xL9d-A',
+    active: true,
+  },
+  {
     id: 'rss:google-news',
     kind: 'rss',
     name: 'Google News',

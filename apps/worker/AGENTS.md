@@ -18,7 +18,9 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 | `src/collect.ts` | Pré-filtre, seuil d'historique, upsert ; rattrapage ; revérification des directs |
 | `src/classifier/` | `questions.ts` (version), `systemone.ts` (client REST), `thresholds.ts`, `decide.ts` |
 | `src/publish.ts` | `classifyPending`, `recompute`, `reclassify` |
-| `src/media/` | `safe-fetch.ts` (anti-SSRF, POST, lecture limitée à l'en-tête), `resolve.ts` (oEmbed, Open Graph), `google-news.ts` (décodage vers l'éditeur), `task.ts` (rendus, `refreshMedia`) |
+| `src/media/` | `safe-fetch.ts` (anti-SSRF, POST, lecture limitée à l'en-tête), `resolve.ts` (oEmbed, Open Graph), `google-news.ts` (décodage vers l'éditeur), `task.ts` (rendus, `refreshMedia`, `repairMediaEntities` au démarrage) |
+| `src/dedupe.ts` | Reprises d'une même dépêche par plusieurs médias (titre identique à 3 jours près) : `markPressDuplicates` au démarrage et après chaque collecte RSS |
+| `src/text.ts` | `decodeEntities` : entités HTML numériques et nommées (accents, guillemets typographiques), sensibles à la casse ; une entité inconnue reste telle quelle |
 | `src/summaries/` | `prompt.ts` (consigne, `PROMPT_VERSION`, `SUMMARY_MODEL`), `openrouter.ts` (client Gemini, validation), `task.ts` (sélection, budget, échecs). Voir `docs/architecture/resumes.md` |
 | `src/websub/` | `server.ts` (vérification du hub, signature HMAC, corps borné, file sérielle), `subscribe.ts` (abonnements), `handle.ts` (voie rapide : enregistrement, classement, rendu) |
 | `src/notifications/` | `send.ts` (messages, Web Push chiffré par `web-push`, Expo Push), `task.ts` (`notifyPending` : réservation puis envoi, abonnements expirés supprimés) |

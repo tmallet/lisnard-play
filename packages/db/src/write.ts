@@ -25,6 +25,7 @@ export interface SourceRecord {
   kind: 'youtube' | 'rss';
   name: string;
   active: boolean;
+  official?: boolean;
 }
 
 /** Recopie les sources de la configuration du worker (idempotent). */
@@ -32,10 +33,15 @@ export async function upsertSources(db: Db, sources: SourceRecord[]): Promise<vo
   if (sources.length === 0) return;
   await db
     .insert(source)
-    .values(sources)
+    .values(sources.map((s) => ({ ...s, official: s.official ?? false })))
     .onConflictDoUpdate({
       target: source.id,
-      set: { kind: sql`excluded.kind`, name: sql`excluded.name`, active: sql`excluded.active` },
+      set: {
+        kind: sql`excluded.kind`,
+        name: sql`excluded.name`,
+        active: sql`excluded.active`,
+        official: sql`excluded.official`,
+      },
     });
 }
 
@@ -231,6 +237,8 @@ export async function listClassificationTargets(
       .where(
         and(
           onlyId ? eq(item.id, onlyId) : undefined,
+          // Une reprise d'article n'est ni classée ni affichée.
+          sql`${item.duplicateOf} is null`,
           or(eq(item.status, 'pending'), sql`${lastHash} is distinct from ${hash}`),
         ),
       )
@@ -316,6 +324,7 @@ export async function listPublishedWithoutMedia(db: Db, limit: number, onlyId?: 
         onlyId ? eq(item.id, onlyId) : undefined,
         eq(item.status, 'published'),
         sql`${item.media} is null`,
+        sql`${item.duplicateOf} is null`,
       ),
     )
     .limit(limit);
@@ -475,7 +484,7 @@ export async function listNotificationEvents(db: Db): Promise<NotificationEvent[
       .from(item)
       .innerJoin(source, eq(item.sourceId, source.id))
       .where(and(eq(item.status, 'published'), where, notSent(kind)));
-  const visible = sql`${item.media} is not null`;
+  const visible = sql`(${item.media} is not null and ${item.duplicateOf} is null)`;
   const [live, reminder, newItem] = await Promise.all([
     event(
       'live',
@@ -567,4 +576,53 @@ export async function purgeStaleSubscriptions(db: Db): Promise<number> {
     .where(sql`${pushSubscription.confirmedAt} < now() - interval '13 months'`)
     .returning({ id: pushSubscription.id });
   return rows.length;
+}
+
+// --- Reprises d'articles (spec intervention-collection, « Dédoublonnage ») ---
+
+/**
+ * Articles de presse, pour repérer les reprises d'une même dépêche par plusieurs médias.
+ * `since` restreint aux articles publiés depuis cette date (cycle courant).
+ */
+export async function listPressItems(db: Db, since?: Date) {
+  return db
+    .select({
+      id: item.id,
+      title: item.title,
+      publishedAt: item.publishedAt,
+      firstSeenAt: item.firstSeenAt,
+      visible: sql<boolean>`(${item.status} = 'published' and ${item.media} is not null)`,
+      duplicateOf: item.duplicateOf,
+    })
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(and(eq(source.kind, 'rss'), since ? sql`${item.publishedAt} >= ${since}` : undefined))
+    .orderBy(item.firstSeenAt, item.id);
+}
+
+/** Contenus dont le titre ou la description contient encore une entité HTML. */
+export async function listItemsWithEntities(db: Db) {
+  const entity = '&(#x[0-9a-f]+|#[0-9]+|[a-z][a-z0-9]*);';
+  return db
+    .select({ id: item.id, title: item.title, description: item.description })
+    .from(item)
+    .where(or(sql`${item.title} ~* ${entity}`, sql`${item.description} ~* ${entity}`));
+}
+
+export async function setItemText(
+  db: Db,
+  id: string,
+  text: { title: string; description: string },
+) {
+  await db
+    .update(item)
+    .set({ ...text, updatedAt: sql`now()` })
+    .where(eq(item.id, id));
+}
+
+export async function setDuplicateOf(db: Db, id: string, canonicalId: string | null) {
+  await db
+    .update(item)
+    .set({ duplicateOf: canonicalId, updatedAt: sql`now()` })
+    .where(eq(item.id, id));
 }

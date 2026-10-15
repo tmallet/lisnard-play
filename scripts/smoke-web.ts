@@ -118,6 +118,15 @@ await recordSummary(db, id, {
   cost: 0,
 });
 
+// Source des adhésions factice (ADR 0026) : le smoke test n'appelle jamais le site du parti.
+const membershipFixture = Bun.serve({
+  port: PORT + 2,
+  fetch: (req) =>
+    new URL(req.url).pathname.endsWith('/historique.json')
+      ? Response.json({ jours: [{ jour: '2026-06-01', adherents: 20000 }] })
+      : Response.json({ adherents: 20500, mis_a_jour: '2026-06-02T08:00:00.000Z' }),
+});
+
 const server = Bun.spawn(['bun', 'server.ts'], {
   cwd: APP_DIR,
   env: {
@@ -127,6 +136,7 @@ const server = Bun.spawn(['bun', 'server.ts'], {
     NODE_ENV: 'production',
     ALLOW_INDEXING: '',
     VAPID_PUBLIC_KEY: 'BSmokeVapidKey',
+    MEMBERSHIP_SOURCE_URL: `http://localhost:${PORT + 2}`,
   },
   stdout: 'ignore',
   stderr: 'inherit',
@@ -272,6 +282,22 @@ try {
       ).status === 200,
   );
 
+  // Adhésions (spec membership-timeline).
+  const membershipPage = await fetch(`${BASE}/adhesions`);
+  check('/adhesions : HTTP 200', membershipPage.status === 200);
+  checkPage('/adhesions', await membershipPage.text(), pageTitle('Adhésions'), INDEPENDENCE_NOTICE);
+  const timeline = (await (await fetch(`${BASE}/api/trpc/membership.timeline`)).json()) as {
+    result?: {
+      data?: { total?: { members?: number }; interventions?: { id: string }[]; days?: unknown[] };
+    };
+  };
+  check(
+    'membership.timeline : total, jours et interventions',
+    timeline.result?.data?.total?.members === 20500 &&
+      timeline.result.data.interventions?.[0]?.id === id &&
+      (timeline.result.data.days?.length ?? 0) > 0,
+  );
+
   const malformed = await fetch(`${BASE}/%E0%A4%A`);
   check('URL mal encodée : pas d’erreur serveur', malformed.status < 500);
 
@@ -315,6 +341,7 @@ try {
 } finally {
   server.kill();
   await server.exited;
+  membershipFixture.stop(true);
   await drop();
 }
 

@@ -57,6 +57,7 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | `VAPID_PRIVATE_KEY` | — | ✅ | Clé privée associée, en secret. **Ne jamais la changer** : tous les abonnements web deviendraient invalides. Définir les deux clés ou aucune, sinon le worker s'arrête au démarrage |
 | `VAPID_SUBJECT` | — | facultatif | Contact transmis aux services push (`mailto:lisnardplay@tmallet.fr` par défaut) |
 | `EXPO_ACCESS_TOKEN` | — | facultatif | Jeton d'accès Expo Push, quand les notifications mobiles seront activées |
+| `MEMBERSHIP_SOURCE_URL` | facultatif | — | Base des fichiers JSON d'adhésion (ADR 0026), par défaut celle du parti. L'app doit pouvoir joindre `adherent.unenouvelleenergie.fr` |
 | `WEBSUB_PORT` | — | 8080 par défaut | Port du serveur WebSub, exposé au proxy Coolify |
 | `ALLOW_INDEXING` | absente | — | Indexation par les moteurs de recherche. **Absente ou autre que `true` : bloquée** (en-tête `X-Robots-Tag: noindex, nofollow` et `robots.txt` qui interdit tout). Ne la passer à `true` qu'au lancement public, puis redémarrer le service : aucune reconstruction n'est nécessaire |
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |

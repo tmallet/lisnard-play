@@ -33,19 +33,25 @@ function BellIcon() {
 export function WebChrome({ children }: { children: ReactNode }) {
   return (
     <View className="min-h-full flex-1">
-      <View role="banner" className="flex-row items-center gap-6 px-6 py-4">
+      <View role="banner" className="flex-row items-center gap-3 px-6 py-4 md:gap-6">
+        {/* Sous 640 px, le nom laisse la place aux quatre entrées ; « Accueil » y mène aussi. */}
         <Link href="/" asChild>
-          <Pressable className="mr-auto">
+          <Pressable className="mr-auto hidden sm:flex">
             <Text className="font-sans-extrabold text-blanc uppercase tracking-widest">
               {APP_NAME}
             </Text>
           </Pressable>
         </Link>
-        <View role="navigation" className="flex-row gap-5">
+        <View
+          role="navigation"
+          className="flex-1 flex-row items-center justify-between gap-3 sm:flex-none sm:justify-start md:gap-5"
+        >
           {NAV_ITEMS.map((link) => (
             <Link key={link.href} href={link.href} asChild>
               <Pressable>
-                <Text className="font-sans-semibold text-blanc">{link.label}</Text>
+                <Text className="font-sans-semibold text-blanc text-sm md:text-base">
+                  {link.label}
+                </Text>
               </Pressable>
             </Link>
           ))}

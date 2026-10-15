@@ -9,6 +9,12 @@ export const NAV_ITEMS = [
     icon: { sf: { default: 'house', selected: 'house.fill' }, md: 'home' },
   },
   {
+    route: 'adhesions',
+    href: '/adhesions',
+    label: 'Adhésions',
+    icon: { sf: { default: 'person.3', selected: 'person.3.fill' }, md: 'groups' },
+  },
+  {
     route: 'a-propos',
     href: '/a-propos',
     label: 'À propos',

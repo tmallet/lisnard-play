@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   boolean,
   customType,
   date,
@@ -121,6 +122,8 @@ export const source = pgTable('source', {
   kind: sourceKind('kind').notNull(),
   name: text('name').notNull(),
   active: boolean('active').notNull().default(true),
+  /** Chaîne officielle de David Lisnard (recopiée depuis sources.config.ts, ADR 0018). */
+  official: boolean('official').notNull().default(false),
 });
 
 /** Contenu candidat ou intervention (une ligne par contenu, quel que soit le nombre de sources). */
@@ -156,6 +159,13 @@ export const item = pgTable(
     summaryAttempts: integer('summary_attempts').notNull().default(0),
     /** Pas de nouvel essai de résumé avant cette date (attente croissante après un échec). */
     summaryRetryAt: timestamp('summary_retry_at', { withTimezone: true }),
+    /**
+     * Reprise d'un article déjà enregistré (même titre, autre média) : masquée partout,
+     * gardée pour la traçabilité (spec intervention-collection, « Dédoublonnage »).
+     */
+    duplicateOf: uuid('duplicate_of').references((): AnyPgColumn => item.id, {
+      onDelete: 'set null',
+    }),
     firstSeenAt: timestamp('first_seen_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

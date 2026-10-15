@@ -38,7 +38,7 @@ Pages détaillées :
 ```
 lisnard-play/
 ├─ apps/app/              @lisnard/app : Expo Router (web, iOS, Android) + API routes
-│  ├─ src/app/            routes
+│  ├─ src/app/            routes (onglets : accueil, adhésions, à propos)
 │  │  ├─ _layout.tsx      racine : CSS, polices, ApiProvider, Stack, thème de navigation
 │  │  ├─ +html.tsx        document HTML web (lang, balises communes)
 │  │  ├─ (tabs)/          accueil (flux d'interventions) et à-propos
@@ -81,7 +81,7 @@ lisnard-play/
 | Table | Rôle | Points clés |
 |-------|------|-------------|
 | `source` | Sources configurées, recopiées depuis `sources.config.ts` | `id` (« yt:bfmtv »), `kind`, `name`, `active` |
-| `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `media` (rendu, dont l'URL de l'éditeur pour un article Google News), `summary` (résumé ou motif d'absence), `duration_s` |
+| `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `duplicate_of` (reprise d'un article déjà enregistré, masquée partout), `media` (rendu, dont l'URL de l'éditeur pour un article Google News), `summary` (résumé ou motif d'absence), `duration_s` |
 | `push_subscription` | Abonnements aux notifications, **écrits par l'API** (ADR 0024) | `kind` (`web` / `expo`), `endpoint` unique (adresse Web Push ou jeton Expo), `keys`, préférences `live` / `reminder` / `new_item`, `confirmed_at` (purge à 13 mois) |
 | `notification_sent` | Envois effectués, un par intervention et par type | clé (`item_id`, `kind`), `recipients` |
 | `classification` | Journal des décisions, en ajout seul | `model` (instantané servi), `questions_version`, `input_hash`, `answers` (probabilités brutes), `thresholds`, `outcome` |
@@ -134,7 +134,9 @@ SDK 58. Sur mobile, le client appelle `${EXPO_PUBLIC_API_URL}/api/trpc`.
 - Procédures : `health`, `interventions.list` (statut, thème, curseur,
   `limit ≤ 50`), `interventions.byId` (`NOT_FOUND`), `notifications.config`,
   `notifications.subscribe` / `update` / `unsubscribe` (seules écritures de l'API,
-  dans `push_subscription`, ADR 0024). Les éléments exposent
+  dans `push_subscription`, ADR 0024), `membership.timeline` (adhérents de Nouvelle
+  Énergie lus sur le site du parti avec un cache de 90 s, et interventions posées sur la
+  courbe ; aucune copie en base, ADR 0026). Les éléments exposent
   `themes` ; le rôle n'est pas exposé, puisque tout contenu publié est
   `national` (ADR 0020).
 - Le client importe uniquement le type `AppRouter`. Garde-fou de typage :

@@ -1,6 +1,8 @@
 import type { Db } from '@lisnard/db/client';
 import { TRPCError } from '@trpc/server';
 
+import type { MembershipSource } from './membership/source';
+
 export interface CreateContextOptions {
   /** Requête HTTP entrante (absente pour les appels serveur directs). */
   req?: Request;
@@ -12,6 +14,10 @@ export interface CreateContextOptions {
   db?: Db | null;
   /** Clé publique VAPID des notifications web (ADR 0024) ; absente : web désactivé. */
   vapidPublicKey?: string | null;
+  /** Source des données d'adhésion ; par défaut, la source partagée (tests : factice). */
+  membership?: MembershipSource;
+  /** Horloge (tests). */
+  now?: () => Date;
 }
 
 export type Context = CreateContextOptions;

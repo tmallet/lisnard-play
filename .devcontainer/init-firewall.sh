@@ -38,6 +38,8 @@ ALLOWED_DOMAINS=(
   "fcm.googleapis.com"
   "updates.push.services.mozilla.com"
   "web.push.apple.com"
+  # Données d'adhésion de Nouvelle Énergie, lues par l'API (ADR 0026)
+  "adherent.unenouvelleenergie.fr"
   # Expo (CLI, manifestes, tunnel exclu)
   "api.expo.dev"
   "exp.host"

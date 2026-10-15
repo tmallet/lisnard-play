@@ -180,7 +180,8 @@ describe('interventions.byId', () => {
     expect(detail).toMatchObject({
       id: id('p1'),
       outlet: 'BFMTV',
-      description: 'Description',
+      // Vidéo d'une chaîne de média : sa description YouTube n'est pas exposée.
+      description: '',
       url: 'https://www.youtube.com/watch?v=p1',
     });
     expect(detail.media).toEqual({

@@ -130,6 +130,51 @@ function toSummary(row: SummaryRow, now: Date): InterventionSummary {
   };
 }
 
+/** Intervention posée sur le graphique des adhésions (spec membership-timeline). */
+export interface TimelineItem {
+  id: string;
+  /** Jour de l'intervention, heure de Paris (AAAA-MM-JJ). */
+  day: string;
+  title: string;
+  outlet: string;
+  thumbnailUrl: string | null;
+  /** Vidéo de la chaîne officielle de David Lisnard : miniature sur le graphique. */
+  official: boolean;
+  live: boolean;
+}
+
+/**
+ * Toutes les interventions publiées et visibles, dans l'ordre chronologique, réduites
+ * à ce que le graphique affiche (environ 220 lignes).
+ */
+export async function listTimelineItems(db: Db): Promise<TimelineItem[]> {
+  const rows = await db
+    .select({
+      id: item.id,
+      day: sql<string>`to_char(${sortDate} at time zone 'Europe/Paris', 'YYYY-MM-DD')`,
+      title: item.title,
+      outlet: summaryColumns.outlet,
+      thumbnailUrl: summaryColumns.thumbnailUrl,
+      official: source.official,
+      liveStatus: item.liveStatus,
+    })
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(
+      and(
+        eq(item.status, 'published'),
+        sql`${item.media} is not null`,
+        sql`${item.duplicateOf} is null`,
+      ),
+    )
+    .orderBy(sortDate, item.id);
+  return rows.map(({ liveStatus, ...row }) => ({
+    ...row,
+    // Un direct en cours ou terminé reste signalé comme direct sur le graphique.
+    live: liveStatus === 'live' || liveStatus === 'ended',
+  }));
+}
+
 /** Liste paginée par curseur des interventions publiées (spec intervention-feed). */
 export async function listPublished(
   db: Db,
@@ -141,6 +186,8 @@ export async function listPublished(
   const conditions: SQL[] = [
     sql`${item.status} = 'published'`,
     sql`${item.media} is not null`,
+    // Reprise d'un article déjà listé (spec intervention-collection, « Dédoublonnage »).
+    sql`${item.duplicateOf} is null`,
     statusCondition(status, now),
   ];
   if (theme) conditions.push(sql`${item.themes} @> array[${theme}]::text[]`);
@@ -181,6 +228,8 @@ export async function getPublishedById(
     .select({
       ...summaryColumns,
       description: item.description,
+      sourceKind: source.kind,
+      official: source.official,
       url: item.url,
       media: item.media,
       summary: item.summary,
@@ -192,7 +241,9 @@ export async function getPublishedById(
   if (!row) return null;
   return {
     ...toSummary(row as SummaryRow, now),
-    description: row.description,
+    // Description d'une vidéo YouTube : seulement pour la chaîne officielle. Celle d'une
+    // chaîne de média parle de toute l'émission (liens, autres invités), pas de lui.
+    description: row.sourceKind === 'youtube' && !row.official ? '' : row.description,
     url: row.url,
     media: row.media as MediaRender,
     summary: toPublicSummary(row.summary),
