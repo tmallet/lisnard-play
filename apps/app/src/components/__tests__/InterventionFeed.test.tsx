@@ -8,7 +8,10 @@ import { ScrollEndProvider } from '../ScrollEnd';
 // L'invitation aux notifications a ses propres tests (usePushAvailability).
 jest.mock('../NotifyInvite', () => ({ NotifyInvite: () => null }));
 // L'invitation à adhérer est testée à part (JoinCta.test.tsx).
-jest.mock('../JoinCta', () => ({ JoinCta: () => null }));
+jest.mock('../JoinCta', () => {
+  const { Text } = require('react-native');
+  return { JoinCta: () => <Text>Encart adhésion</Text> };
+});
 jest.mock('expo-router', () => ({
   Link: ({ children }: { children: React.ReactNode }) => children,
 }));
@@ -149,6 +152,24 @@ test('chargement continu : la page suivante arrive en fin de défilement', async
     for (const listener of endListeners) listener();
   });
   expect(await screen.findByText('Intervention p3')).toBeTruthy();
+});
+
+test('invitation à adhérer : après les six premières passées, pas avant', async () => {
+  lists.past = Array.from({ length: 8 }, (_, i) => item(`p${i + 1}`, 'past'));
+  await renderFeed();
+  await screen.findByText('Intervention p8');
+  const text = JSON.stringify(screen.toJSON());
+  const at = (label: string) => text.indexOf(label);
+  expect(at('Intervention p6')).toBeLessThan(at('Encart adhésion'));
+  expect(at('Encart adhésion')).toBeLessThan(at('Intervention p7'));
+});
+
+test('invitation à adhérer : après la dernière passée quand il y en a moins de six', async () => {
+  lists.past = [item('p1', 'past'), item('p2', 'past')];
+  await renderFeed();
+  await screen.findByText('Intervention p2');
+  const text = JSON.stringify(screen.toJSON());
+  expect(text.indexOf('Intervention p2')).toBeLessThan(text.indexOf('Encart adhésion'));
 });
 
 test('page suivante en échec : la liste reste affichée, on peut réessayer', async () => {

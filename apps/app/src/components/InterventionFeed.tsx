@@ -4,7 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 
 import { useTRPC } from '@/lib/trpc';
 
-import { CardGrid } from './CardGrid';
+import { CardGrid, GridRow } from './CardGrid';
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
 import { JoinCta } from './JoinCta';
 import { NotifyInvite } from './NotifyInvite';
@@ -16,6 +16,12 @@ import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
  * en plus du retour au premier plan (lib/focus.ts).
  */
 const REFRESH_MS = 30_000;
+
+/**
+ * Position de l'invitation à adhérer parmi les passées : six cartes remplissent des
+ * rangées entières sur une, deux ou trois colonnes.
+ */
+const JOIN_AFTER = 6;
 
 function SectionTitle({ children, live = false }: { children: string; live?: boolean }) {
   return (
@@ -116,8 +122,6 @@ export function InterventionFeed() {
             !theme && <NotifyInvite />
           )}
           {upcomingItems.length > 0 && <Section title="À venir" items={upcomingItems} />}
-          {/* Avant les passées : plus bas, le chargement continu le rendrait inaccessible. */}
-          <JoinCta compact />
           <View className="gap-3">
             <SectionTitle>Passées</SectionTitle>
             {pastItems.length === 0 ? (
@@ -128,9 +132,19 @@ export function InterventionFeed() {
               </Text>
             ) : (
               <CardGrid>
-                {pastItems.map((item) => (
-                  <InterventionCard key={item.id} item={item} />
-                ))}
+                {pastItems.flatMap((item, index) => {
+                  const card = <InterventionCard key={item.id} item={item} />;
+                  // Invitation à adhérer après les premières interventions (ou la dernière,
+                  // s'il y en a moins) : le haut de l'accueil reste aux vidéos.
+                  return index === Math.min(JOIN_AFTER, pastItems.length) - 1
+                    ? [
+                        card,
+                        <GridRow key="join">
+                          <JoinCta compact />
+                        </GridRow>,
+                      ]
+                    : [card];
+                })}
               </CardGrid>
             )}
             {past.isFetchNextPageError && !past.isFetchingNextPage && (
