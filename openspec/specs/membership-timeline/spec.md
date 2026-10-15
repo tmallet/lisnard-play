@@ -3,16 +3,6 @@
 ## Purpose
 TBD - created by archiving change membership-timeline. Update Purpose after archive.
 ## Requirements
-### Requirement: Onglet « Adhésions »
-L'application DOIT proposer un onglet « Adhésions » dans la navigation principale
-(en-tête sur le web, barre d'onglets sur iOS et Android), qui mène à une page
-présentant le nombre d'adhérents de Nouvelle Énergie et son évolution au fil des
-interventions. Sur le web, la page DOIT être accessible à l'adresse `/adhesions`.
-
-#### Scenario: Accès depuis la navigation
-- **WHEN** l'utilisateur choisit « Adhésions » dans la navigation
-- **THEN** la page affiche le total d'adhérents en cours, sa date de mise à jour et le graphique
-
 ### Requirement: Données d'adhésion mises en cache
 Le système DOIT obtenir le total en cours et l'historique quotidien des adhérents
 depuis les fichiers publics de Nouvelle Énergie, par le serveur de l'application et
@@ -73,4 +63,25 @@ parti, et n'ajouter aucun traceur.
 #### Scenario: Mention de la source
 - **WHEN** un visiteur ouvre la page « Adhésions »
 - **THEN** il y lit la source des chiffres et l'avertissement sur la corrélation
+
+### Requirement: Onglet « Campagne »
+L'application DOIT proposer un onglet « Campagne » dans la navigation principale
+(en-tête sur le web, barre d'onglets sur iOS et Android). Il présente deux vues, au
+choix de l'utilisateur : « Adhésions » (nombre d'adhérents de Nouvelle Énergie et son
+évolution au fil des interventions, vue par défaut) et « Déplacements » (spec
+`intervention-places`). Sur le web, la page DOIT être accessible à l'adresse
+`/campagne`, la vue choisie DOIT figurer dans l'adresse (`/campagne?vue=deplacements`),
+et l'ancienne adresse `/adhesions` DOIT rediriger vers `/campagne`.
+
+#### Scenario: Accès depuis la navigation
+- **WHEN** l'utilisateur choisit « Campagne » dans la navigation
+- **THEN** la vue « Adhésions » s'affiche, avec le total d'adhérents, sa date de mise à jour et le graphique
+
+#### Scenario: Changer de vue
+- **WHEN** l'utilisateur choisit « Déplacements »
+- **THEN** la carte des déplacements s'affiche et l'adresse devient `/campagne?vue=deplacements`
+
+#### Scenario: Ancienne adresse
+- **WHEN** un visiteur ouvre `/adhesions`
+- **THEN** il arrive sur `/campagne`, vue « Adhésions »
 
