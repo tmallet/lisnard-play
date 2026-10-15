@@ -39,3 +39,4 @@ Règles :
 | [0025](0025-invitation-adhesion.md) | Invitation à adhérer à Nouvelle Énergie par le lien de parrainage de l'éditeur | accepted | produit, ui, independance, juridique |
 | [0026](0026-donnees-adhesion.md) | Données d'adhésion de Nouvelle Énergie lues par l'API avec un cache, sans copie en base | accepted | donnees, api, independance, dependance-externe |
 | [0027](0027-carte-des-deplacements.md) | Lieu des déplacements extrait par un modèle, carte de France en SVG sans tiers, onglet « Campagne » | accepted | ia, donnees, ui, confidentialite |
+| [0028](0028-citations-horodatees.md) | Citations horodatées extraites avec le résumé, recherche plein texte dans Postgres, page par citation | accepted | ia, donnees, ui, recherche |
