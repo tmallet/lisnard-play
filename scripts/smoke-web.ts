@@ -259,6 +259,20 @@ try {
     found.result?.data?.quotes?.[0]?.itemId === id,
   );
 
+  // Plan du site (spec app-shell) : adresses absolues sur le domaine demandé.
+  const sitemap = await fetch(`${BASE}/sitemap.xml`, {
+    headers: { 'x-forwarded-proto': 'https', 'x-forwarded-host': 'play.example.test' },
+  });
+  const sitemapXml = await sitemap.text();
+  check(
+    '/sitemap.xml : XML servi',
+    sitemap.status === 200 && (sitemap.headers.get('content-type') ?? '').includes('xml'),
+  );
+  check(
+    '/sitemap.xml : intervention publiée, sur le domaine du proxy',
+    sitemapXml.includes(`<loc>https://play.example.test/interventions/${id}</loc>`),
+  );
+
   // Notifications (spec push-notifications, ADR 0024).
   const sw = await fetch(`${BASE}/sw.js`);
   check(
@@ -388,6 +402,10 @@ try {
     check('indexation activée : pas d’en-tête X-Robots-Tag', !page.headers.has('x-robots-tag'));
     const allowed = await (await fetch(`${openBase}/robots.txt`)).text();
     check('indexation activée : robots.txt autorise', !allowed.includes('Disallow'));
+    check(
+      'indexation activée : robots.txt indique le plan du site',
+      allowed.includes('Sitemap: http'),
+    );
   } finally {
     open.kill();
     await open.exited;

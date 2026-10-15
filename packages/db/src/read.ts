@@ -416,3 +416,21 @@ export async function getPublishedById(
     summary: toPublicSummary(row.summary),
   };
 }
+
+/**
+ * Adresses du plan du site (spec app-shell) : interventions visibles. Les pages de
+ * citation n'y figurent pas : leur HTML servi est le gabarit commun tant que le rendu
+ * par requête n'existe pas (ADR 0011), et leur adresse change quand le résumé est
+ * régénéré.
+ */
+export interface SitemapEntries {
+  interventions: { id: string; updated: string }[];
+}
+
+export async function listSitemapEntries(db: Db): Promise<SitemapEntries> {
+  // Mise à jour : jour du résumé s'il existe, sinon de l'intervention. Lu comme texte
+  // plutôt que converti : une date illisible dans une ligne ne fait pas échouer le plan.
+  const updated = sql<string>`coalesce(substring(${item.summary}->>'generatedAt' from '^[0-9]{4}-[0-9]{2}-[0-9]{2}'), to_char(${sortDate} at time zone 'UTC', 'YYYY-MM-DD'))`;
+  // Sans tri : l'ordre d'un plan du site est indifférent.
+  return { interventions: await db.select({ id: item.id, updated }).from(item).where(visibleItem) };
+}

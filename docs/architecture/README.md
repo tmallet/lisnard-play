@@ -45,7 +45,8 @@ lisnard-play/
 │  │  ├─ interventions/[id].tsx   détail (rendu côté client, ADR 0011), `?t=` pour un minutage
 │  │  ├─ interventions/[id]/citation/[t].tsx   page d'une citation (ADR 0028)
 │  │  ├─ +not-found.tsx   404
-│  │  └─ api/trpc/[trpc]+api.ts   point d'accès tRPC (connexion Postgres partagée)
+│  │  ├─ sitemap.xml+api.ts   plan du site, depuis la base (cache de 10 min)
+│  │  └─ api/trpc/[trpc]+api.ts   point d'accès tRPC (connexion Postgres partagée, src/server/db.ts)
 │  ├─ src/components/     Screen, WebChrome, AppNavigation, InterventionFeed,
 │  │                      InterventionCard, LiveBadge, ThemeFilter, MediaEmbed, LinkCard…
 │  ├─ src/config/         identity.json (nom), app.ts, navigation.ts

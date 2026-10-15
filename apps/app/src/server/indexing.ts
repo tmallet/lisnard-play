@@ -9,8 +9,22 @@ export function indexingAllowed(value: string | undefined): boolean {
   return value === 'true';
 }
 
-export function robotsTxt(allowed: boolean): string {
-  return allowed ? 'User-agent: *\nAllow: /\n' : 'User-agent: *\nDisallow: /\n';
+/** robots.txt ; une fois l'indexation activée, il indique le plan du site (adresse absolue). */
+export function robotsTxt(allowed: boolean, origin?: string): string {
+  if (!allowed) return 'User-agent: *\nDisallow: /\n';
+  return `User-agent: *\nAllow: /\n${origin ? `Sitemap: ${origin}/sitemap.xml\n` : ''}`;
+}
+
+/**
+ * Domaine public par lequel la requête est arrivée : le proxy (Caddy) pose
+ * X-Forwarded-Proto et X-Forwarded-Host, le serveur ne voyant que du HTTP local.
+ */
+export function publicOrigin(req: Request): string {
+  const url = new URL(req.url);
+  const first = (name: string) => req.headers.get(name)?.split(',')[0]?.trim() || null;
+  const proto = first('x-forwarded-proto') ?? url.protocol.replace(':', '');
+  const host = first('x-forwarded-host') ?? req.headers.get('host') ?? url.host;
+  return `${proto}://${host}`;
 }
 
 export const NOINDEX_HEADER = 'noindex, nofollow';

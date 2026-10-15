@@ -104,7 +104,14 @@ sans reconstruction de l'application. Tant que l'indexation est désactivée :
 - `/robots.txt` DOIT interdire l'exploration de tout le site.
 
 Une fois l'indexation activée, ni l'en-tête ni l'interdiction NE DOIVENT être
-présents.
+présents, et `/robots.txt` DOIT indiquer l'adresse absolue du plan du site.
+
+Le site DOIT servir à `/sitemap.xml` un plan du site au format Sitemaps qui liste, en
+adresses absolues sur le domaine par lequel il est servi, les pages fixes (accueil,
+campagne, à propos, mentions légales) et chaque intervention visible, avec leur date de
+dernière mise à jour. Les pages de citation n'y figurent pas tant que leur contenu n'est
+pas présent dans le HTML servi : leur adresse change aussi quand le résumé est régénéré. Une intervention masquée (non
+publiée, sans rendu ou reprise d'un autre article) NE DOIT PAS y figurer.
 
 #### Scenario: Déploiement par défaut
 - **WHEN** le serveur démarre sans `ALLOW_INDEXING`
@@ -112,7 +119,11 @@ présents.
 
 #### Scenario: Indexation activée
 - **WHEN** le serveur démarre avec `ALLOW_INDEXING=true`
-- **THEN** aucune réponse ne porte d'en-tête `X-Robots-Tag` et `/robots.txt` autorise l'exploration
+- **THEN** aucune réponse ne porte d'en-tête `X-Robots-Tag`, `/robots.txt` autorise l'exploration et contient `Sitemap: https://<domaine>/sitemap.xml`
+
+#### Scenario: Plan du site
+- **WHEN** un moteur demande `https://play.projetlisnard.fr/sitemap.xml`
+- **THEN** il reçoit un document XML dont chaque adresse commence par `https://play.projetlisnard.fr/`, avec l'accueil et chaque intervention publiée, mais aucune intervention masquée ni page de citation
 
 ### Requirement: Mentions légales et confidentialité
 L'application DOIT proposer une page « Mentions légales et confidentialité »,
