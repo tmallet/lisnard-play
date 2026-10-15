@@ -1,8 +1,7 @@
 import { appRouter, createContext } from '@lisnard/api';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
-
+import { getDb } from '@/server/db';
 import pkg from '../../../../package.json';
-import { getDb } from '../../../server/db';
 
 function handler(req: Request) {
   return fetchRequestHandler({

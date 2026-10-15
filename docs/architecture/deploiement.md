@@ -182,7 +182,7 @@ dépense sur la clé OpenRouter.
     - `ALLOW_INDEXING=true` sur l'app (production seulement), puis **Restart** ;
     - vérifier : plus d'en-tête `X-Robots-Tag`, `robots.txt` contient
       `Sitemap: https://play.projetlisnard.fr/sitemap.xml`, et `/sitemap.xml` liste les
-      interventions et les citations en adresses `https://play.projetlisnard.fr/…` ;
+      interventions en adresses `https://play.projetlisnard.fr/…` ;
     - Google Search Console : propriété `play.projetlisnard.fr` (validation par un
       enregistrement DNS TXT), puis **Sitemaps** → `sitemap.xml`.
 

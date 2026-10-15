@@ -269,9 +269,8 @@ try {
     sitemap.status === 200 && (sitemap.headers.get('content-type') ?? '').includes('xml'),
   );
   check(
-    '/sitemap.xml : intervention publiée et sa citation, sur le domaine du proxy',
-    sitemapXml.includes(`<loc>https://play.example.test/interventions/${id}</loc>`) &&
-      sitemapXml.includes(`https://play.example.test/interventions/${id}/citation/125`),
+    '/sitemap.xml : intervention publiée, sur le domaine du proxy',
+    sitemapXml.includes(`<loc>https://play.example.test/interventions/${id}</loc>`),
   );
 
   // Notifications (spec push-notifications, ADR 0024).

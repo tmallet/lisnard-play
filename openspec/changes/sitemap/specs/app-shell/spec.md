@@ -12,8 +12,9 @@ présents, et `/robots.txt` DOIT indiquer l'adresse absolue du plan du site.
 
 Le site DOIT servir à `/sitemap.xml` un plan du site au format Sitemaps qui liste, en
 adresses absolues sur le domaine par lequel il est servi, les pages fixes (accueil,
-campagne, à propos, mentions légales), chaque intervention visible et chaque page de
-citation, avec leur date de dernière mise à jour. Une intervention masquée (non
+campagne, à propos, mentions légales) et chaque intervention visible, avec leur date de
+dernière mise à jour. Les pages de citation n'y figurent pas tant que leur contenu n'est
+pas présent dans le HTML servi : leur adresse change aussi quand le résumé est régénéré. Une intervention masquée (non
 publiée, sans rendu ou reprise d'un autre article) NE DOIT PAS y figurer.
 
 #### Scenario: Déploiement par défaut
@@ -26,4 +27,4 @@ publiée, sans rendu ou reprise d'un autre article) NE DOIT PAS y figurer.
 
 #### Scenario: Plan du site
 - **WHEN** un moteur demande `https://play.projetlisnard.fr/sitemap.xml`
-- **THEN** il reçoit un document XML dont chaque adresse commence par `https://play.projetlisnard.fr/`, avec l'accueil, chaque intervention publiée et chaque page de citation, mais aucune intervention masquée
+- **THEN** il reçoit un document XML dont chaque adresse commence par `https://play.projetlisnard.fr/`, avec l'accueil et chaque intervention publiée, mais aucune intervention masquée ni page de citation

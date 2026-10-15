@@ -12,7 +12,6 @@ export function sitemapXml(origin: string, entries: SitemapEntries): string {
   const urls = [
     ...STATIC_PATHS.map((path) => url(path)),
     ...entries.interventions.map((i) => url(`/interventions/${i.id}`, i.updated)),
-    ...entries.quotes.map((q) => url(`/interventions/${q.itemId}/citation/${q.startS}`, q.updated)),
   ];
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
 }

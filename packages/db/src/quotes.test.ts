@@ -82,7 +82,7 @@ test('recherche : une phrase publiée dans deux vidéos ne sort qu’une fois', 
   await db.delete(item).where(eq(item.id, copy));
 });
 
-test('plan du site : intervention visible et ses citations, datées du résumé', async () => {
+test('plan du site : intervention visible, datée du résumé', async () => {
   const { id: hidden } = await upsertItem(db, {
     sourceId: 'yt:bfm',
     platformId: 'yt:hidden',
@@ -93,11 +93,13 @@ test('plan du site : intervention visible et ses citations, datées du résumé'
   });
   const entries = await listSitemapEntries(db);
   expect(entries.interventions).toEqual([{ id, updated: '2026-10-15' }]);
-  expect(entries.quotes.map((q) => [q.itemId, q.startS])).toEqual([
-    [id, 120],
-    [id, 754],
-  ]);
   expect(JSON.stringify(entries)).not.toContain(hidden);
+  // Date de résumé illisible : la date de l'intervention, sans erreur.
+  await db
+    .update(item)
+    .set({ summary: { ...summary('x'), generatedAt: 'hier' } })
+    .where(eq(item.id, id));
+  expect((await listSitemapEntries(db)).interventions).toEqual([{ id, updated: '2026-10-13' }]);
 });
 
 test('résumé régénéré sans citation : les anciennes sont effacées', async () => {
