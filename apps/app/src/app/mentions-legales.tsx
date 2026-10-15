@@ -93,6 +93,11 @@ export default function LegalNotice() {
             renvoient vers le site de leur éditeur : aucun contenu n’est copié ni réhébergé.
           </P>
           <P>
+            Le bouton « Adhérer à Nouvelle Énergie » renvoie vers le site d’adhésion du parti par un
+            lien de parrainage de l’éditeur : une adhésion faite par ce lien lui est rattachée. Ce
+            lien ne fait de {APP_NAME} ni un site du parti ni un site officiel.
+          </P>
+          <P>
             Les résumés de vidéos sont générés automatiquement par un modèle d’intelligence
             artificielle et signalés comme tels. Pour signaler une erreur ou demander le retrait
             d’un contenu, écrivez à <ExternalLink url={mail}>{LEGAL.contactEmail}</ExternalLink>.
