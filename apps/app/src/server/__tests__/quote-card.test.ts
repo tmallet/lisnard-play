@@ -1,6 +1,7 @@
 import { INDEPENDENCE_NOTICE } from '../../config/app';
 import { type CardNode, quoteCard, quoteFontSize, withoutEmoji } from '../quote-card';
 import { createQuoteImageHandler, quoteImageParams } from '../quote-image-route';
+import { quotePageMeta, quotePageParams } from '../quote-page';
 
 /** Tous les textes de l'arbre, dans l'ordre. */
 const texts = (node: CardNode | string): string[] => {
@@ -51,13 +52,20 @@ test('taille du texte : grande pour une phrase courte, réduite pour une longue'
 
 test('adresse de l’image : identifiant et minutage seulement', () => {
   const id = 'b710101c-1a11-4810-b8f8-339a5d171995';
-  expect(quoteImageParams(`/interventions/${id}/citation/641/image.png`)).toEqual({ id, t: 641 });
+  expect(quoteImageParams(`/interventions/${id}/citation/641/image.png`)).toEqual({
+    id,
+    t: 641,
+    format: 'square',
+  });
+  expect(quoteImageParams(`/interventions/${id}/citation/641/apercu.png`)?.format).toBe(
+    'landscape',
+  );
   expect(quoteImageParams(`/interventions/${id}/citation/abc/image.png`)).toBeNull();
   expect(quoteImageParams('/interventions/../citation/1/image.png')).toBeNull();
 });
 
 describe('route de l’image', () => {
-  const params = { id: 'b710101c-1a11-4810-b8f8-339a5d171995', t: 641 };
+  const params = { id: 'b710101c-1a11-4810-b8f8-339a5d171995', t: 641, format: 'square' as const };
   const req = new Request('http://localhost:3000/x');
   const quote = { ...base, itemId: params.id, startS: 641 };
   const api = (data: unknown, ok = true) =>
@@ -92,4 +100,39 @@ describe('route de l’image', () => {
 test('emojis retirés du texte (absents de Montserrat)', () => {
   expect(withoutEmoji('Bravo 👏🏻 à tous 🇫🇷 !')).toBe('Bravo à tous !');
   expect(withoutEmoji('Le prix : 10 € — « net ».')).toBe('Le prix : 10 € — « net ».');
+});
+
+test('paysage : 1200 × 630, même contenu, texte plus petit', () => {
+  const square = quoteCard(base);
+  const landscape = quoteCard(base, 'landscape');
+  expect(landscape.props.style).toMatchObject({ width: 1200, height: 630 });
+  expect(texts(landscape)).toEqual(texts(square));
+  const size = (node: CardNode) =>
+    JSON.stringify(node).match(/"fontSize":(\d+),"fontWeight":700,"lineHeight"/)?.[1];
+  expect(Number(size(landscape))).toBeLessThan(Number(size(square)));
+});
+
+describe('aperçu de la page d’une citation', () => {
+  const id = 'b710101c-1a11-4810-b8f8-339a5d171995';
+  const quote = { ...base, itemId: id, startS: 641 };
+
+  test('adresse de page seulement, pas celle de l’image', () => {
+    expect(quotePageParams(`/interventions/${id}/citation/643`)).toEqual({ id, t: 643 });
+    expect(quotePageParams(`/interventions/${id}/citation/643/image.png`)).toBeNull();
+  });
+
+  test('titre, description et balises d’aperçu, adresses absolues et échappées', () => {
+    const meta = quotePageMeta({ ...quote, text: 'Il dit "non" & <oui>' }, 'https://play.test');
+    expect(meta.title).toBe('« Il dit "non" & <oui> » · Lisnard Play');
+    expect(meta.description).toBe('David Lisnard sur BFMTV, 13 octobre 2026');
+    expect(quotePageMeta({ ...quote, official: true }, 'https://play.test').description).toBe(
+      'David Lisnard sur sa chaîne YouTube, 13 octobre 2026',
+    );
+    expect(meta.tags).toContain('<meta name="twitter:card" content="summary_large_image"/>');
+    expect(meta.tags).toContain(
+      `<meta property="og:image" content="https://play.test/interventions/${id}/citation/641/apercu.png"/>`,
+    );
+    expect(meta.tags).toContain('Il dit &#34;non&#34; &#38; &#60;oui&#62;');
+    expect(meta.tags).not.toContain('<oui>');
+  });
 });

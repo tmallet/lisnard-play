@@ -2,8 +2,9 @@
  * Serveur de production (ADR 0015) : sert l'export Expo (`dist/`) avec Bun.
  * Fichiers statiques depuis dist/client, pages pré-rendues et API routes via
  * l'adaptateur Bun d'expo-server. Usage : bun server.ts (PORT, défaut 3000).
- * Indexation bloquée sauf ALLOW_INDEXING=true (spec app-shell). Image de partage des
- * citations (ADR 0029), produite ici : son module natif ne passe pas par Metro.
+ * Indexation bloquée sauf ALLOW_INDEXING=true (spec app-shell). Images de partage des
+ * citations (ADR 0029), produites ici : leur module natif ne passe pas par Metro.
+ * En-tête des pages de citation réécrit pour les aperçus de lien (ADR 0030).
  */
 import { join, normalize, resolve } from 'node:path';
 
@@ -16,6 +17,8 @@ import {
   withIndexingPolicy,
 } from './src/server/indexing';
 import { createQuoteImageHandler, quoteImageParams } from './src/server/quote-image-route';
+import { quotePageMeta, quotePageParams, withQuoteMeta } from './src/server/quote-page';
+import { readQuote } from './src/server/quote-share';
 
 const DIST = resolve(import.meta.dir, process.env.DIST_DIR ?? 'dist');
 const CLIENT = join(DIST, 'client');
@@ -23,7 +26,8 @@ const handle = createRequestHandler({ build: join(DIST, 'server') });
 const ALLOW_INDEXING = indexingAllowed(process.env.ALLOW_INDEXING);
 // Adresse du site en pied des images partagées : celle de la production, jamais celle
 // annoncée par la requête (un en-tête falsifié ne doit ni l'afficher ni vider le cache).
-const SITE_HOST = new URL(process.env.EXPO_PUBLIC_SITE_URL ?? 'https://play.projetlisnard.fr').host;
+const SITE_URL = new URL(process.env.EXPO_PUBLIC_SITE_URL ?? 'https://play.projetlisnard.fr');
+const SITE_HOST = SITE_URL.host;
 // Module d'image chargé à la première image : un échec (binaire absent) n'empêche pas
 // le site de démarrer, seule l'image répond 503.
 const quoteImage = createQuoteImageHandler(handle, async () => {
@@ -73,6 +77,22 @@ const server = Bun.serve({
         }),
         ALLOW_INDEXING,
       );
+    const page = quotePageParams(pathname);
+    if (page) {
+      // Citation introuvable ou API en erreur : gabarit inchangé (métadonnées génériques).
+      // Lecture de la citation et rendu du gabarit en parallèle. Adresses de l'aperçu sur
+      // le domaine de production, jamais tirées des en-têtes de la requête.
+      const [quote, response] = await Promise.all([
+        readQuote(handle, req, page).catch(() => null),
+        handle(req),
+      ]);
+      return withIndexingPolicy(
+        quote && quote !== 'error'
+          ? withQuoteMeta(response, quotePageMeta(quote, SITE_URL.origin))
+          : response,
+        ALLOW_INDEXING,
+      );
+    }
     return withIndexingPolicy((await staticFile(pathname)) ?? (await handle(req)), ALLOW_INDEXING);
   },
 });

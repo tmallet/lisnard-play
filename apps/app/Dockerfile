@@ -17,6 +17,8 @@ RUN bun --bun expo export --platform web
 # Image des citations (ADR 0029) : module empaqueté, resvg (binaire natif) laissé à part.
 RUN bun build src/server/quote-image.ts --target=bun --outfile=/repo/image/quote-image.js \
     --external @resvg/resvg-js
+# Aperçu des pages de citation (ADR 0030) : module empaqueté avec ses textes partagés.
+RUN bun build src/server/quote-page.ts --target=bun --outfile=/repo/image/quote-page.js
 
 FROM oven/bun:${BUN_VERSION}-slim AS runtime
 WORKDIR /app
@@ -28,7 +30,9 @@ COPY --from=build /repo/apps/app/dist ./dist
 COPY --from=build /repo/apps/app/server.ts ./server.ts
 COPY --from=build /repo/apps/app/src/server/indexing.ts ./src/server/indexing.ts
 COPY --from=build /repo/apps/app/src/server/quote-image-route.ts ./src/server/quote-image-route.ts
+COPY --from=build /repo/apps/app/src/server/quote-share.ts ./src/server/quote-share.ts
 COPY --from=build /repo/image/quote-image.js ./src/server/quote-image.js
+COPY --from=build /repo/image/quote-page.js ./src/server/quote-page.js
 COPY --from=build /repo/node_modules/@resvg ./node_modules/@resvg
 COPY --from=build /repo/node_modules/@expo-google-fonts/montserrat/package.json ./node_modules/@expo-google-fonts/montserrat/package.json
 COPY --from=build /repo/node_modules/@expo-google-fonts/montserrat/400Regular/Montserrat_400Regular.ttf ./node_modules/@expo-google-fonts/montserrat/400Regular/
