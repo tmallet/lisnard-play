@@ -259,6 +259,13 @@ try {
     found.result?.data?.quotes?.[0]?.itemId === id,
   );
 
+  // Fichier de validation Google Search Console : à servir tel quel, sans jamais le retirer.
+  const gsc = await fetch(`${BASE}/google2fcb3d6622939462.html`);
+  check(
+    'validation Search Console : fichier servi',
+    gsc.status === 200 && (await gsc.text()).includes('google-site-verification'),
+  );
+
   // Plan du site (spec app-shell) : adresses absolues sur le domaine demandé.
   const sitemap = await fetch(`${BASE}/sitemap.xml`, {
     headers: { 'x-forwarded-proto': 'https', 'x-forwarded-host': 'play.example.test' },
