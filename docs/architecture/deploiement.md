@@ -112,36 +112,21 @@ dépense sur la clé OpenRouter.
    Domaine : `play.projetlisnard.fr` ; prévisualisations des PR sous
    `{{pr_id}}.lisnardplay.thimal.fr` (modèle écrit en clair dans Coolify, sans
    `{{domain}}`). L'ancien domaine `lisnardplay.thimal.fr` redirige vers le nouveau
-   (configuration dynamique Traefik) : les abonnés aux notifications web s'y étaient
+   (configuration dynamique du proxy Caddy) : les abonnés aux notifications web s'y étaient
    inscrits, et leurs clics y mènent encore.
    - Redirection : retirer l'ancien domaine de l'app, puis, dans Coolify, **Servers**
-     → **Proxy** → **Dynamic Configurations**, un fichier `lisnardplay-redirect.yaml` :
+     → **Proxy** (Caddy) → **Dynamic Configurations**, un fichier
+     `lisnardplay-redirect.caddy` :
 
-     ```yaml
-     http:
-       routers:
-         lisnardplay-old-https:
-           rule: Host(`lisnardplay.thimal.fr`)
-           entryPoints: [https]
-           middlewares: [lisnardplay-to-play]
-           service: noop@internal
-           tls:
-             certResolver: letsencrypt
-         lisnardplay-old-http:
-           rule: Host(`lisnardplay.thimal.fr`)
-           entryPoints: [http]
-           middlewares: [lisnardplay-to-play]
-           service: noop@internal
-       middlewares:
-         lisnardplay-to-play:
-           redirectRegex:
-             regex: "^https?://lisnardplay\\.thimal\\.fr/(.*)"
-             replacement: "https://play.projetlisnard.fr/${1}"
-             permanent: true
+     ```caddy
+     lisnardplay.thimal.fr {
+     	redir https://play.projetlisnard.fr{uri} permanent
+     }
      ```
 
-     Vérifier : `curl -I https://lisnardplay.thimal.fr/a-propos` répond `301` vers
-     `https://play.projetlisnard.fr/a-propos`. La règle ne vise que ce nom exact : les
+     Caddy obtient le certificat et redirige aussi le HTTP. Vérifier :
+     `curl -I https://lisnardplay.thimal.fr/a-propos` répond `301` vers
+     `https://play.projetlisnard.fr/a-propos`. Le bloc ne vise que ce nom exact : les
      prévisualisations ne sont pas touchées.
    - Build Pack « Dockerfile », Base Directory `/`, Dockerfile
      `apps/app/Dockerfile`, port exposé `3000`.
