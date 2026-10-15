@@ -121,6 +121,16 @@ describe('aperçu de la page d’une citation', () => {
     expect(quotePageParams(`/interventions/${id}/citation/643/image.png`)).toBeNull();
   });
 
+  test('image versionnée par le texte : nouvelle adresse si la citation change', () => {
+    const image = (text: string) =>
+      quotePageMeta({ ...quote, text }, 'https://play.test').tags.match(
+        /og:image" content="([^"]+)"/,
+      )?.[1];
+    expect(image('Un')).toMatch(/\/apercu\.png\?v=[0-9a-f]+$/);
+    expect(image('Un')).toBe(image('Un'));
+    expect(image('Un')).not.toBe(image('Deux'));
+  });
+
   test('titre, description et balises d’aperçu, adresses absolues et échappées', () => {
     const meta = quotePageMeta({ ...quote, text: 'Il dit "non" & <oui>' }, 'https://play.test');
     expect(meta.title).toBe('« Il dit "non" & <oui> » · Lisnard Play');
@@ -130,7 +140,7 @@ describe('aperçu de la page d’une citation', () => {
     );
     expect(meta.tags).toContain('<meta name="twitter:card" content="summary_large_image"/>');
     expect(meta.tags).toContain(
-      `<meta property="og:image" content="https://play.test/interventions/${id}/citation/641/apercu.png"/>`,
+      `<meta property="og:image" content="https://play.test/interventions/${id}/citation/641/apercu.png?v=`,
     );
     expect(meta.tags).toContain('Il dit &#34;non&#34; &#38; &#60;oui&#62;');
     expect(meta.tags).not.toContain('<oui>');

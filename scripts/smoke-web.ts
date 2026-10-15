@@ -294,17 +294,19 @@ try {
     'page de citation : titre de la citation et aperçu paysage',
     /<title[^>]*>« Il faut réformer l’école dès le primaire\. » · /.test(quoteHtml) &&
       quoteHtml.includes(
-        `<meta property="og:image" content="https://play.projetlisnard.fr/interventions/${id}/citation/125/apercu.png"/>`,
+        `<meta property="og:image" content="https://play.projetlisnard.fr/interventions/${id}/citation/125/apercu.png?v=`,
       ) &&
       quoteHtml.includes('<meta name="twitter:card" content="summary_large_image"/>'),
   );
   const unknownQuote = await (await fetch(`${BASE}/interventions/${id}/citation/9999`)).text();
   check(
-    'page de citation : description remplacée, une seule balise de chaque',
+    'page de citation : description remplacée, une seule balise de chaque, aperçu en tête',
     quoteHtml.includes('content="David Lisnard sur ') &&
       !quoteHtml.includes('Toutes les interventions publiques') &&
       quoteHtml.split('property="og:image"').length === 2 &&
-      quoteHtml.split('property="og:title"').length === 2,
+      quoteHtml.split('property="og:title"').length === 2 &&
+      quoteHtml.split(/<meta charset/i).length === 2 &&
+      quoteHtml.indexOf('og:image') < quoteHtml.indexOf('<style'),
   );
   const quotedHtml = await (await fetch(`${BASE}/interventions/${id}/citation/300`)).text();
   check(
