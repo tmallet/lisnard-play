@@ -29,8 +29,20 @@ consigne change.
 
 ### Requirement: Coût borné
 Les appels au modèle pour les lieux DOIVENT être imputés sur le plafond quotidien de
-dépense des résumés (ADR 0021) et s'arrêter quand il est atteint. Une erreur
-passagère du service NE DOIT PAS compter comme un échec définitif.
+dépense des résumés (ADR 0021), après les résumés, et s'arrêter quand il est atteint.
+Une indisponibilité du service NE DOIT PAS compter comme un échec. Une réponse
+inexploitable DOIT être réessayée après une attente croissante, et abandonnée au bout
+de trois essais (sans lieu, jusqu'à une nouvelle consigne). Une réponse payée NE DOIT
+jamais être redemandée parce que la géolocalisation a échoué : elle est gardée et
+géolocalisée plus tard.
+
+#### Scenario: Réponses inexploitables
+- **WHEN** le modèle renvoie trois fois une réponse inexploitable pour une intervention
+- **THEN** l'intervention est abandonnée sans lieu et n'est plus envoyée au modèle
+
+#### Scenario: Base adresse nationale indisponible
+- **WHEN** la géolocalisation échoue après une réponse du modèle
+- **THEN** la réponse est gardée et géolocalisée plus tard, sans nouvel appel au modèle
 
 #### Scenario: Plafond atteint
 - **WHEN** le plafond quotidien est atteint

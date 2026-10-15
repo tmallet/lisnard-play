@@ -115,6 +115,15 @@ export interface PlaceRecord {
   lon: number | null;
   /** Centre d'une région ou d'un département plutôt qu'une commune. */
   approximate: boolean;
+  /**
+   * Commune et département répondus par le modèle, gardés tant que la géolocalisation
+   * n'a pas abouti (Base adresse nationale indisponible) : elle est refaite sans
+   * rappeler le modèle.
+   */
+  query?: { city: string; department: string } | null;
+  geocodePending?: boolean;
+  /** Abandon après plusieurs réponses inexploitables du modèle. */
+  failed?: boolean;
   model: string;
   promptVersion: number;
   /** ISO 8601. */
@@ -179,6 +188,10 @@ export const item = pgTable(
     summary: jsonb<SummaryRecord>('summary'),
     /** Lieu du déplacement, ou son absence ; null tant qu'il n'a pas été déterminé. */
     place: jsonb<PlaceRecord>('place'),
+    /** Échecs consécutifs de détermination du lieu (plafond, comme pour les résumés). */
+    placeAttempts: integer('place_attempts').notNull().default(0),
+    /** Pas de nouvel essai avant cette date (attente croissante après un échec). */
+    placeRetryAt: timestamp('place_retry_at', { withTimezone: true }),
     /** Échecs consécutifs de production du résumé (plafond de tentatives). */
     summaryAttempts: integer('summary_attempts').notNull().default(0),
     /** Pas de nouvel essai de résumé avant cette date (attente croissante après un échec). */

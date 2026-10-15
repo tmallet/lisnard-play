@@ -150,7 +150,13 @@ const tasks: Task[] = [
     run: async () => ({ purged: await purgeStaleSubscriptions(db) }),
   },
   {
-    // Lieu des déplacements : plafond de dépense partagé avec les résumés (ADR 0027).
+    name: 'summarize',
+    everyMs: CADENCE_MS.summarize,
+    run: () => summarizePending(db, summarizer, { dailyBudget: SUMMARY_DAILY_BUDGET_USD }),
+  },
+  {
+    // Lieu des déplacements, après les résumés : même plafond quotidien, les résumés
+    // restent prioritaires (ADR 0027).
     name: 'places',
     everyMs: CADENCE_MS.places,
     run: () => locatePending(db, locator, { dailyBudget: SUMMARY_DAILY_BUDGET_USD }),
@@ -162,11 +168,6 @@ const tasks: Task[] = [
       };
       return located === 0 && failed === 0 && !budgetReached;
     },
-  },
-  {
-    name: 'summarize',
-    everyMs: CADENCE_MS.summarize,
-    run: () => summarizePending(db, summarizer, { dailyBudget: SUMMARY_DAILY_BUDGET_USD }),
   },
 ];
 

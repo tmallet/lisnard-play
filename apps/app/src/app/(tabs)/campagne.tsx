@@ -36,8 +36,11 @@ export default function Campaign() {
               key={view.value}
               role="tab"
               accessibilityState={{ selected }}
+              // Adresse propre : /campagne pour la vue par défaut, jamais « vue=undefined ».
               onPress={() =>
-                router.setParams({ vue: view.value === 'adhesions' ? undefined : view.value })
+                router.replace(
+                  view.value === 'adhesions' ? '/campagne' : '/campagne?vue=deplacements',
+                )
               }
               className={`rounded-full px-4 py-1.5 ${selected ? 'bg-chamois' : ''}`}
             >

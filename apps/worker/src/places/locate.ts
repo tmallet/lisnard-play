@@ -133,10 +133,14 @@ export async function geocodeCity(
     }[];
   };
   const candidates = (body.features ?? []).filter((f) => (f.properties?.score ?? 0) >= MIN_SCORE);
+  // Contexte BAN : « 49, Maine-et-Loire, Pays de la Loire ». Comparaison exacte avec le
+  // numéro ou le nom du département : « Ain » ne doit pas correspondre à « Maine-et-Loire ».
   const wanted = plain(department);
-  const best =
-    (wanted && candidates.find((f) => plain(f.properties?.context ?? '').includes(wanted))) ||
-    candidates[0];
+  const inDepartment = (context = '') => {
+    const [code, name] = context.split(',').map(plain);
+    return wanted !== '' && (code === wanted || name === wanted);
+  };
+  const best = candidates.find((f) => inDepartment(f.properties?.context)) ?? candidates[0];
   const [lon, lat] = best?.geometry?.coordinates ?? [];
   if (!best || lon === undefined || lat === undefined) return null;
   return { city: best.properties?.name ?? best.properties?.city ?? city, lat, lon };

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 
+import { projectPlace } from '@/lib/franceMap';
 import { useTRPC } from '@/lib/trpc';
 
 import { CampaignMap } from './CampaignMap';
@@ -14,7 +15,9 @@ export function TravelsView() {
     trpc.campaign.places.queryOptions(undefined, { refetchInterval: 300_000 }),
   );
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const places = query.data?.places ?? [];
+  // Seuls les lieux que la carte sait dessiner (métropole et cinq départements
+  // d'outre-mer) sont comptés : le chiffre annoncé correspond aux repères affichés.
+  const places = (query.data?.places ?? []).filter((p) => projectPlace(p.lat, p.lon) !== null);
   const selected = places.find((p) => p.key === selectedKey) ?? null;
   const count = places.reduce((n, p) => n + p.interventions.length, 0);
 

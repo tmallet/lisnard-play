@@ -18,6 +18,8 @@
 
 - [x] 2.5 Commande `cli places [--budget N]` : traite tout l'historique d'un coup après le déploiement
 
+- [x] 2.6 Suites de la revue : essais plafonnés avec attente croissante (migration 0011), contenus jamais essayés d'abord, géolocalisation différée sans nouvel appel payé, départage exact des homonymes, tâche après les résumés ; tests
+
 ## 3. API
 
 - [x] 3.1 Procédure `campaign.places` (regroupement par lieu, cache d'une minute) ; tests

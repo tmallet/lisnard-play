@@ -52,7 +52,14 @@ Bayeux, Cannes), et une majorité de plateaux et d'extraits sans lieu pertinent.
   compter d'échec.
 - **Coût** : ajouté au journal `summary_spend` du jour, avec contrôle du plafond
   avant chaque appel (ADR 0021).
-- **Tâche `places`** : toutes les 5 minutes, par lots de 20.
+- **Tâche `places`** : toutes les 5 minutes, par lots de 20, après `summarize` (les
+  résumés restent prioritaires sur le plafond partagé).
+  - Échecs (réponse inexploitable, erreur réseau) : colonnes `place_attempts` et
+    `place_retry_at` (migration 0011), nouvel essai après 30 min puis 1 h, abandon
+    au troisième (lieu `failed`, sans coordonnées). Les contenus jamais essayés
+    passent avant ceux qui ont déjà échoué : l'historique n'est jamais bloqué.
+  - Géolocalisation en échec : la réponse payée est gardée (`query`,
+    `geocodePending`) et géolocalisée au cycle suivant, sans rappeler le modèle.
   - Elle traite les interventions publiées, visibles et non reprises, dont le lieu
     est absent ou dont la version de consigne a changé.
   - Elle est silencieuse quand il n'y a rien à faire.
@@ -69,7 +76,8 @@ Bayeux, Cannes), et une majorité de plateaux et d'extraits sans lieu pertinent.
   centres à maintenir.
 - **Requête** : la commune seule, avec `limit=5`. Ajouter le département à la
   requête fait chuter le score. Le département sert ensuite à départager les
-  homonymes, grâce au champ `context` de la réponse.
+  homonymes, par comparaison exacte avec le numéro ou le nom du champ `context`
+  (« Ain » ne doit pas correspondre à « Maine-et-Loire »).
 - **Pays étranger, ou rien de trouvé** : lieu gardé sans coordonnées.
 - **Sécurité** : appel par le `fetch` du worker, vers une adresse fixe. Le lieu
   extrait n'est qu'un paramètre de requête, jamais une URL : pas de risque de SSRF
@@ -103,6 +111,9 @@ Bayeux, Cannes), et une majorité de plateaux et d'extraits sans lieu pertinent.
   - cercle chamois, rayon de 5 à 14 px selon la racine du nombre d'interventions ;
   - contour pointillé pour un lieu approximatif ;
   - toucher : carte de la liste sous la carte, comme `TimelineCard`.
+- **Compteur** : seuls les lieux que la carte sait dessiner (métropole et cinq
+  départements d'outre-mer) sont comptés ; Saint-Martin ou Saint-Pierre-et-Miquelon,
+  situés par la BAN, n'ont pas d'encart.
 - **Lieux proches qui se recouvrent** : le plus grand est dessiné en dernier, donc
   par-dessus. Le toucher sélectionne le lieu le plus proche du doigt.
 - **Charte** : régions en `bleu` avec contours `blanc/15`, sans aucun visuel du parti.

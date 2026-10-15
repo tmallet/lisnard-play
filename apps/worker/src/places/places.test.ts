@@ -6,10 +6,10 @@ import { createTestDb } from '@lisnard/db/testing';
 import { setMedia, upsertItem, upsertSources } from '@lisnard/db/write';
 import { eq, sql } from 'drizzle-orm';
 
-import { SummaryServiceUnavailable } from '../summaries/openrouter';
+import { InvalidSummaryResponse, SummaryServiceUnavailable } from '../summaries/openrouter';
 import { geocodeCity, type Locator, type PlaceAnswer, parsePlaceAnswer } from './locate';
 import { PLACE_PROMPT_VERSION } from './prompt';
-import { locatePending } from './task';
+import { locatePending, MAX_PLACE_ATTEMPTS } from './task';
 
 /** Base adresse nationale simulée : Saint-Denis existe en Seine-Saint-Denis et à La Réunion. */
 const ban = (async (input: string | URL | Request) => {
@@ -26,9 +26,14 @@ const ban = (async (input: string | URL | Request) => {
         ]
       : q === 'Saint-Raphaël'
         ? [feature('Saint-Raphaël', "83, Var, Provence-Alpes-Côte d'Azur", 6.77, 43.43)]
-        : q === 'Introuvable'
-          ? [feature('Ailleurs', '01, Ain', 5, 46, 0.2)]
-          : [];
+        : q === 'Saint-Martin'
+          ? [
+              feature('Saint-Martin', '49, Maine-et-Loire, Pays de la Loire', -0.5, 47.3),
+              feature('Saint-Martin', '01, Ain, Auvergne-Rhône-Alpes', 5.2, 46.1),
+            ]
+          : q === 'Introuvable'
+            ? [feature('Ailleurs', '01, Ain', 5, 46, 0.2)]
+            : [];
   return Response.json({ features });
 }) as typeof fetch;
 
@@ -49,6 +54,8 @@ describe('réponse du modèle et géolocalisation', () => {
     expect((await geocodeCity('Saint-Denis', 'La Réunion', ban))?.lat).toBe(-20.91);
     expect((await geocodeCity('Saint-Denis', 'Seine-Saint-Denis', ban))?.lat).toBe(48.94);
     expect(await geocodeCity('Introuvable', '', ban)).toBeNull();
+    // « Ain » ne doit pas correspondre à « Maine-et-Loire ».
+    expect((await geocodeCity('Saint-Martin', 'Ain', ban))?.lat).toBe(46.1);
   });
 });
 
@@ -134,5 +141,46 @@ describe('tâche places', () => {
     });
     expect(down.unavailable).toBe('HTTP 402');
     expect(await placeOf(id)).toBeNull();
+  });
+
+  test('réponses inexploitables : nouvel essai différé, abandon au bout de trois, sans autre appel', async () => {
+    const id = await publish('Grand meeting à Saint-Raphaël');
+    let calls = 0;
+    const broken: Locator = {
+      model: 'test',
+      ask: async () => {
+        calls += 1;
+        throw new InvalidSummaryResponse('réponse invalide : lieu', 0.001);
+      },
+    };
+    for (let i = 0; i < MAX_PLACE_ATTEMPTS; i++) {
+      await locatePending(db, broken, { dailyBudget: 1, fetch: ban });
+      // Nouvel essai différé : rien tant que l'attente n'est pas écoulée.
+      expect((await locatePending(db, broken, { dailyBudget: 1, fetch: ban })).failed).toBe(0);
+      await db.update(item).set({ placeRetryAt: null }).where(eq(item.id, id));
+    }
+    expect(calls).toBe(MAX_PLACE_ATTEMPTS);
+    expect(await placeOf(id)).toMatchObject({ failed: true, onSite: false });
+    await locatePending(db, broken, { dailyBudget: 1, fetch: ban });
+    expect(calls).toBe(MAX_PLACE_ATTEMPTS);
+  });
+
+  test('Base adresse nationale indisponible : réponse gardée, géolocalisée plus tard sans nouvel appel', async () => {
+    const id = await publish('Grand meeting à Saint-Raphaël');
+    let calls = 0;
+    const counting: Locator = {
+      model: 'test',
+      ask: async (ctx) => {
+        calls += 1;
+        return locator().ask(ctx);
+      },
+    };
+    const down = (async () => new Response('panne', { status: 503 })) as unknown as typeof fetch;
+    await locatePending(db, counting, { dailyBudget: 1, fetch: down });
+    expect(await placeOf(id)).toMatchObject({ geocodePending: true, lat: null });
+    const stats = await locatePending(db, counting, { dailyBudget: 1, fetch: ban });
+    expect(stats.geocoded).toBe(1);
+    expect(await placeOf(id)).toMatchObject({ geocodePending: false, city: 'Saint-Raphaël' });
+    expect(calls).toBe(1);
   });
 });
