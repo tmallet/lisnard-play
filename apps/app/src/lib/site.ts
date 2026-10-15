@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 /** Adresse publique du site : origine de la page sur le web, configurée sur mobile. */
-export const SITE_URL = process.env.EXPO_PUBLIC_SITE_URL ?? 'https://lisnardplay.thimal.fr';
+export const SITE_URL = process.env.EXPO_PUBLIC_SITE_URL ?? 'https://play.projetlisnard.fr';
 
 export function siteOrigin(): string {
   return Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : SITE_URL;

@@ -63,7 +63,7 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
 | `NODE_ENV` | `production` (image) | `production` (image) | Masque les détails d'erreur de l'API |
 | `MIGRATIONS_DIR`, `HEARTBEAT_FILE` | — | fixés par l'image | Ne pas modifier |
-| `EXPO_PUBLIC_API_URL` | — | — | **Au build des apps mobiles** : URL publique de l'app (ex. `https://lisnardplay.thimal.fr` en préproduction). Même valeur pour `EXPO_PUBLIC_SITE_URL`, l'origine déclarée par le lecteur vidéo |
+| `EXPO_PUBLIC_API_URL` | — | — | **Au build des apps mobiles** : URL publique de l'app (`https://play.projetlisnard.fr`). Même valeur pour `EXPO_PUBLIC_SITE_URL`, l'origine déclarée par le lecteur vidéo |
 
 Le backend (`app`) ne reçoit que `DATABASE_URL`. Les clés d'ingestion ne
 résident que dans le worker (ADR 0017).
@@ -109,7 +109,40 @@ dépense sur la clé OpenRouter.
      - `media` ;
      - `summarize`.
 5. **App** : nouvelle application depuis le même dépôt.
-   Domaine de préproduction : `lisnardplay.thimal.fr`.
+   Domaine : `play.projetlisnard.fr` ; prévisualisations des PR sous
+   `{{pr_id}}.lisnardplay.thimal.fr` (modèle écrit en clair dans Coolify, sans
+   `{{domain}}`). L'ancien domaine `lisnardplay.thimal.fr` redirige vers le nouveau
+   (configuration dynamique Traefik) : les abonnés aux notifications web s'y étaient
+   inscrits, et leurs clics y mènent encore.
+   - Redirection : retirer l'ancien domaine de l'app, puis, dans Coolify, **Servers**
+     → **Proxy** → **Dynamic Configurations**, un fichier `lisnardplay-redirect.yaml` :
+
+     ```yaml
+     http:
+       routers:
+         lisnardplay-old-https:
+           rule: Host(`lisnardplay.thimal.fr`)
+           entryPoints: [https]
+           middlewares: [lisnardplay-to-play]
+           service: noop@internal
+           tls:
+             certResolver: letsencrypt
+         lisnardplay-old-http:
+           rule: Host(`lisnardplay.thimal.fr`)
+           entryPoints: [http]
+           middlewares: [lisnardplay-to-play]
+           service: noop@internal
+       middlewares:
+         lisnardplay-to-play:
+           redirectRegex:
+             regex: "^https?://lisnardplay\\.thimal\\.fr/(.*)"
+             replacement: "https://play.projetlisnard.fr/${1}"
+             permanent: true
+     ```
+
+     Vérifier : `curl -I https://lisnardplay.thimal.fr/a-propos` répond `301` vers
+     `https://play.projetlisnard.fr/a-propos`. La règle ne vise que ce nom exact : les
+     prévisualisations ne sont pas touchées.
    - Build Pack « Dockerfile », Base Directory `/`, Dockerfile
      `apps/app/Dockerfile`, port exposé `3000`.
    - Domaine en HTTPS.
