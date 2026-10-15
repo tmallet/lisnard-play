@@ -28,30 +28,35 @@ interface QuoteAt {
 
 /**
  * Crée le gestionnaire : `api` répond aux requêtes tRPC (le gestionnaire d'Expo),
- * `render` produit le PNG. Cache mémoire borné, indexé par la citation lue : un texte
- * régénéré a une autre clé.
+ * `render` produit le PNG, `host` est l'adresse du site affichée en pied d'image (fixe,
+ * jamais tirée de la requête). Cache mémoire borné, indexé par la citation lue (un texte
+ * régénéré a une autre clé) ; une image en cours de calcul est partagée par les requêtes
+ * simultanées.
  */
 export function createQuoteImageHandler(
   api: (req: Request) => Promise<Response>,
   render: () => Promise<Render>,
 ) {
-  const cache = new Map<string, Uint8Array>();
+  const cache = new Map<string, Promise<Uint8Array>>();
   return async (req: Request, params: { id: string; t: number }, host: string) => {
     const input = encodeURIComponent(JSON.stringify(params));
     const res = await api(
       new Request(`${new URL(req.url).origin}/api/trpc/quotes.at?input=${input}`),
     );
-    const quote = res.ok
-      ? (((await res.json()) as { result?: { data?: QuoteAt | null } }).result?.data ?? null)
-      : null;
+    // Base ou API indisponible : 503, pour ne pas faire croire que la citation a disparu.
+    if (!res.ok) return new Response('Image indisponible', { status: 503 });
+    const quote = ((await res.json()) as { result?: { data?: QuoteAt | null } }).result?.data;
     if (!quote) return new Response('Citation introuvable', { status: 404 });
-    const key = JSON.stringify([quote.itemId, quote.startS, quote.text, host]);
-    let png = cache.get(key);
-    if (!png) {
-      png = await (await render())({ ...quote, host });
+    const key = JSON.stringify([quote.itemId, quote.startS, quote.text]);
+    let pending = cache.get(key);
+    if (!pending) {
+      pending = render().then((draw) => draw({ ...quote, host }));
       if (cache.size >= MAX_CACHED) cache.delete(cache.keys().next().value as string);
-      cache.set(key, png);
+      cache.set(key, pending);
+      // Échec : rien n'est gardé, la requête suivante réessaie.
+      pending.catch(() => cache.delete(key));
     }
+    const png = await pending;
     return new Response(png as Uint8Array<ArrayBuffer>, {
       headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' },
     });

@@ -31,7 +31,7 @@ proposer « Partager en image » :
 
 #### Scenario: Contenu de l'image
 - **WHEN** on ouvre l'image d'une citation de BFMTV du 13 octobre 2026
-- **THEN** elle montre la citation, « David Lisnard », « BFMTV · 13 octobre 2026 », le passage à 10:41 situé sur la durée de la vidéo, l'adresse du site et la mention d'indépendance, sans logo ni photo
+- **THEN** elle montre la citation, « David Lisnard », « 13 octobre 2026 · BFMTV », le passage à 10:41 situé sur la durée de la vidéo, l'adresse du site et la mention d'indépendance, sans logo ni photo
 
 #### Scenario: Citation régénérée
 - **WHEN** on demande l'image d'une citation qui n'existe plus à ce minutage

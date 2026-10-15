@@ -35,6 +35,16 @@ const el = (style: Record<string, unknown>, ...children: (CardNode | string)[]):
   },
 });
 
+/** Montserrat n'a pas d'emoji : ils sont retirés plutôt que dessinés en carrés vides. */
+export const withoutEmoji = (text: string) =>
+  text
+    .replace(
+      /\p{Extended_Pictographic}|\p{Emoji_Modifier}|\p{Regional_Indicator}|\u{FE0F}|\u{200D}/gu,
+      '',
+    )
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
 /** Taille du texte selon sa longueur : une phrase courte en grand, une longue tient. */
 export function quoteFontSize(text: string): number {
   if (text.length < 90) return 66;
@@ -43,10 +53,12 @@ export function quoteFontSize(text: string): number {
   return 40;
 }
 
-export function quoteCard(q: QuoteCardData): CardNode {
+export function quoteCard(input: QuoteCardData): CardNode {
+  const q = { ...input, text: withoutEmoji(input.text) };
   const date = formatDate(`${q.day}T12:00:00Z`);
-  // Sa propre chaîne : la date seule, son nom figure déjà en signature.
-  const header = (q.official ? date : `${q.outlet} · ${date}`).toUpperCase();
+  // Date d'abord : un nom de média long peut être coupé, jamais la date. Sa propre
+  // chaîne : la date seule, son nom figure déjà en signature.
+  const header = (q.official ? date : `${date} · ${q.outlet}`).toUpperCase();
   const theme = q.theme && q.theme in THEME_LABELS ? THEME_LABELS[q.theme as Theme] : null;
   const progress =
     q.durationS && q.durationS > 0 ? Math.min(1, Math.max(0, q.startS / q.durationS)) : null;
@@ -71,7 +83,21 @@ export function quoteCard(q: QuoteCardData): CardNode {
       },
       el(
         { justifyContent: 'space-between', alignItems: 'center' },
-        el({ fontSize: 22, fontWeight: 700, letterSpacing: 5, color: colors.chamois }, header),
+        // Un nom de média long est coupé plutôt que de chevaucher la pastille du thème.
+        el(
+          {
+            flex: 1,
+            marginRight: 24,
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            textOverflow: 'ellipsis',
+            fontSize: 22,
+            fontWeight: 700,
+            letterSpacing: 5,
+            color: colors.chamois,
+          },
+          header,
+        ),
         ...(theme
           ? [
               el(

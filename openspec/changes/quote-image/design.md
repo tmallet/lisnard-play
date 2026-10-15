@@ -37,6 +37,14 @@ Décisions durables consignées dans l'ADR 0029. En résumé :
   - En développement (`expo start`), l'image n'existe pas. Le bouton est quand même
     affiché et pointe vers le domaine de production quand il tourne sur le natif.
   - On l'essaie avec le serveur de production en local, comme le fait le smoke test.
+- **Sans bloquer le serveur** : la conversion en PNG passe par `renderAsync` de resvg,
+  sur un fil à part ; une image en cours de calcul est partagée par les requêtes
+  simultanées.
+- **Adresse affichée** : celle de la production (`EXPO_PUBLIC_SITE_URL`, par défaut
+  `play.projetlisnard.fr`), jamais tirée des en-têtes de la requête.
+- **Erreurs** : citation introuvable, 404 ; API ou base indisponible, 503. Les emojis,
+  absents de Montserrat, sont retirés du texte ; un nom de média trop long est coupé,
+  la date passant avant lui.
 - **Cache** :
   - `Cache-Control: public, max-age=86400` ;
   - un cache mémoire de 200 images au plus, indexé par citation, texte et minutage.

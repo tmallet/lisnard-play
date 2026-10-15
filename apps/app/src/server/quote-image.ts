@@ -6,7 +6,7 @@
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
 
-import { Resvg } from '@resvg/resvg-js';
+import { renderAsync } from '@resvg/resvg-js';
 import satori from 'satori';
 
 import { CARD_SIZE, type QuoteCardData, quoteCard } from './quote-card';
@@ -44,5 +44,6 @@ export async function renderQuoteImage(data: QuoteCardData): Promise<Uint8Array>
     height: CARD_SIZE,
     fonts: await loadFonts(),
   });
-  return new Resvg(svg).render().asPng();
+  // Conversion en PNG sur un fil à part : le serveur continue de répondre pendant ce temps.
+  return (await renderAsync(svg)).asPng();
 }

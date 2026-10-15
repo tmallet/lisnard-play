@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, Text } from 'react-native';
 
+import { formatTimestamp } from '@/lib/format';
 import { shareImage } from '@/lib/share-image';
 import { quoteImageUrl } from '@/lib/site';
 
@@ -20,10 +21,16 @@ export function ShareImageButton({
   label?: string;
 }) {
   const [state, setState] = useState<'idle' | 'busy' | keyof typeof MESSAGES>('idle');
+  // Le message s'efface : le bouton redevient disponible pour un nouvel essai.
+  useEffect(() => {
+    if (state !== 'downloaded' && state !== 'failed') return;
+    const timer = setTimeout(() => setState('idle'), 4000);
+    return () => clearTimeout(timer);
+  }, [state]);
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel="Partager la citation en image"
+      accessibilityLabel={`Partager en image la citation à ${formatTimestamp(startS)}`}
       disabled={state === 'busy'}
       onPress={async () => {
         setState('busy');

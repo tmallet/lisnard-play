@@ -1,6 +1,6 @@
 import { INDEPENDENCE_NOTICE } from '../../config/app';
-import { type CardNode, quoteCard, quoteFontSize } from '../quote-card';
-import { quoteImageParams } from '../quote-image-route';
+import { type CardNode, quoteCard, quoteFontSize, withoutEmoji } from '../quote-card';
+import { createQuoteImageHandler, quoteImageParams } from '../quote-image-route';
 
 /** Tous les textes de l'arbre, dans l'ordre. */
 const texts = (node: CardNode | string): string[] => {
@@ -27,7 +27,7 @@ test('image : citation, signature, média et date, thème, passage, site et ment
     expect.arrayContaining([
       base.text,
       'DAVID LISNARD',
-      'BFMTV · 13 OCTOBRE 2026',
+      '13 OCTOBRE 2026 · BFMTV',
       'ÉCONOMIE',
       '▶ Le passage à 10:41',
       '20:06',
@@ -54,4 +54,42 @@ test('adresse de l’image : identifiant et minutage seulement', () => {
   expect(quoteImageParams(`/interventions/${id}/citation/641/image.png`)).toEqual({ id, t: 641 });
   expect(quoteImageParams(`/interventions/${id}/citation/abc/image.png`)).toBeNull();
   expect(quoteImageParams('/interventions/../citation/1/image.png')).toBeNull();
+});
+
+describe('route de l’image', () => {
+  const params = { id: 'b710101c-1a11-4810-b8f8-339a5d171995', t: 641 };
+  const req = new Request('http://localhost:3000/x');
+  const quote = { ...base, itemId: params.id, startS: 641 };
+  const api = (data: unknown, ok = true) =>
+    jest.fn(async () => ({ ok, json: async () => ({ result: { data } }) }) as unknown as Response);
+
+  test('une seule image calculée pour des demandes simultanées, puis gardée', async () => {
+    const draw = jest.fn(async (_data: unknown) => new Uint8Array([1, 2, 3]));
+    const handle = createQuoteImageHandler(api(quote), async () => draw);
+    const [a, b] = await Promise.all([
+      handle(req, params, 'site.test'),
+      handle(req, params, 'site.test'),
+    ]);
+    await handle(req, params, 'site.test');
+    expect([a.status, b.status]).toEqual([200, 200]);
+    expect(a.headers.get('content-type')).toBe('image/png');
+    expect(draw).toHaveBeenCalledTimes(1);
+    expect(draw.mock.calls[0]?.[0]).toMatchObject({ host: 'site.test' });
+  });
+
+  test('citation inconnue : 404 ; API indisponible : 503, sans calcul', async () => {
+    const draw = jest.fn();
+    expect(
+      (await createQuoteImageHandler(api(null), async () => draw)(req, params, 'h')).status,
+    ).toBe(404);
+    expect(
+      (await createQuoteImageHandler(api(null, false), async () => draw)(req, params, 'h')).status,
+    ).toBe(503);
+    expect(draw).not.toHaveBeenCalled();
+  });
+});
+
+test('emojis retirés du texte (absents de Montserrat)', () => {
+  expect(withoutEmoji('Bravo 👏🏻 à tous 🇫🇷 !')).toBe('Bravo à tous !');
+  expect(withoutEmoji('Le prix : 10 € — « net ».')).toBe('Le prix : 10 € — « net ».');
 });

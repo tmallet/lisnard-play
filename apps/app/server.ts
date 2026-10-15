@@ -21,6 +21,9 @@ const DIST = resolve(import.meta.dir, process.env.DIST_DIR ?? 'dist');
 const CLIENT = join(DIST, 'client');
 const handle = createRequestHandler({ build: join(DIST, 'server') });
 const ALLOW_INDEXING = indexingAllowed(process.env.ALLOW_INDEXING);
+// Adresse du site en pied des images partagées : celle de la production, jamais celle
+// annoncée par la requête (un en-tête falsifié ne doit ni l'afficher ni vider le cache).
+const SITE_HOST = new URL(process.env.EXPO_PUBLIC_SITE_URL ?? 'https://play.projetlisnard.fr').host;
 // Module d'image chargé à la première image : un échec (binaire absent) n'empêche pas
 // le site de démarrer, seule l'image répond 503.
 const quoteImage = createQuoteImageHandler(handle, async () => {
@@ -62,7 +65,7 @@ const server = Bun.serve({
     const image = quoteImageParams(pathname);
     if (image)
       return withIndexingPolicy(
-        await quoteImage(req, image, new URL(publicOrigin(req)).host).catch((error) => {
+        await quoteImage(req, image, SITE_HOST).catch((error) => {
           console.error(
             JSON.stringify({ msg: 'image de citation en échec', error: String(error) }),
           );
