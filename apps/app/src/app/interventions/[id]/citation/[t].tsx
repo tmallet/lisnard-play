@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import { Link, Redirect, Stack, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { Link, Redirect, router, Stack, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 
 import { PageHead } from '@/components/PageHead';
@@ -33,8 +33,11 @@ export default function QuotePage() {
   const [playRequest, setPlayRequest] = useState(0);
   const [copied, setCopied] = useState(false);
 
-  // Minutage illisible : l'intervention, sans deviner de passage.
-  if (!valid) return <Redirect href={`/interventions/${String(id)}`} />;
+  // Minutage illisible : l'intervention, sans deviner de passage. Dans un effet, pour que
+  // le gabarit pré-rendu au build (paramètres inconnus) garde ses balises.
+  useEffect(() => {
+    if (!valid) router.replace(`/interventions/${String(id)}`);
+  }, [valid, id]);
   if (quote.isSuccess && quote.data === null)
     return <Redirect href={`/interventions/${String(id)}?t=${startS}`} />;
 
