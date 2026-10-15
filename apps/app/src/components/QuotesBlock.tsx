@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { formatTimestamp, THEME_LABELS, type Theme } from '@/lib/format';
 import { shareLink } from '@/lib/share';
 import { quoteHref, quotePath, siteOrigin } from '@/lib/site';
+import { ShareImageButton } from './ShareImageButton';
 
 export interface QuoteItem {
   text: string;
@@ -74,6 +75,7 @@ export function QuotesBlock({
                 {copied === quote.startS ? 'Lien copié' : 'Partager'}
               </Text>
             </Pressable>
+            <ShareImageButton itemId={itemId} startS={quote.startS} label="En image" />
             {quote.theme && quote.theme in THEME_LABELS ? (
               <Text className="font-sans text-blanc/70 text-xs">
                 {THEME_LABELS[quote.theme as Theme]}

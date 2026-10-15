@@ -2,7 +2,8 @@
  * Serveur de production (ADR 0015) : sert l'export Expo (`dist/`) avec Bun.
  * Fichiers statiques depuis dist/client, pages pré-rendues et API routes via
  * l'adaptateur Bun d'expo-server. Usage : bun server.ts (PORT, défaut 3000).
- * Indexation bloquée sauf ALLOW_INDEXING=true (spec app-shell).
+ * Indexation bloquée sauf ALLOW_INDEXING=true (spec app-shell). Image de partage des
+ * citations (ADR 0029), produite ici : son module natif ne passe pas par Metro.
  */
 import { join, normalize, resolve } from 'node:path';
 
@@ -14,11 +15,18 @@ import {
   robotsTxt,
   withIndexingPolicy,
 } from './src/server/indexing';
+import { createQuoteImageHandler, quoteImageParams } from './src/server/quote-image-route';
 
 const DIST = resolve(import.meta.dir, process.env.DIST_DIR ?? 'dist');
 const CLIENT = join(DIST, 'client');
 const handle = createRequestHandler({ build: join(DIST, 'server') });
 const ALLOW_INDEXING = indexingAllowed(process.env.ALLOW_INDEXING);
+// Module d'image chargé à la première image : un échec (binaire absent) n'empêche pas
+// le site de démarrer, seule l'image répond 503.
+const quoteImage = createQuoteImageHandler(handle, async () => {
+  const { renderQuoteImage } = await import('./src/server/quote-image');
+  return renderQuoteImage;
+});
 
 async function staticFile(pathname: string): Promise<Response | null> {
   if (pathname === '/' || pathname.endsWith('/')) return null;
@@ -48,6 +56,17 @@ const server = Bun.serve({
       return withIndexingPolicy(
         new Response(robotsTxt(ALLOW_INDEXING, publicOrigin(req)), {
           headers: { 'Content-Type': 'text/plain' },
+        }),
+        ALLOW_INDEXING,
+      );
+    const image = quoteImageParams(pathname);
+    if (image)
+      return withIndexingPolicy(
+        await quoteImage(req, image, new URL(publicOrigin(req)).host).catch((error) => {
+          console.error(
+            JSON.stringify({ msg: 'image de citation en échec', error: String(error) }),
+          );
+          return new Response('Image indisponible', { status: 503 });
         }),
         ALLOW_INDEXING,
       );

@@ -1,7 +1,7 @@
 ---
 id: "0029"
 title: Image de partage d'une citation produite par le serveur (satori et resvg)
-status: proposed
+status: accepted
 date: 2026-10-15
 tags: [ui, partage, architecture, dependance]
 supersedes: null
@@ -31,9 +31,9 @@ est un programme Bun (ADR 0015).
   - **@resvg/resvg-js** convertit le SVG en PNG ;
   - aucun service tiers ni appel payant.
 - **Contenu** :
-  - format carré 1080 × 1080, palette de la charte ;
-  - la citation, « David Lisnard », le média, la date, l'adresse du site et la
-    mention d'indépendance ;
+  - format carré 1080 × 1080, palette de la charte, modèle « encadré » ;
+  - la citation, « David Lisnard », le média, la date, le thème, le minutage situé
+    sur la durée de la vidéo, le nom et l'adresse du site, la mention d'indépendance ;
   - jamais de logo, de photo ni de miniature de vidéo.
 - **Cache** : mémoire (200 images) et navigateur (24 h), indexé par le texte et le
   minutage ; une citation inconnue répond 404 sans calcul.
@@ -50,6 +50,9 @@ est un programme Bun (ADR 0015).
 
 - Nouvelles dépendances de l'app : `satori`, `@resvg/resvg-js`, `expo-sharing`,
   `expo-file-system`.
+- L'image Docker reçoit le module d'image empaqueté, le binaire de resvg et quatre
+  graisses de Montserrat ; la citation est lue par l'API interne, sans accès direct à la base depuis
+  `server.ts`.
 - L'image n'existe qu'avec le serveur de production : en développement, on la vérifie
   avec `server.ts` après un export, comme le smoke test.
 - L'adresse de l'image pourra servir d'`og:image` quand les pages seront rendues à la

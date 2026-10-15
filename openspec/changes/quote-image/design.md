@@ -30,6 +30,10 @@ Décisions durables consignées dans l'ADR 0029. En résumé :
 - **Servie par `server.ts`**, hors Metro, à
   `/interventions/<id>/citation/<s>/image.png`. Le module natif de resvg s'y charge
   normalement.
+  - L'image Docker ne contient pas de `node_modules` : le serveur lit la citation par
+    l'API déjà présente (`quotes.at`, appelée en interne sans réseau), et le module
+    d'image est empaqueté au build (`bun build`). Seuls resvg (binaire natif) et quatre
+    graisses de Montserrat sont copiés dans l'image.
   - En développement (`expo start`), l'image n'existe pas. Le bouton est quand même
     affiché et pointe vers le domaine de production quand il tourne sur le natif.
   - On l'essaie avec le serveur de production en local, comme le fait le smoke test.
@@ -37,11 +41,14 @@ Décisions durables consignées dans l'ADR 0029. En résumé :
   - `Cache-Control: public, max-age=86400` ;
   - un cache mémoire de 200 images au plus, indexé par citation, texte et minutage.
     Une citation régénérée a donc une autre clé.
-- **Mise en page** : taille du texte selon sa longueur (de 72 px pour une phrase
-  courte à 44 px pour 40 mots). Guillemets français. Les autres éléments :
-  - en bas, « David Lisnard », puis le média et la date, en chamois ;
-  - au pied, `play.projetlisnard.fr` et « Initiative indépendante, sans lien avec la
-    campagne ».
+- **Mise en page** (modèle « encadré », choisi sur maquettes) :
+  - filet chamois ; en tête, le média et la date (la date seule pour sa chaîne), et le
+    thème en pastille ;
+  - au centre, un grand guillemet, la citation centrée (de 66 px pour une phrase courte
+    à 40 px pour une longue), puis « DAVID LISNARD » entre deux traits ;
+  - une barre de lecture : « ▶ Le passage à 10:41 », placée sur la durée de la vidéo
+    (sans barre si la durée est inconnue) ;
+  - en pied, « LISNARD PLAY », la mention d'indépendance et `play.projetlisnard.fr`.
 - **Partage** :
   - natif : `expo-file-system` télécharge l'image dans le cache, puis `expo-sharing`
     ouvre la feuille de partage ;

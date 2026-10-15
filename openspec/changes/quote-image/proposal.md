@@ -8,9 +8,14 @@ l'adresse du site, est le meilleur moyen de faire connaître le site.
 ## What Changes
 
 - **Image d'une citation** : `/interventions/<id>/citation/<secondes>/image.png`, une
-  image carrée de 1080 × 1080 aux couleurs de la charte. Elle montre la citation en
-  grand, « David Lisnard », le média et la date, le thème, l'adresse du site et la
-  mention d'indépendance. Ni logo, ni photo, ni miniature de la vidéo (ADR 0001, 0007).
+  image carrée de 1080 × 1080 aux couleurs de la charte, modèle « encadré » retenu par
+  le porteur du projet sur maquettes :
+  - un filet chamois, le média et la date en tête, le thème en pastille ;
+  - la citation centrée sous un grand guillemet, signée « David Lisnard » ;
+  - une barre de lecture qui situe le passage dans la vidéo (« Le passage à 10:41 ») ;
+  - en pied, le nom du site, la mention d'indépendance et l'adresse du site.
+
+  Ni logo, ni photo, ni miniature de la vidéo (ADR 0001, 0007).
 - **Bouton « Partager en image »** sur la page d'une citation et dans la section
   « Citations » de l'écran de détail :
   - sur mobile, la feuille de partage du système avec l'image ;

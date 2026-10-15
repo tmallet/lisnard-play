@@ -6,6 +6,7 @@ import { Platform, Pressable, Text, View } from 'react-native';
 import { PageHead } from '@/components/PageHead';
 import { PlayerConsent } from '@/components/PlayerConsent';
 import { Screen } from '@/components/Screen';
+import { ShareImageButton } from '@/components/ShareImageButton';
 import { WebChrome } from '@/components/WebChrome';
 import { formatDate, formatTimestamp, quoteSource, THEME_LABELS, type Theme } from '@/lib/format';
 import { shareLink } from '@/lib/share';
@@ -110,6 +111,7 @@ export default function QuotePage() {
                   {copied ? 'Lien copié' : 'Partager la citation'}
                 </Text>
               </Pressable>
+              <ShareImageButton itemId={q.itemId} startS={q.startS} />
               <Link href={`/interventions/${q.itemId}`} asChild>
                 <Pressable accessibilityRole="link">
                   <Text className="font-sans-semibold text-chamois text-sm underline">

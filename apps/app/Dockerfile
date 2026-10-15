@@ -14,15 +14,27 @@ RUN bun install --frozen-lockfile
 COPY . .
 WORKDIR /repo/apps/app
 RUN bun --bun expo export --platform web
+# Image des citations (ADR 0029) : module empaqueté, resvg (binaire natif) laissé à part.
+RUN bun build src/server/quote-image.ts --target=bun --outfile=/repo/image/quote-image.js \
+    --external @resvg/resvg-js
 
 FROM oven/bun:${BUN_VERSION}-slim AS runtime
 WORKDIR /app
 ENV NODE_ENV=production PORT=3000
-# Le bundle de l'API est autonome : seul expo-server (sans dépendance) est requis par server.ts.
+# Le bundle de l'API est autonome : server.ts requiert expo-server (sans dépendance) et,
+# pour l'image des citations, resvg et les polices.
 COPY --from=build /repo/node_modules/expo-server ./node_modules/expo-server
 COPY --from=build /repo/apps/app/dist ./dist
 COPY --from=build /repo/apps/app/server.ts ./server.ts
 COPY --from=build /repo/apps/app/src/server/indexing.ts ./src/server/indexing.ts
+COPY --from=build /repo/apps/app/src/server/quote-image-route.ts ./src/server/quote-image-route.ts
+COPY --from=build /repo/image/quote-image.js ./src/server/quote-image.js
+COPY --from=build /repo/node_modules/@resvg ./node_modules/@resvg
+COPY --from=build /repo/node_modules/@expo-google-fonts/montserrat/package.json ./node_modules/@expo-google-fonts/montserrat/package.json
+COPY --from=build /repo/node_modules/@expo-google-fonts/montserrat/400Regular/Montserrat_400Regular.ttf ./node_modules/@expo-google-fonts/montserrat/400Regular/
+COPY --from=build /repo/node_modules/@expo-google-fonts/montserrat/600SemiBold/Montserrat_600SemiBold.ttf ./node_modules/@expo-google-fonts/montserrat/600SemiBold/
+COPY --from=build /repo/node_modules/@expo-google-fonts/montserrat/700Bold/Montserrat_700Bold.ttf ./node_modules/@expo-google-fonts/montserrat/700Bold/
+COPY --from=build /repo/node_modules/@expo-google-fonts/montserrat/800ExtraBold/Montserrat_800ExtraBold.ttf ./node_modules/@expo-google-fonts/montserrat/800ExtraBold/
 USER bun
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \

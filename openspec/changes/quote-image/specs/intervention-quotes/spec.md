@@ -6,8 +6,10 @@ Chaque citation DOIT disposer d'une image carrée de 1080 × 1080 pixels, au for
 reprendre la palette et la police de la charte, et montrer :
 - le texte de la citation ;
 - « David Lisnard » ;
-- le média et la date ;
-- l'adresse du site ;
+- le média (sauf pour sa propre chaîne) et la date ;
+- le thème, s'il est connu ;
+- le minutage du passage, situé sur la durée de la vidéo quand elle est connue ;
+- le nom et l'adresse du site ;
 - la mention d'indépendance.
 
 L'image NE DOIT contenir ni logo, ni photo, ni miniature de vidéo. Une citation
@@ -29,7 +31,7 @@ proposer « Partager en image » :
 
 #### Scenario: Contenu de l'image
 - **WHEN** on ouvre l'image d'une citation de BFMTV du 13 octobre 2026
-- **THEN** elle montre la citation, « David Lisnard », « BFMTV · 13 octobre 2026 », l'adresse du site et la mention d'indépendance, sans logo ni photo
+- **THEN** elle montre la citation, « David Lisnard », « BFMTV · 13 octobre 2026 », le passage à 10:41 situé sur la durée de la vidéo, l'adresse du site et la mention d'indépendance, sans logo ni photo
 
 #### Scenario: Citation régénérée
 - **WHEN** on demande l'image d'une citation qui n'existe plus à ce minutage
