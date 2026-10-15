@@ -32,6 +32,8 @@ adhésions par jour contre une médiane de 55).
   graphique du total et des interventions.
 
 ### Modified Capabilities
+- `intervention-feed` : la description d'une vidéo YouTube n'est affichée que pour la
+  chaîne officielle, ajouté en cours de revue.
 - `intervention-collection` : les reprises d'une même dépêche par plusieurs médias
   (même titre, moins de trois jours d'écart) sont masquées, ajouté en cours de revue.
 

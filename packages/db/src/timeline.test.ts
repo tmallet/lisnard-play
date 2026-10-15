@@ -48,3 +48,27 @@ test('graphique des adhésions : ordre chronologique, jour de Paris, source offi
     ['yt:late', '2026-10-09', true, false],
   ]);
 });
+
+test('détail : description YouTube seulement pour la chaîne officielle', async () => {
+  const { getPublishedById } = await import('./read');
+  await upsertSources(db, [{ id: 'yt:bfm', kind: 'youtube', name: 'BFMTV', active: true }]);
+  const create = async (platformId: string, sourceId: string) => {
+    const { id } = await upsertItem(db, {
+      sourceId,
+      platformId,
+      url: `https://www.youtube.com/watch?v=${platformId}`,
+      title: platformId,
+      description: 'Abonnez-vous, retrouvez nos autres invités…',
+      publishedAt: new Date('2026-10-08T10:00:00Z'),
+    });
+    await db.update(item).set({ status: 'published' }).where(eq(item.id, id));
+    await setMedia(db, id, { kind: 'embed', provider: 'youtube', embedUrl: 'https://x' });
+    return id;
+  };
+  const media = await create('yt:media', 'yt:bfm');
+  const official = await create('yt:official', 'yt:dl');
+  expect((await getPublishedById(db, media))?.description).toBe('');
+  expect((await getPublishedById(db, official))?.description).toBe(
+    'Abonnez-vous, retrouvez nos autres invités…',
+  );
+});

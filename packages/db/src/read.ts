@@ -228,6 +228,8 @@ export async function getPublishedById(
     .select({
       ...summaryColumns,
       description: item.description,
+      sourceKind: source.kind,
+      official: source.official,
       url: item.url,
       media: item.media,
       summary: item.summary,
@@ -239,7 +241,9 @@ export async function getPublishedById(
   if (!row) return null;
   return {
     ...toSummary(row as SummaryRow, now),
-    description: row.description,
+    // Description d'une vidéo YouTube : seulement pour la chaîne officielle. Celle d'une
+    // chaîne de média parle de toute l'émission (liens, autres invités), pas de lui.
+    description: row.sourceKind === 'youtube' && !row.official ? '' : row.description,
     url: row.url,
     media: row.media as MediaRender,
     summary: toPublicSummary(row.summary),
