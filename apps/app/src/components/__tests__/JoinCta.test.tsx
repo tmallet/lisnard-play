@@ -15,3 +15,11 @@ test('invitation : ouvre le lien d’adhésion et signale le parrainage', async 
   // Aucun paramètre de suivi ajouté au lien (ADR 0025).
   expect(JOIN.url).not.toMatch(/utm_|fbclid|gclid/);
 });
+
+test('encart compact (accueil) : parrainage toujours signalé, bouton court', async () => {
+  const open = jest.spyOn(Linking, 'openURL').mockResolvedValue(true);
+  await render(<JoinCta compact />);
+  expect(screen.getByText(JOIN.disclosureShort)).toBeTruthy();
+  await fireEvent.press(screen.getByText(`${JOIN.buttonShort} ↗`));
+  expect(open).toHaveBeenCalledWith(JOIN.url);
+});

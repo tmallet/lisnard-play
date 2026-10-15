@@ -117,7 +117,7 @@ export function InterventionFeed() {
           )}
           {upcomingItems.length > 0 && <Section title="À venir" items={upcomingItems} />}
           {/* Avant les passées : plus bas, le chargement continu le rendrait inaccessible. */}
-          <JoinCta />
+          <JoinCta compact />
           <View className="gap-3">
             <SectionTitle>Passées</SectionTitle>
             {pastItems.length === 0 ? (

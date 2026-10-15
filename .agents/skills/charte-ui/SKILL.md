@@ -65,6 +65,8 @@ ni de nom de police en dur, jamais de valeur dérivée (opacité, teinte) hors
 - `JoinCta` : invitation à adhérer à Nouvelle Énergie (ADR 0025), sur l'accueil et le
   détail. Charte de l'app seulement, jamais de logo ni de visuel du parti ; la mention
   du parrainage reste sous le bouton. Lien et textes : `src/config/join.ts`.
+  Sur l'accueil, `<JoinCta compact />` : sur téléphone, titre et bouton court, mention
+  courte ; forme complète dès `md`.
 
 ## Accessibilité (spec app-shell)
 
