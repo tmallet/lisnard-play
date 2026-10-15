@@ -20,7 +20,7 @@ import {
   TICK_MS,
 } from './config';
 import { log } from './log';
-import { resolvePendingMedia } from './media/task';
+import { repairMediaEntities, resolvePendingMedia } from './media/task';
 import { notifyPending } from './notifications/task';
 import { classifyPending } from './publish';
 import { Scheduler, type Task, tryAcquireLeaderLock } from './scheduler';
@@ -60,6 +60,10 @@ await upsertSources(
     official: s.kind === 'youtube' && s.official === true,
   })),
 );
+
+// Aperçus enregistrés avant le décodage complet des entités HTML (sans appel réseau).
+const repaired = await repairMediaEntities(db);
+if (repaired > 0) log.info('aperçus réparés (entités HTML)', { repaired });
 
 const ctx: SourceContext = {
   fetch,
