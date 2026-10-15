@@ -2,7 +2,7 @@
  * Lecture publique (backend, ADR 0017) : uniquement les interventions publiées,
  * sans aucune donnée interne (probabilités, seuils, journal).
  */
-import { and, eq, type SQL, sql } from 'drizzle-orm';
+import { and, desc, eq, type SQL, sql } from 'drizzle-orm';
 
 import type { Db } from './client';
 import { isTheme, item, type MediaRender, type SummaryRecord, source, type Theme } from './schema';
@@ -173,6 +173,60 @@ export async function listTimelineItems(db: Db): Promise<TimelineItem[]> {
     // Un direct en cours ou terminé reste signalé comme direct sur le graphique.
     live: liveStatus === 'live' || liveStatus === 'ended',
   }));
+}
+
+/** Intervention placée sur la carte des déplacements (spec intervention-places). */
+export interface PlacedIntervention {
+  id: string;
+  title: string;
+  outlet: string;
+  /** Jour de l'intervention, heure de Paris. */
+  day: string;
+  thumbnailUrl: string | null;
+  label: string | null;
+  city: string | null;
+  lat: number;
+  lon: number;
+  approximate: boolean;
+}
+
+/** Déplacements situés en France : interventions visibles, non reprises, avec coordonnées. */
+export async function listPlaces(db: Db): Promise<PlacedIntervention[]> {
+  const rows = await db
+    .select({
+      id: item.id,
+      title: item.title,
+      outlet: summaryColumns.outlet,
+      day: sql<string>`to_char(${sortDate} at time zone 'Europe/Paris', 'YYYY-MM-DD')`,
+      thumbnailUrl: summaryColumns.thumbnailUrl,
+      place: item.place,
+    })
+    .from(item)
+    .innerJoin(source, eq(item.sourceId, source.id))
+    .where(
+      and(
+        eq(item.status, 'published'),
+        sql`${item.media} is not null`,
+        sql`${item.duplicateOf} is null`,
+        sql`(${item.place}->>'onSite')::boolean`,
+        sql`${item.place}->'lat' <> 'null'::jsonb`,
+      ),
+    )
+    .orderBy(desc(sortDate), item.id);
+  return rows.flatMap(({ place, ...row }) =>
+    place?.lat != null && place.lon != null
+      ? [
+          {
+            ...row,
+            label: place.label,
+            city: place.city,
+            lat: place.lat,
+            lon: place.lon,
+            approximate: place.approximate,
+          },
+        ]
+      : [],
+  );
 }
 
 /** Liste paginée par curseur des interventions publiées (spec intervention-feed). */

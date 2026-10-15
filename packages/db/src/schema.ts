@@ -100,6 +100,37 @@ export type SummaryRecord = {
   | { kind: 'none'; reason: 'not_speaking' | 'failed' | 'too_long' }
 );
 
+/**
+ * Lieu d'une intervention (spec intervention-places, ADR 0027). `onSite` faux : aucun
+ * déplacement (plateau, studio, presse, lieu inconnu). Coordonnées absentes : hors de
+ * France ou introuvable.
+ */
+export interface PlaceRecord {
+  onSite: boolean;
+  /** Lieu tel que formulé par le modèle (« Saint-Raphaël (Var) », « Alsace »). */
+  label: string | null;
+  /** Commune ou zone retenue par la géolocalisation. */
+  city: string | null;
+  lat: number | null;
+  lon: number | null;
+  /** Centre d'une région ou d'un département plutôt qu'une commune. */
+  approximate: boolean;
+  /**
+   * Commune et département répondus par le modèle, gardés tant que la géolocalisation
+   * n'a pas abouti (Base adresse nationale indisponible) : elle est refaite sans
+   * rappeler le modèle.
+   */
+  query?: { city: string; department: string } | null;
+  geocodePending?: boolean;
+  /** Abandon après plusieurs réponses inexploitables du modèle. */
+  failed?: boolean;
+  model: string;
+  promptVersion: number;
+  /** ISO 8601. */
+  generatedAt: string;
+  cost: number;
+}
+
 /** Réponses brutes du classifieur, telles que journalisées (ADR 0005). */
 export interface ClassifierAnswers {
   intervient: number;
@@ -155,6 +186,12 @@ export const item = pgTable(
     /** Durée de la vidéo en secondes (videos.list), quand elle est connue. */
     durationS: integer('duration_s'),
     summary: jsonb<SummaryRecord>('summary'),
+    /** Lieu du déplacement, ou son absence ; null tant qu'il n'a pas été déterminé. */
+    place: jsonb<PlaceRecord>('place'),
+    /** Échecs consécutifs de détermination du lieu (plafond, comme pour les résumés). */
+    placeAttempts: integer('place_attempts').notNull().default(0),
+    /** Pas de nouvel essai avant cette date (attente croissante après un échec). */
+    placeRetryAt: timestamp('place_retry_at', { withTimezone: true }),
     /** Échecs consécutifs de production du résumé (plafond de tentatives). */
     summaryAttempts: integer('summary_attempts').notNull().default(0),
     /** Pas de nouvel essai de résumé avant cette date (attente croissante après un échec). */

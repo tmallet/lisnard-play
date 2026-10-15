@@ -7,6 +7,7 @@
  *   bun run cli summarize [--budget N] [--retry]  résume les vidéos jusqu'au plafond du jour (N $)
  *   bun run cli media --refresh [--source ID]    recalcule le rendu des contenus publiés
  *   bun run cli notify --test                    envoie une notification de test à tous les abonnés
+ *   bun run cli places [--budget N]              détermine le lieu de toutes les interventions en attente
  */
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -28,6 +29,8 @@ import { runBackfill } from './collect';
 import { parseNotify, requireEnv, SUMMARY_DAILY_BUDGET_USD } from './config';
 import { refreshMedia } from './media/task';
 import { sendTestNotification } from './notifications/task';
+import { createOpenRouterLocator } from './places/locate';
+import { locatePending } from './places/task';
 import { reclassify, recompute } from './publish';
 import { SOURCES } from './sources.config';
 import { createOpenRouterSummarizer } from './summaries/openrouter';
@@ -80,6 +83,24 @@ switch (positionals[0]) {
       const done = stats.summarized + stats.notSpeaking + stats.skipped + stats.failed;
       if (stats.budgetReached || stats.unavailable || done === 0) break;
     }
+    break;
+  }
+  case 'places': {
+    const locator = createOpenRouterLocator({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+    const dailyBudget = values.budget ? Number(values.budget) : SUMMARY_DAILY_BUDGET_USD;
+    // Lots successifs jusqu'à épuisement de l'historique ou du budget du jour. Un lot sans
+    // aucun lieu déterminé (erreurs répétées) arrête aussi la boucle.
+    const total = { located: 0, onSite: 0, failed: 0, cost: 0 };
+    for (;;) {
+      const stats = await locatePending(db, locator, { dailyBudget, limit: 50 });
+      total.located += stats.located;
+      total.onSite += stats.onSite;
+      total.failed += stats.failed;
+      total.cost += stats.cost;
+      console.log(stats);
+      if (stats.budgetReached || stats.unavailable || stats.located === 0) break;
+    }
+    console.log({ total });
     break;
   }
   case 'media': {

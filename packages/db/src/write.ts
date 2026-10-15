@@ -13,6 +13,7 @@ import {
   type MediaRender,
   type NotificationKind,
   notificationSent,
+  type PlaceRecord,
   pushSubscription,
   type SummaryRecord,
   source,
@@ -625,4 +626,71 @@ export async function setDuplicateOf(db: Db, id: string, canonicalId: string | n
     .update(item)
     .set({ duplicateOf: canonicalId, updatedAt: sql`now()` })
     .where(eq(item.id, id));
+}
+
+// --- Lieux des déplacements (spec intervention-places, ADR 0027) ---
+
+/** Interventions visibles dont le lieu reste à déterminer pour cette version de consigne. */
+export async function listPlaceTargets(db: Db, promptVersion: number, limit: number) {
+  return (
+    db
+      .select({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        outlet: sql<string>`coalesce(${item.outlet}, ${source.name})`,
+        sourceKind: source.kind,
+        kind: item.kind,
+        attempts: item.placeAttempts,
+      })
+      .from(item)
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(
+        and(
+          eq(item.status, 'published'),
+          sql`${item.media} is not null`,
+          sql`${item.duplicateOf} is null`,
+          sql`(${item.place} is null or (${item.place}->>'promptVersion')::int <> ${promptVersion})`,
+          sql`(${item.placeRetryAt} is null or ${item.placeRetryAt} <= now())`,
+        ),
+      )
+      // Les contenus jamais essayés d'abord : quelques échecs répétés ne bloquent pas
+      // l'historique.
+      .orderBy(item.placeAttempts, desc(item.firstSeenAt))
+      .limit(limit)
+  );
+}
+
+/** Lieu déterminé (ou abandonné) : remet à zéro le compteur d'échecs. */
+export async function recordPlace(db: Db, itemId: string, place: PlaceRecord): Promise<void> {
+  await db
+    .update(item)
+    .set({ place, placeAttempts: 0, placeRetryAt: null, updatedAt: sql`now()` })
+    .where(eq(item.id, itemId));
+}
+
+/** Échec passager : nouvel essai après `retryAfterMs`. Renvoie le nombre d'échecs. */
+export async function recordPlaceFailure(
+  db: Db,
+  itemId: string,
+  retryAfterMs: number,
+): Promise<number> {
+  const [row] = await db
+    .update(item)
+    .set({
+      placeAttempts: sql`${item.placeAttempts} + 1`,
+      placeRetryAt: sql`now() + make_interval(secs => ${retryAfterMs / 1000})`,
+    })
+    .where(eq(item.id, itemId))
+    .returning({ attempts: item.placeAttempts });
+  return row?.attempts ?? 0;
+}
+
+/** Lieux répondus par le modèle mais pas encore géolocalisés. */
+export async function listPendingGeocodes(db: Db, limit: number) {
+  return db
+    .select({ id: item.id, place: item.place })
+    .from(item)
+    .where(sql`(${item.place}->>'geocodePending')::boolean`)
+    .limit(limit);
 }

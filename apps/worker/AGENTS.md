@@ -19,6 +19,7 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 | `src/classifier/` | `questions.ts` (version), `systemone.ts` (client REST), `thresholds.ts`, `decide.ts` |
 | `src/publish.ts` | `classifyPending`, `recompute`, `reclassify` |
 | `src/media/` | `safe-fetch.ts` (anti-SSRF, POST, lecture limitée à l'en-tête), `resolve.ts` (oEmbed, Open Graph), `google-news.ts` (décodage vers l'éditeur), `task.ts` (rendus, `refreshMedia`, `repairMediaEntities` au démarrage) |
+| `src/places/` | `prompt.ts` (consigne, `PLACE_PROMPT_VERSION`), `locate.ts` (modèle via OpenRouter, Base adresse nationale avec départage des homonymes par département), `task.ts` (`locatePending`, plafond partagé avec les résumés). ADR 0027 |
 | `src/dedupe.ts` | Reprises d'une même dépêche par plusieurs médias (titre identique à 3 jours près) : `markPressDuplicates` au démarrage et après chaque collecte RSS |
 | `src/text.ts` | `decodeEntities` : entités HTML numériques et nommées (accents, guillemets typographiques), sensibles à la casse ; une entité inconnue reste telle quelle |
 | `src/summaries/` | `prompt.ts` (consigne, `PROMPT_VERSION`, `SUMMARY_MODEL`), `openrouter.ts` (client Gemini, validation), `task.ts` (sélection, budget, échecs). Voir `docs/architecture/resumes.md` |
@@ -46,6 +47,9 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 - **Notifications** : réserver l'événement (`claimNotification`) avant d'envoyer,
   jamais l'inverse : une panne perd une notification plutôt que de la doubler.
   `VAPID_PRIVATE_KEY` et `EXPO_ACCESS_TOKEN` n'existent que dans ce service.
+- **Lieux** : changer la consigne impose d'incrémenter `PLACE_PROMPT_VERSION` (les lieux
+  sont alors recalculés) et de vérifier un échantillon réel : un faux lieu se voit sur
+  la carte. Le lieu est celui de l'intervention, jamais celui dont elle parle.
 - **Ajouter une source** : skill `add-intervention-source`.
 - **Logs** : `log.info|warn|error` (JSON par ligne), jamais de secret dans les
   données journalisées. Une tâche fréquente qui n'a souvent rien à faire déclare

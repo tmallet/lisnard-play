@@ -1,3 +1,4 @@
+import { campaignRouter } from './routers/campaign';
 import { health } from './routers/health';
 import { interventionsRouter } from './routers/interventions';
 import { membershipRouter } from './routers/membership';
@@ -9,6 +10,7 @@ export const appRouter = router({
   interventions: interventionsRouter,
   notifications: notificationsRouter,
   membership: membershipRouter,
+  campaign: campaignRouter,
 });
 
 export type AppRouter = typeof appRouter;

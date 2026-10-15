@@ -9,10 +9,10 @@ export const NAV_ITEMS = [
     icon: { sf: { default: 'house', selected: 'house.fill' }, md: 'home' },
   },
   {
-    route: 'adhesions',
-    href: '/adhesions',
-    label: 'Adhésions',
-    icon: { sf: { default: 'person.3', selected: 'person.3.fill' }, md: 'groups' },
+    route: 'campagne',
+    href: '/campagne',
+    label: 'Campagne',
+    icon: { sf: { default: 'flag', selected: 'flag.fill' }, md: 'flag' },
   },
   {
     route: 'a-propos',

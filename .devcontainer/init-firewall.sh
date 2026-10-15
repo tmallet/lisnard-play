@@ -40,6 +40,8 @@ ALLOWED_DOMAINS=(
   "web.push.apple.com"
   # Données d'adhésion de Nouvelle Énergie, lues par l'API (ADR 0026)
   "adherent.unenouvelleenergie.fr"
+  # Base adresse nationale : situer les lieux des déplacements (ADR 0027)
+  "api-adresse.data.gouv.fr"
   # Expo (CLI, manifestes, tunnel exclu)
   "api.expo.dev"
   "exp.host"

@@ -3,18 +3,15 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { MembershipChart } from '@/components/MembershipChart';
-import { PageHead } from '@/components/PageHead';
-import { Screen } from '@/components/Screen';
 import { TimelineCard } from '@/components/TimelineCard';
-import { Title } from '@/components/Title';
 import { formatDateTime } from '@/lib/format';
 import type { Marker } from '@/lib/timeline';
 import { useTRPC } from '@/lib/trpc';
 
 const members = new Intl.NumberFormat('fr-FR');
 
-/** Adhésions à Nouvelle Énergie et interventions (spec membership-timeline, ADR 0026). */
-export default function Membership() {
+/** Vue « Adhésions » de l'onglet Campagne (spec membership-timeline, ADR 0026). */
+export function MembershipView() {
   const trpc = useTRPC();
   const timeline = useQuery(
     trpc.membership.timeline.queryOptions(undefined, { refetchInterval: 120_000 }),
@@ -26,12 +23,7 @@ export default function Membership() {
   const data = timeline.data;
 
   return (
-    <Screen wide>
-      <PageHead
-        title="Adhésions"
-        description="Le nombre d’adhérents de Nouvelle Énergie au fil des interventions de David Lisnard."
-      />
-      <Title highlight="adhésions">Les adhésions au fil des interventions</Title>
+    <>
       <Text className="font-sans text-base text-blanc/85 leading-relaxed">
         Chaque repère marque une intervention de David Lisnard ; les ronds sont les vidéos de sa
         chaîne. Une hausse au même moment ne prouve pas que l’intervention en est la cause.
@@ -77,6 +69,6 @@ export default function Membership() {
           )}
         </View>
       )}
-    </Screen>
+    </>
   );
 }

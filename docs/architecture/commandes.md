@@ -35,6 +35,7 @@ devcontainer, qui fournit Postgres : voir [devcontainer.md](devcontainer.md).
 | `bun run format` | Formate tout le dépôt (Biome) |
 | `bun run smoke:web` | Export de production, serveur Bun et base jetable, puis vérifications HTTP sans JavaScript |
 | `bunx web-push generate-vapid-keys` | Génère la paire de clés des notifications web (une fois par environnement, ADR 0024) |
+| `bun scripts/build-france-map.ts <régions métropole> <régions avec outre-mer>` | Régénère le fond de carte `apps/app/assets/france-map.json` à partir des GeoJSON de france-geojson (IGN, Licence Ouverte) |
 | `bun run docs:check` | Cohérence des ADR, de l'index, des liens, des skills, des versions d'outils et des Dockerfiles |
 
 Options du smoke test : `SMOKE_PORT` (8091 par défaut), `SKIP_EXPORT=1` pour
@@ -49,6 +50,7 @@ réutiliser `apps/app/dist`.
 | `bun apps/worker/src/cli.ts recompute` | Applique les seuils et la règle actuels aux décisions journalisées (sans appel au modèle) |
 | `bun apps/worker/src/cli.ts reclassify [--model M] [--version N]` | Reclasse en rappelant le modèle |
 | `bun apps/worker/src/cli.ts summarize [--budget N] [--retry]` | Résume les vidéos jusqu'au plafond du jour (N $) ; `--retry` relance les abandons |
+| `bun apps/worker/src/cli.ts places [--budget N]` | Détermine d'un coup le lieu de toutes les interventions en attente (historique après déploiement), dans la limite du plafond du jour ou de N $ |
 | `bun apps/worker/src/cli.ts notify --test` | Envoie une notification de test à tous les abonnés (vérifie les clés VAPID et la chaîne d'envoi) |
 | `bun apps/worker/src/cli.ts media --refresh [--source ID]` | Recalcule le rendu des contenus publiés (cartes des articles Google News) |
 
