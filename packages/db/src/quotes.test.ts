@@ -2,7 +2,7 @@ import { afterAll, beforeAll, expect, test } from 'bun:test';
 import { eq } from 'drizzle-orm';
 
 import type { Db } from './client';
-import { getPublishedById, getQuoteAt, search } from './read';
+import { getPublishedById, getQuoteAt, listSitemapEntries, search } from './read';
 import { item, type SummaryRecord } from './schema';
 import { createTestDb } from './testing';
 import { recordSummary, setMedia, upsertItem, upsertSources } from './write';
@@ -80,6 +80,24 @@ test('recherche : une phrase publiée dans deux vidéos ne sort qu’une fois', 
   ]);
   expect((await search(db, 'Bercy')).quotes).toHaveLength(1);
   await db.delete(item).where(eq(item.id, copy));
+});
+
+test('plan du site : intervention visible et ses citations, datées du résumé', async () => {
+  const { id: hidden } = await upsertItem(db, {
+    sourceId: 'yt:bfm',
+    platformId: 'yt:hidden',
+    url: 'https://www.youtube.com/watch?v=hidden',
+    title: 'Non publiée',
+    description: '',
+    publishedAt: new Date('2026-10-14T08:00:00Z'),
+  });
+  const entries = await listSitemapEntries(db);
+  expect(entries.interventions).toEqual([{ id, updated: '2026-10-15' }]);
+  expect(entries.quotes.map((q) => [q.itemId, q.startS])).toEqual([
+    [id, 120],
+    [id, 754],
+  ]);
+  expect(JSON.stringify(entries)).not.toContain(hidden);
 });
 
 test('résumé régénéré sans citation : les anciennes sont effacées', async () => {

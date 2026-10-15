@@ -59,7 +59,7 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | `EXPO_ACCESS_TOKEN` | — | facultatif | Jeton d'accès Expo Push, quand les notifications mobiles seront activées |
 | `MEMBERSHIP_SOURCE_URL` | facultatif | — | Base des fichiers JSON d'adhésion (ADR 0026), par défaut celle du parti. L'app doit pouvoir joindre `adherent.unenouvelleenergie.fr` |
 | `WEBSUB_PORT` | — | 8080 par défaut | Port du serveur WebSub, exposé au proxy Coolify |
-| `ALLOW_INDEXING` | absente | — | Indexation par les moteurs de recherche. **Absente ou autre que `true` : bloquée** (en-tête `X-Robots-Tag: noindex, nofollow` et `robots.txt` qui interdit tout). Ne la passer à `true` qu'au lancement public, puis redémarrer le service : aucune reconstruction n'est nécessaire |
+| `ALLOW_INDEXING` | absente | — | Indexation par les moteurs de recherche. **Absente ou autre que `true` : bloquée** (en-tête `X-Robots-Tag: noindex, nofollow` et `robots.txt` qui interdit tout). Ne la passer à `true` qu'au lancement public (après la redirection de l'ancien domaine), et pas pour les prévisualisations, puis redémarrer le service : aucune reconstruction n'est nécessaire. `robots.txt` indique alors `/sitemap.xml` |
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
 | `NODE_ENV` | `production` (image) | `production` (image) | Masque les détails d'erreur de l'API |
 | `MIGRATIONS_DIR`, `HEARTBEAT_FILE` | — | fixés par l'image | Ne pas modifier |
@@ -177,6 +177,14 @@ dépense sur la clé OpenRouter.
    - au prochain direct ou à la prochaine intervention publiée (si l'option est
      cochée), les logs du worker montrent `tâche terminée` pour `notify` avec
      `events` et `sent`. La tâche n'écrit rien quand il n'y a rien à envoyer.
+
+10. **Lancement public** (indexation) :
+    - `ALLOW_INDEXING=true` sur l'app (production seulement), puis **Restart** ;
+    - vérifier : plus d'en-tête `X-Robots-Tag`, `robots.txt` contient
+      `Sitemap: https://play.projetlisnard.fr/sitemap.xml`, et `/sitemap.xml` liste les
+      interventions et les citations en adresses `https://play.projetlisnard.fr/…` ;
+    - Google Search Console : propriété `play.projetlisnard.fr` (validation par un
+      enregistrement DNS TXT), puis **Sitemaps** → `sitemap.xml`.
 
 Sur une base neuve, ni `recompute` ni `media --refresh` ne sont nécessaires :
 chaque contenu est traité directement avec les règles en vigueur.

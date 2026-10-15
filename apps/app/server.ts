@@ -8,7 +8,12 @@ import { join, normalize, resolve } from 'node:path';
 
 import { createRequestHandler } from 'expo-server/adapter/bun';
 
-import { indexingAllowed, robotsTxt, withIndexingPolicy } from './src/server/indexing';
+import {
+  indexingAllowed,
+  publicOrigin,
+  robotsTxt,
+  withIndexingPolicy,
+} from './src/server/indexing';
 
 const DIST = resolve(import.meta.dir, process.env.DIST_DIR ?? 'dist');
 const CLIENT = join(DIST, 'client');
@@ -41,7 +46,9 @@ const server = Bun.serve({
     const { pathname } = new URL(req.url);
     if (pathname === '/robots.txt')
       return withIndexingPolicy(
-        new Response(robotsTxt(ALLOW_INDEXING), { headers: { 'Content-Type': 'text/plain' } }),
+        new Response(robotsTxt(ALLOW_INDEXING, publicOrigin(req)), {
+          headers: { 'Content-Type': 'text/plain' },
+        }),
         ALLOW_INDEXING,
       );
     return withIndexingPolicy((await staticFile(pathname)) ?? (await handle(req)), ALLOW_INDEXING);

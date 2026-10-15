@@ -416,3 +416,24 @@ export async function getPublishedById(
     summary: toPublicSummary(row.summary),
   };
 }
+
+/** Adresses du plan du site (spec app-shell) : interventions visibles et leurs citations. */
+export interface SitemapEntries {
+  interventions: { id: string; updated: string }[];
+  quotes: { itemId: string; startS: number; updated: string }[];
+}
+
+export async function listSitemapEntries(db: Db): Promise<SitemapEntries> {
+  // Mise à jour : celle du résumé (et donc des citations) s'il existe, sinon l'intervention.
+  const updated = sql<string>`to_char(coalesce((${item.summary}->>'generatedAt')::timestamptz, ${sortDate}) at time zone 'UTC', 'YYYY-MM-DD')`;
+  const [interventions, quotes] = await Promise.all([
+    db.select({ id: item.id, updated }).from(item).where(visibleItem).orderBy(desc(sortDate)),
+    db
+      .select({ itemId: quote.itemId, startS: quote.startS, updated })
+      .from(quote)
+      .innerJoin(item, eq(quote.itemId, item.id))
+      .where(visibleItem)
+      .orderBy(desc(sortDate), quote.startS),
+  ]);
+  return { interventions, quotes };
+}
