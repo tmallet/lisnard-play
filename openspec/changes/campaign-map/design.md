@@ -137,6 +137,7 @@ Bayeux, Cannes), et une majorité de plateaux et d'extraits sans lieu pertinent.
 ## Migration Plan
 
 1. Merger. La migration 0010 s'applique au démarrage du worker, puis la tâche
-   `places` traite l'historique en quelques cycles.
+   `places` traite l'historique en quelques cycles (environ une heure). Pour aller plus
+   vite, `bun cli.js places --budget 1` dans le terminal du worker le traite d'un coup.
 2. La vue « Déplacements » affiche « aucun déplacement pour l'instant » tant que
    rien n'est traité.

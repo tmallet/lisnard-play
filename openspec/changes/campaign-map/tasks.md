@@ -16,6 +16,8 @@
   - Écartés à raison : plateaux BFMTV, LCI, RMC, CNews ; débat de la REF et duel avec Édouard Philippe (lieu non indiqué) ; anecdote « rencontre avec Mike Tyson à Cannes » (ce n'est pas un déplacement).
   - Correction apportée : la Base adresse nationale doit recevoir la commune seule (y ajouter le département fait chuter le score) ; le département sert ensuite à départager les homonymes.
 
+- [x] 2.5 Commande `cli places [--budget N]` : traite tout l'historique d'un coup après le déploiement
+
 ## 3. API
 
 - [x] 3.1 Procédure `campaign.places` (regroupement par lieu, cache d'une minute) ; tests
