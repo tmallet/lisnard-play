@@ -1,8 +1,8 @@
-import { Linking, Pressable, Text } from 'react-native';
+import { Linking, Platform, Pressable, Text } from 'react-native';
 
 import { formatTimestamp } from '@/lib/format';
 import { quotePath, siteOrigin } from '@/lib/site';
-import { xShareUrl } from '@/lib/x-share';
+import { xAppUrl, xShareUrl } from '@/lib/x-share';
 
 /**
  * « Partager sur X » (spec intervention-quotes, ADR 0030) : rédaction X pré-remplie
@@ -24,9 +24,13 @@ export function ShareXButton({
     <Pressable
       accessibilityRole="link"
       accessibilityLabel={`Partager sur X la citation à ${formatTimestamp(startS)}`}
-      onPress={() =>
-        Linking.openURL(xShareUrl(text, `${siteOrigin()}${quotePath(itemId, startS)}`))
-      }
+      onPress={() => {
+        const url = `${siteOrigin()}${quotePath(itemId, startS)}`;
+        const web = xShareUrl(text, url);
+        // App : rédaction native de X ; si X n'est pas installé, l'adresse web.
+        if (Platform.OS === 'web') Linking.openURL(web);
+        else Linking.openURL(xAppUrl(text, url)).catch(() => Linking.openURL(web));
+      }}
     >
       <Text className="font-sans-semibold text-chamois text-sm underline">{label}</Text>
     </Pressable>

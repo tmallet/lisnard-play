@@ -29,7 +29,9 @@ s'affiche avec un titre générique. L'image de chaque citation existe déjà (A
   - `og:url` ;
   - `twitter:card` de valeur `summary_large_image`.
 - Citation introuvable ou API en erreur : le gabarit est servi sans changement.
-- Le partage sur X passe par l'**adresse publique** `x.com/intent/post`, sans script,
+- Le partage sur X passe par l'**adresse publique** `twitter.com/intent/tweet` (l'app X
+  l'ouvre dans sa rédaction native, quand `x.com/intent/post` s'affiche dans son
+  navigateur intégré), ou par le schéma `twitter://post` depuis l'app, sans script,
   SDK ni compte développeur, conformément à l'absence de traceur (ADR 0022).
 - Au passage au SDK 58, cette réécriture sera remplacée par les métadonnées rendues
   par la page elle-même, et cet ADR sera remplacé.

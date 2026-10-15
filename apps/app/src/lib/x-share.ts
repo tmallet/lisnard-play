@@ -20,5 +20,14 @@ export function xShareText(quote: string): string {
   return `« ${text} »${SIGNATURE}`;
 }
 
+/**
+ * Adresse de partage web. `twitter.com/intent/tweet` plutôt que `x.com/intent/post` :
+ * sur téléphone, l'app X reconnaît la première et ouvre sa rédaction native, alors que
+ * la seconde s'affiche dans son navigateur intégré.
+ */
 export const xShareUrl = (quote: string, url: string) =>
-  `https://x.com/intent/post?text=${encodeURIComponent(xShareText(quote))}&url=${encodeURIComponent(url)}`;
+  `https://twitter.com/intent/tweet?text=${encodeURIComponent(xShareText(quote))}&url=${encodeURIComponent(url)}`;
+
+/** Rédaction native de l'app X (iOS, Android) ; repli sur xShareUrl si X est absent. */
+export const xAppUrl = (quote: string, url: string) =>
+  `twitter://post?message=${encodeURIComponent(`${xShareText(quote)} ${url}`)}`;

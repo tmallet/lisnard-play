@@ -42,8 +42,11 @@ Décision durable consignée dans l'ADR 0030. En résumé :
   1200 × 630, avec des tailles réduites. Elle est servie à `…/apercu.png` par la même
   route et le même cache, dont la clé inclut le format.
 - **Bouton X** :
-  - adresse `https://x.com/intent/post?text=…&url=…`, ouverte par `Linking.openURL`
-    (sur mobile, l'app X la prend en charge) ;
+  - web : adresse `https://twitter.com/intent/tweet?text=…&url=…`. Sur téléphone,
+    l'app X l'ouvre dans sa rédaction native ; `x.com/intent/post`, essayée
+    d'abord, s'affichait dans le navigateur intégré de l'app (constaté sur iPhone) ;
+  - app iOS et Android : schéma `twitter://post?message=…`, et l'adresse web si X
+    n'est pas installé ;
   - texte « « citation » — David Lisnard », raccourci à 280 caractères en comptant
     23 caractères pour le lien, comme X le fait ;
   - aucun script de X n'est chargé.
