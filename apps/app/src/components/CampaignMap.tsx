@@ -1,5 +1,5 @@
-import { type ReactNode, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { type ReactNode, useEffect, useState } from 'react';
+import { Platform, Pressable, ScrollView, View } from 'react-native';
 import Svg, { Circle, Path, Text as SvgText } from 'react-native-svg';
 
 import { FRANCE_MAP, markerRadius, projectPlace } from '@/lib/franceMap';
@@ -21,7 +21,9 @@ const GAP = 8;
 /**
  * Position de la fiche d'un lieu, sans masquer son repère : à droite, sinon à gauche,
  * verticalement centrée sur lui ; faute de place sur les côtés (téléphone), dessous,
- * sinon dessus, calée horizontalement dans le conteneur. Pixels du conteneur.
+ * sinon dessus, calée horizontalement dans le conteneur. Elle ne sort jamais de la carte
+ * (sur Android, une zone hors de son parent ne reçoit pas les touchers) : si elle ne
+ * tient ni dessous ni dessus, elle est calée en bas ou en haut. Pixels du conteneur.
  */
 export function popoverPosition(
   marker: { x: number; y: number; r: number },
@@ -38,10 +40,13 @@ export function popoverPosition(
     };
   const below = marker.y + marker.r + GAP;
   const above = marker.y - marker.r - GAP - popHeight;
-  return {
-    left: clamp(marker.x - popWidth / 2, width - popWidth),
-    top: below + popHeight <= height || above < 0 ? below : above,
-  };
+  const top =
+    below + popHeight <= height
+      ? below
+      : above >= 0
+        ? above
+        : clamp(height - marker.y > marker.y ? below : above, height - popHeight);
+  return { left: clamp(marker.x - popWidth / 2, width - popWidth), top };
 }
 
 /**
@@ -65,7 +70,18 @@ export function CampaignMap({
 }) {
   const [width, setWidth] = useState(0);
   const [available, setAvailable] = useState(0);
-  const [popHeight, setPopHeight] = useState(0);
+  // Hauteur de la fiche, mesurée pour ce lieu : tant qu'elle ne l'est pas, la fiche reste
+  // invisible, pour ne pas sauter d'une position provisoire à la bonne.
+  const [measured, setMeasured] = useState<{ key: string; height: number } | null>(null);
+  // Web : Échap ferme la fiche.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !children) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [children, onClose]);
   // La carte est centrée dans son conteneur : décalage des zones tactiles.
   const [offset, setOffset] = useState(0);
   const max = Math.max(1, ...places.map((p) => p.interventions.length));
@@ -77,6 +93,34 @@ export function CampaignMap({
     })
     .sort((a, b) => b.r - a.r);
   const height = (width * FRANCE_MAP.height) / FRANCE_MAP.width;
+
+  // Fiche du lieu choisi, à côté de son repère.
+  const selected = children && width > 0 ? markers.find((m) => m.place.key === selectedKey) : null;
+  let popover: ReactNode = null;
+  if (selected) {
+    const scale = width / FRANCE_MAP.width;
+    const popWidth = Math.min(POPOVER_WIDTH, available);
+    const ready = measured?.key === selected.place.key;
+    const popHeight = ready ? Math.min(measured.height, height) : 0;
+    // À côté du repère, en débordant à droite de la carte s'il y a de la place.
+    const at = popoverPosition(
+      { x: offset + selected.x * scale, y: selected.y * scale, r: selected.r * scale },
+      { width: available, height, popWidth, popHeight },
+    );
+    const key = selected.place.key;
+    popover = (
+      <View
+        onLayout={(e) => setMeasured({ key, height: e.nativeEvent.layout.height })}
+        style={{ position: 'absolute', ...at, width: popWidth, opacity: ready ? 1 : 0 }}
+      >
+        {/* Hauteur bornée sur la vue défilante elle-même, seule contrainte respectée sur
+            iOS et Android ; défilement imbriqué dans celui de la page sur Android. */}
+        <ScrollView style={{ maxHeight: height }} nestedScrollEnabled>
+          {children}
+        </ScrollView>
+      </View>
+    );
+  }
 
   return (
     <View
@@ -135,6 +179,7 @@ export function CampaignMap({
       {/* Toucher la carte hors d'un repère ferme la fiche. */}
       {children && width > 0 ? (
         <Pressable
+          accessibilityRole="button"
           accessibilityLabel="Fermer la fiche du lieu"
           onPress={onClose}
           style={{ position: 'absolute', left: offset, top: 0, width, height }}
@@ -164,27 +209,7 @@ export function CampaignMap({
             );
           })
         : null}
-      {children && width > 0
-        ? (() => {
-            const marker = markers.find((m) => m.place.key === selectedKey);
-            if (!marker) return null;
-            const scale = width / FRANCE_MAP.width;
-            const popWidth = Math.min(POPOVER_WIDTH, available);
-            // À côté du repère, en débordant à droite de la carte s'il y a de la place.
-            const at = popoverPosition(
-              { x: offset + marker.x * scale, y: marker.y * scale, r: marker.r * scale },
-              { width: available, height, popWidth, popHeight },
-            );
-            return (
-              <View
-                onLayout={(e) => setPopHeight(e.nativeEvent.layout.height)}
-                style={{ position: 'absolute', ...at, width: popWidth, maxHeight: height }}
-              >
-                <ScrollView>{children}</ScrollView>
-              </View>
-            );
-          })()
-        : null}
+      {popover}
     </View>
   );
 }

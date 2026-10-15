@@ -89,7 +89,9 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
   miniatures YouTube en `hq720`, avec repli sur l'image d'origine (`onError`).
 - **Lecteurs tiers** : toujours via `PlayerConsent` (clic pour charger, ADR 0022), jamais
   `MediaEmbed` directement dans un écran. `playerUrl()` passe YouTube sur
-  `youtube-nocookie.com` et active la lecture automatique après le clic.
+  `youtube-nocookie.com` et active la lecture automatique après le clic. Le lecteur est
+  retiré quand l'écran perd le focus (`useFocusEffect`) : la pile garde les écrans montés,
+  et la vidéo continuerait sinon en arrière-plan.
 - **Mentions légales** : contact et hébergeur dans `config/legal.ts`, page
   `mentions-legales`, lien `LegalLink` dans le pied de page.
 - **Médias** : `MediaEmbed` affiche le lecteur de l'URL fournie par le worker

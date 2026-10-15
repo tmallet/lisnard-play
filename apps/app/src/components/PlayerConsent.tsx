@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 
 import { largeThumbnail, playerUrl, providerLabel } from '@/lib/format';
@@ -33,6 +34,9 @@ export function PlayerConsent({
   useEffect(() => {
     if (playRequest > 0) setAccepted(true);
   }, [playRequest]);
+  // En quittant l'écran, le lecteur est retiré : la pile de navigation garde l'écran
+  // monté, et la vidéo continuerait en arrière-plan. Au retour, l'affiche revient.
+  useFocusEffect(useCallback(() => () => setAccepted(false), []));
   if (accepted) {
     const url = playerUrl(embedUrl, startS);
     // Nouveau moment de départ ou nouvelle demande d'écoute : le lecteur repart du passage.

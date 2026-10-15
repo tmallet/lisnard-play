@@ -19,6 +19,7 @@ export function TravelsView() {
   // d'outre-mer) sont comptés : le chiffre annoncé correspond aux repères affichés.
   const places = (query.data?.places ?? []).filter((p) => projectPlace(p.lat, p.lon) !== null);
   const selected = places.find((p) => p.key === selectedKey) ?? null;
+  const close = () => setSelectedKey(null);
   const count = places.reduce((n, p) => n + p.interventions.length, 0);
 
   if (query.isPending)
@@ -41,9 +42,10 @@ export function TravelsView() {
           places={places}
           selectedKey={selectedKey}
           onSelect={(p) => setSelectedKey(p.key)}
-          onClose={() => setSelectedKey(null)}
+          onClose={close}
         >
-          {selected ? <PlaceCard place={selected} onClose={() => setSelectedKey(null)} /> : null}
+          {/* Clé : une nouvelle fiche (et son focus) à chaque lieu. */}
+          {selected ? <PlaceCard key={selected.key} place={selected} onClose={close} /> : null}
         </CampaignMap>
       ) : null}
       {!selected && places.length > 0 ? (
