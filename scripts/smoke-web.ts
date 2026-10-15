@@ -259,6 +259,21 @@ try {
     found.result?.data?.quotes?.[0]?.itemId === id,
   );
 
+  // Image de partage d'une citation (ADR 0029) : PNG carré de 1080 px, 404 sinon.
+  const image = await fetch(`${BASE}/interventions/${id}/citation/125/image.png`);
+  const png = new DataView(await image.arrayBuffer());
+  check(
+    'image de citation : PNG 1080 × 1080',
+    image.status === 200 &&
+      image.headers.get('content-type') === 'image/png' &&
+      png.byteLength > 8 &&
+      png.getUint32(0) === 0x89504e47 &&
+      png.getUint32(16) === 1080 &&
+      png.getUint32(20) === 1080,
+  );
+  const noImage = await fetch(`${BASE}/interventions/${id}/citation/9999/image.png`);
+  check('image de citation inconnue : HTTP 404', noImage.status === 404);
+
   // Fichier de validation Google Search Console : à servir tel quel, sans jamais le retirer.
   const gsc = await fetch(`${BASE}/google2fcb3d6622939462.html`);
   check(

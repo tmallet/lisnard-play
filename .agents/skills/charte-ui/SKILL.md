@@ -49,6 +49,13 @@ Si une API exige une valeur JS (options natives, `+html.tsx`), importer `colors`
 ni de nom de police en dur, jamais de valeur dérivée (opacité, teinte) hors
 `blancSecondaire`.
 
+## Images partagées
+
+L'image d'une citation (`src/server/quote-card.ts`, ADR 0029) suit les mêmes règles :
+palette et Montserrat seulement, ni logo, ni photo, ni miniature de vidéo, et la
+mention d'indépendance (`INDEPENDENCE_NOTICE`) toujours en pied, mot pour mot. Les
+valeurs viennent de `colors` et `blancSecondaire`, jamais d'un code hex en dur.
+
 ## Composants existants
 
 - `Title` : titre de page, en Montserrat 800 et en majuscules. La prop

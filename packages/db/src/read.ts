@@ -201,6 +201,8 @@ export interface QuoteHit extends PublicQuote {
   outlet: string;
   /** Vidéo de la chaîne de David Lisnard : le média n'est pas répété après son nom. */
   official: boolean;
+  /** Durée de la vidéo en secondes, si connue (barre de lecture de l'image). */
+  durationS: number | null;
   /** Jour de l'intervention, heure de Paris. */
   day: string;
 }
@@ -213,6 +215,7 @@ const quoteHitColumns = {
   title: item.title,
   outlet: summaryColumns.outlet,
   official: source.official,
+  durationS: item.durationS,
   day: sql<string>`to_char(${sortDate} at time zone 'Europe/Paris', 'YYYY-MM-DD')`,
 };
 

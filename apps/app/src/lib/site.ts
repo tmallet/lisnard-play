@@ -11,6 +11,10 @@ export function siteOrigin(): string {
 export const quotePath = (itemId: string, startS: number) =>
   `/interventions/${itemId}/citation/${startS}`;
 
+/** Image de partage d'une citation (ADR 0029), produite par le serveur de production. */
+export const quoteImageUrl = (itemId: string, startS: number) =>
+  `${siteOrigin()}${quotePath(itemId, startS)}/image.png`;
+
 /** Même page, sous forme de lien typé pour expo-router. */
 export const quoteHref = (itemId: string, startS: number) => ({
   pathname: '/interventions/[id]/citation/[t]' as const,
