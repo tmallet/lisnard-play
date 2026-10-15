@@ -271,6 +271,31 @@ try {
       png.getUint32(16) === 1080 &&
       png.getUint32(20) === 1080,
   );
+  const preview = await fetch(`${BASE}/interventions/${id}/citation/125/apercu.png`);
+  const previewPng = new DataView(await preview.arrayBuffer());
+  check(
+    'aperçu de citation : PNG 1200 × 630',
+    preview.status === 200 &&
+      previewPng.byteLength > 24 &&
+      previewPng.getUint32(16) === 1200 &&
+      previewPng.getUint32(20) === 630,
+  );
+  // Aperçu du lien (ADR 0030) : en-tête réécrit, lisible sans JavaScript.
+  const quoteHtml = await (
+    await fetch(`${BASE}/interventions/${id}/citation/125`, {
+      headers: { 'x-forwarded-proto': 'https', 'x-forwarded-host': 'play.example.test' },
+    })
+  ).text();
+  check(
+    'page de citation : titre de la citation et aperçu paysage',
+    /<title[^>]*>« Il faut réformer l’école dès le primaire\. » · /.test(quoteHtml) &&
+      quoteHtml.includes(
+        `<meta property="og:image" content="https://play.example.test/interventions/${id}/citation/125/apercu.png"/>`,
+      ) &&
+      quoteHtml.includes('<meta name="twitter:card" content="summary_large_image"/>'),
+  );
+  const unknownQuote = await (await fetch(`${BASE}/interventions/${id}/citation/9999`)).text();
+  check('page de citation inconnue : aperçu générique', !unknownQuote.includes('twitter:card'));
   const noImage = await fetch(`${BASE}/interventions/${id}/citation/9999/image.png`);
   check('image de citation inconnue : HTTP 404', noImage.status === 404);
 

@@ -6,6 +6,7 @@ import { formatTimestamp, THEME_LABELS, type Theme } from '@/lib/format';
 import { shareLink } from '@/lib/share';
 import { quoteHref, quotePath, siteOrigin } from '@/lib/site';
 import { ShareImageButton } from './ShareImageButton';
+import { ShareXButton } from './ShareXButton';
 
 export interface QuoteItem {
   text: string;
@@ -76,6 +77,7 @@ export function QuotesBlock({
               </Text>
             </Pressable>
             <ShareImageButton itemId={itemId} startS={quote.startS} label="En image" />
+            <ShareXButton itemId={itemId} startS={quote.startS} text={quote.text} label="Sur X" />
             {quote.theme && quote.theme in THEME_LABELS ? (
               <Text className="font-sans text-blanc/70 text-xs">
                 {THEME_LABELS[quote.theme as Theme]}

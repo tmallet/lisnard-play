@@ -2,8 +2,9 @@
  * Serveur de production (ADR 0015) : sert l'export Expo (`dist/`) avec Bun.
  * Fichiers statiques depuis dist/client, pages pré-rendues et API routes via
  * l'adaptateur Bun d'expo-server. Usage : bun server.ts (PORT, défaut 3000).
- * Indexation bloquée sauf ALLOW_INDEXING=true (spec app-shell). Image de partage des
- * citations (ADR 0029), produite ici : son module natif ne passe pas par Metro.
+ * Indexation bloquée sauf ALLOW_INDEXING=true (spec app-shell). Images de partage des
+ * citations (ADR 0029), produites ici : leur module natif ne passe pas par Metro.
+ * En-tête des pages de citation réécrit pour les aperçus de lien (ADR 0030).
  */
 import { join, normalize, resolve } from 'node:path';
 
@@ -16,6 +17,8 @@ import {
   withIndexingPolicy,
 } from './src/server/indexing';
 import { createQuoteImageHandler, quoteImageParams } from './src/server/quote-image-route';
+import { quotePageMeta, quotePageParams, withQuoteMeta } from './src/server/quote-page';
+import { readQuote } from './src/server/quote-share';
 
 const DIST = resolve(import.meta.dir, process.env.DIST_DIR ?? 'dist');
 const CLIENT = join(DIST, 'client');
@@ -73,6 +76,18 @@ const server = Bun.serve({
         }),
         ALLOW_INDEXING,
       );
+    const page = quotePageParams(pathname);
+    if (page) {
+      // Citation introuvable ou API en erreur : gabarit inchangé (métadonnées génériques).
+      const quote = await readQuote(handle, req, page).catch(() => null);
+      const response = await handle(req);
+      return withIndexingPolicy(
+        quote && quote !== 'error'
+          ? withQuoteMeta(response, quotePageMeta(quote, publicOrigin(req)))
+          : response,
+        ALLOW_INDEXING,
+      );
+    }
     return withIndexingPolicy((await staticFile(pathname)) ?? (await handle(req)), ALLOW_INDEXING);
   },
 });

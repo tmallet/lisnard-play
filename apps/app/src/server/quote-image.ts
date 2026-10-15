@@ -9,7 +9,7 @@ import { dirname, join } from 'node:path';
 import { renderAsync } from '@resvg/resvg-js';
 import satori from 'satori';
 
-import { CARD_SIZE, type QuoteCardData, quoteCard } from './quote-card';
+import { type CardFormat, cardSize, type QuoteCardData, quoteCard } from './quote-card';
 
 type Weight = 400 | 600 | 700 | 800;
 const WEIGHTS: [Weight, string][] = [
@@ -38,10 +38,12 @@ function loadFonts() {
   return fonts;
 }
 
-export async function renderQuoteImage(data: QuoteCardData): Promise<Uint8Array> {
-  const svg = await satori(quoteCard(data) as never, {
-    width: CARD_SIZE,
-    height: CARD_SIZE,
+export async function renderQuoteImage(
+  data: QuoteCardData,
+  format: CardFormat = 'square',
+): Promise<Uint8Array> {
+  const svg = await satori(quoteCard(data, format) as never, {
+    ...cardSize(format),
     fonts: await loadFonts(),
   });
   // Conversion en PNG sur un fil à part : le serveur continue de répondre pendant ce temps.

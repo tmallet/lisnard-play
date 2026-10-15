@@ -7,8 +7,10 @@ import { PageHead } from '@/components/PageHead';
 import { PlayerConsent } from '@/components/PlayerConsent';
 import { Screen } from '@/components/Screen';
 import { ShareImageButton } from '@/components/ShareImageButton';
+import { ShareXButton } from '@/components/ShareXButton';
 import { WebChrome } from '@/components/WebChrome';
 import { formatDate, formatTimestamp, quoteSource, THEME_LABELS, type Theme } from '@/lib/format';
+import { quotePageDescription, quotePageTitle } from '@/lib/quote-meta';
 import { shareLink } from '@/lib/share';
 import { quotePath, siteOrigin } from '@/lib/site';
 import { useTRPC } from '@/lib/trpc';
@@ -58,10 +60,8 @@ export default function QuotePage() {
       />
       <Screen>
         <PageHead
-          title={q ? `« ${q.text} »` : 'Citation'}
-          description={
-            q ? `David Lisnard, ${quoteSource(q)}, ${formatDate(`${q.day}T12:00:00Z`)}` : undefined
-          }
+          title={q ? quotePageTitle(q) : 'Citation'}
+          description={q ? quotePageDescription(q) : undefined}
         />
         {!q ? (
           <Text className="font-sans text-base text-blanc/70">
@@ -112,6 +112,7 @@ export default function QuotePage() {
                 </Text>
               </Pressable>
               <ShareImageButton itemId={q.itemId} startS={q.startS} />
+              <ShareXButton itemId={q.itemId} startS={q.startS} text={q.text} />
               <Link href={`/interventions/${q.itemId}`} asChild>
                 <Pressable accessibilityRole="link">
                   <Text className="font-sans-semibold text-chamois text-sm underline">

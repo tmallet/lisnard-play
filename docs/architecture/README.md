@@ -46,8 +46,10 @@ lisnard-play/
 │  │  ├─ interventions/[id]/citation/[t].tsx   page d'une citation (ADR 0028)
 │  │  ├─ +not-found.tsx   404
 │  │  ├─ sitemap.xml+api.ts   plan du site, depuis la base (cache de 10 min)
-│  │  │  (…/citation/<s>/image.png : image de partage d'une citation, servie par
-│  │  │   server.ts avec satori et resvg, hors Metro, ADR 0029)
+│  │  │  (…/citation/<s>/image.png et apercu.png : images d'une citation, carrée et
+│  │  │   paysage, servies par server.ts avec satori et resvg, hors Metro, ADR 0029 ;
+│  │  │   en-tête des pages de citation réécrit par server.ts pour les aperçus de
+│  │  │   lien, ADR 0030)
 │  │  └─ api/trpc/[trpc]+api.ts   point d'accès tRPC (connexion Postgres partagée, src/server/db.ts)
 │  ├─ src/components/     Screen, WebChrome, AppNavigation, InterventionFeed,
 │  │                      InterventionCard, LiveBadge, ThemeFilter, MediaEmbed, LinkCard…

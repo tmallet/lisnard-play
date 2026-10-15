@@ -7,7 +7,61 @@ import { APP_NAME, INDEPENDENCE_NOTICE } from '../config/app';
 import { formatDate, formatTimestamp, THEME_LABELS, type Theme } from '../lib/format';
 import { blancSecondaire, colors } from '../theme/colors';
 
-export const CARD_SIZE = 1080;
+/**
+ * Formats : carré pour « Partager en image » (WhatsApp, Instagram), paysage pour les
+ * aperçus de lien (X, Facebook, LinkedIn ; ADR 0030). Même composition, tailles adaptées.
+ */
+export type CardFormat = 'square' | 'landscape';
+
+const SIZES = {
+  square: {
+    width: 1080,
+    height: 1080,
+    outer: 44,
+    inner: '48px 64px 32px',
+    header: 22,
+    pill: 20,
+    pillPadding: '7px 20px',
+    mark: 140,
+    markOverlap: -16,
+    quoteScale: 1,
+    signatureGap: 40,
+    signature: 32,
+    rule: 56,
+    barGap: 24,
+    bar: 21,
+    footerGap: 18,
+    name: 24,
+    host: 23,
+    notice: 16,
+  },
+  landscape: {
+    width: 1200,
+    height: 630,
+    outer: 26,
+    inner: '26px 48px 18px',
+    header: 16,
+    pill: 15,
+    pillPadding: '5px 14px',
+    mark: 84,
+    markOverlap: -12,
+    quoteScale: 0.74,
+    signatureGap: 18,
+    signature: 22,
+    rule: 44,
+    barGap: 12,
+    bar: 16,
+    footerGap: 10,
+    name: 17,
+    host: 17,
+    notice: 13,
+  },
+} as const;
+
+export const cardSize = (format: CardFormat) => ({
+  width: SIZES[format].width,
+  height: SIZES[format].height,
+});
 
 export interface QuoteCardData {
   text: string;
@@ -53,7 +107,8 @@ export function quoteFontSize(text: string): number {
   return 40;
 }
 
-export function quoteCard(input: QuoteCardData): CardNode {
+export function quoteCard(input: QuoteCardData, format: CardFormat = 'square'): CardNode {
+  const z = SIZES[format];
   const q = { ...input, text: withoutEmoji(input.text) };
   const date = formatDate(`${q.day}T12:00:00Z`);
   // Date d'abord : un nom de média long peut être coupé, jamais la date. Sa propre
@@ -62,13 +117,13 @@ export function quoteCard(input: QuoteCardData): CardNode {
   const theme = q.theme && q.theme in THEME_LABELS ? THEME_LABELS[q.theme as Theme] : null;
   const progress =
     q.durationS && q.durationS > 0 ? Math.min(1, Math.max(0, q.startS / q.durationS)) : null;
-  const rule = el({ width: 56, height: 3, background: colors.chamois });
+  const rule = el({ width: z.rule, height: 3, background: colors.chamois });
 
   return el(
     {
-      width: CARD_SIZE,
-      height: CARD_SIZE,
-      padding: 44,
+      width: z.width,
+      height: z.height,
+      padding: z.outer,
       background: colors.bleuSombre,
       color: colors.blanc,
       fontFamily: 'Montserrat',
@@ -78,7 +133,7 @@ export function quoteCard(input: QuoteCardData): CardNode {
         flex: 1,
         flexDirection: 'column',
         border: `3px solid ${colors.chamois}`,
-        padding: '48px 64px 32px',
+        padding: z.inner,
         background: `linear-gradient(160deg, ${colors.bleu}, ${colors.bleuSombre})`,
       },
       el(
@@ -91,7 +146,7 @@ export function quoteCard(input: QuoteCardData): CardNode {
             overflow: 'hidden',
             whiteSpace: 'nowrap',
             textOverflow: 'ellipsis',
-            fontSize: 22,
+            fontSize: z.header,
             fontWeight: 700,
             letterSpacing: 5,
             color: colors.chamois,
@@ -102,13 +157,13 @@ export function quoteCard(input: QuoteCardData): CardNode {
           ? [
               el(
                 {
-                  fontSize: 20,
+                  fontSize: z.pill,
                   fontWeight: 700,
                   letterSpacing: 3,
                   color: colors.chamois,
                   border: `2px solid ${colors.chamois}`,
                   borderRadius: 999,
-                  padding: '7px 20px',
+                  padding: z.pillPadding,
                 },
                 theme.toUpperCase(),
               ),
@@ -119,17 +174,17 @@ export function quoteCard(input: QuoteCardData): CardNode {
         { flex: 1, flexDirection: 'column', justifyContent: 'center', alignItems: 'center' },
         el(
           {
-            fontSize: 140,
+            fontSize: z.mark,
             fontWeight: 800,
             color: colors.chamois,
             lineHeight: 1,
-            marginBottom: -16,
+            marginBottom: z.markOverlap,
           },
           '“',
         ),
         el(
           {
-            fontSize: quoteFontSize(q.text),
+            fontSize: Math.round(quoteFontSize(q.text) * z.quoteScale),
             fontWeight: 700,
             lineHeight: 1.24,
             textAlign: 'center',
@@ -137,21 +192,21 @@ export function quoteCard(input: QuoteCardData): CardNode {
           q.text,
         ),
         el(
-          { alignItems: 'center', marginTop: 40 },
+          { alignItems: 'center', marginTop: z.signatureGap },
           rule,
           el(
-            { fontSize: 32, fontWeight: 800, letterSpacing: 4, margin: '0 20px' },
+            { fontSize: z.signature, fontWeight: 800, letterSpacing: 4, margin: '0 20px' },
             'DAVID LISNARD',
           ),
           rule,
         ),
       ),
       el(
-        { flexDirection: 'column', marginTop: 24, marginBottom: 24 },
+        { flexDirection: 'column', marginTop: z.barGap, marginBottom: z.barGap },
         el(
           {
             justifyContent: 'space-between',
-            fontSize: 21,
+            fontSize: z.bar,
             fontWeight: 600,
             color: blancSecondaire,
             marginBottom: 10,
@@ -177,14 +232,14 @@ export function quoteCard(input: QuoteCardData): CardNode {
         {
           flexDirection: 'column',
           borderTop: `1px solid ${blancSecondaire}`,
-          paddingTop: 18,
+          paddingTop: z.footerGap,
         },
         el(
           { justifyContent: 'space-between', alignItems: 'center' },
-          el({ fontSize: 24, fontWeight: 800, letterSpacing: 5 }, APP_NAME.toUpperCase()),
-          el({ fontSize: 23, fontWeight: 700, color: colors.chamois }, q.host),
+          el({ fontSize: z.name, fontWeight: 800, letterSpacing: 5 }, APP_NAME.toUpperCase()),
+          el({ fontSize: z.host, fontWeight: 700, color: colors.chamois }, q.host),
         ),
-        el({ fontSize: 16, color: blancSecondaire, marginTop: 8 }, INDEPENDENCE_NOTICE),
+        el({ fontSize: z.notice, color: blancSecondaire, marginTop: 6 }, INDEPENDENCE_NOTICE),
       ),
     ),
   );
