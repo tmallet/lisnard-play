@@ -34,7 +34,10 @@ longueur DOIT être proportionnée à la vidéo :
 Il DOIT suivre l'ordre des sujets abordés et préciser les propositions
 concrètes, chiffres et exemples avancés, et être accompagné de trois à six
 points clés courts. Il NE DOIT contenir ni opinion, ni citation de plus de
-quinze mots, ni information absente de la vidéo.
+quinze mots, ni information absente de la vidéo. La même réponse DOIT comprendre
+les citations de la vidéo (spec `intervention-quotes`) : de 3 à 8 phrases de
+David Lisnard, mot pour mot, de 40 mots au plus, chacune avec son minutage en
+secondes et son thème.
 
 #### Scenario: Résumé d'un clip
 - **WHEN** un clip où David Lisnard présente une proposition sur l'école est résumé
@@ -43,6 +46,10 @@ quinze mots, ni information absente de la vidéo.
 #### Scenario: Résumé d'un débat
 - **WHEN** un débat de quarante minutes est résumé
 - **THEN** le résumé tient en trois courts paragraphes au plus, qui suivent les sujets abordés et reprennent ses propositions concrètes
+
+#### Scenario: Citations avec le résumé
+- **WHEN** une interview est résumée avec la consigne version 4
+- **THEN** la réponse comprend le résumé, les points clés et de 3 à 8 citations minutées
 
 ### Requirement: Absence de prise de parole
 Si le modèle indique que David Lisnard ne s'exprime pas dans la vidéo, le
