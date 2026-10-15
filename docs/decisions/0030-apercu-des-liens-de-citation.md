@@ -26,12 +26,12 @@ s'affiche avec un titre générique. L'image de chaque citation existe déjà (A
   l'API interne :
   - titre et description propres à la citation ;
   - `og:image` et `twitter:image`, une variante paysage 1200 × 630 de l'image ;
-  - `og:url` ;
+  - `og:url`, sur le domaine de production (jamais tiré de la requête) ;
   - `twitter:card` de valeur `summary_large_image`.
 - Citation introuvable ou API en erreur : le gabarit est servi sans changement.
 - Le partage sur X passe par l'**adresse publique** `twitter.com/intent/tweet` (l'app X
   l'ouvre dans sa rédaction native, quand `x.com/intent/post` s'affiche dans son
-  navigateur intégré), ou par le schéma `twitter://post` depuis l'app, sans script,
+  navigateur intégré), ou par le schéma `twitter://post` depuis l'app iOS, sans script,
   SDK ni compte développeur, conformément à l'absence de traceur (ADR 0022).
 - Au passage au SDK 58, cette réécriture sera remplacée par les métadonnées rendues
   par la page elle-même, et cet ADR sera remplacé.
@@ -49,3 +49,5 @@ s'affiche avec un titre générique. L'image de chaque citation existe déjà (A
 - Deux sources pour le titre d'une page de citation, le serveur pour les robots et
   `PageHead` pour le navigateur ; elles doivent rester identiques.
 - La technique pourra servir aux pages d'intervention dans un change suivant.
+- Les pages de citation reviennent dans le plan du site : leur HTML porte maintenant
+  leur titre et leur description.

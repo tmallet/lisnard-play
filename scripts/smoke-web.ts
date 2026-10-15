@@ -121,7 +121,11 @@ await recordSummary(
     generatedAt: new Date().toISOString(),
     cost: 0,
   },
-  [{ text: 'Il faut réformer l’école dès le primaire.', startS: 125, theme: 'education' }],
+  [
+    { text: 'Il faut réformer l’école dès le primaire.', startS: 125, theme: 'education' },
+    // Guillemets droits et esperluette : l'en-tête réécrit doit rester du HTML valide.
+    { text: 'Il a dit "non" & c’est tout.', startS: 300, theme: null },
+  ],
 );
 
 // Source des adhésions factice (ADR 0026) : le smoke test n'appelle jamais le site du parti.
@@ -290,11 +294,24 @@ try {
     'page de citation : titre de la citation et aperçu paysage',
     /<title[^>]*>« Il faut réformer l’école dès le primaire\. » · /.test(quoteHtml) &&
       quoteHtml.includes(
-        `<meta property="og:image" content="https://play.example.test/interventions/${id}/citation/125/apercu.png"/>`,
+        `<meta property="og:image" content="https://play.projetlisnard.fr/interventions/${id}/citation/125/apercu.png"/>`,
       ) &&
       quoteHtml.includes('<meta name="twitter:card" content="summary_large_image"/>'),
   );
   const unknownQuote = await (await fetch(`${BASE}/interventions/${id}/citation/9999`)).text();
+  check(
+    'page de citation : description remplacée, une seule balise de chaque',
+    quoteHtml.includes('content="David Lisnard sur ') &&
+      !quoteHtml.includes('Toutes les interventions publiques') &&
+      quoteHtml.split('property="og:image"').length === 2 &&
+      quoteHtml.split('property="og:title"').length === 2,
+  );
+  const quotedHtml = await (await fetch(`${BASE}/interventions/${id}/citation/300`)).text();
+  check(
+    'page de citation : guillemets droits échappés dans l’en-tête',
+    quotedHtml.includes('content="« Il a dit &quot;non&quot; & c’est tout. » · ') &&
+      !quotedHtml.includes('content="« Il a dit "non"'),
+  );
   check('page de citation inconnue : aperçu générique', !unknownQuote.includes('twitter:card'));
   const noImage = await fetch(`${BASE}/interventions/${id}/citation/9999/image.png`);
   check('image de citation inconnue : HTTP 404', noImage.status === 404);
@@ -316,8 +333,9 @@ try {
     sitemap.status === 200 && (sitemap.headers.get('content-type') ?? '').includes('xml'),
   );
   check(
-    '/sitemap.xml : intervention publiée, sur le domaine du proxy',
-    sitemapXml.includes(`<loc>https://play.example.test/interventions/${id}</loc>`),
+    '/sitemap.xml : intervention publiée et ses citations, sur le domaine du proxy',
+    sitemapXml.includes(`<loc>https://play.example.test/interventions/${id}</loc>`) &&
+      sitemapXml.includes(`<loc>https://play.example.test/interventions/${id}/citation/125</loc>`),
   );
 
   // Notifications (spec push-notifications, ADR 0024).

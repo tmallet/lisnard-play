@@ -28,15 +28,18 @@ test('domaine public : en-têtes du proxy, sinon l’adresse reçue', () => {
   );
 });
 
-test('plan du site : pages fixes et interventions en adresses absolues', () => {
+test('plan du site : pages fixes, interventions et citations en adresses absolues', () => {
   const xml = sitemapXml('https://play.projetlisnard.fr', {
     interventions: [{ id: 'abc', updated: '2026-10-15' }],
+    quotes: [{ itemId: 'abc', startS: 641, updated: '2026-10-15' }],
   });
   expect(xml).toContain('<loc>https://play.projetlisnard.fr/</loc>');
   expect(xml).toContain('<loc>https://play.projetlisnard.fr/campagne</loc>');
   expect(xml).toContain(
     '<url><loc>https://play.projetlisnard.fr/interventions/abc</loc><lastmod>2026-10-15</lastmod></url>',
   );
-  expect(xml).not.toContain('/citation/');
-  expect(sitemapXml('https://a&b', { interventions: [] })).toContain('https://a&#38;b/');
+  expect(xml).toContain('<loc>https://play.projetlisnard.fr/interventions/abc/citation/641</loc>');
+  expect(sitemapXml('https://a&b', { interventions: [], quotes: [] })).toContain(
+    'https://a&#38;b/',
+  );
 });

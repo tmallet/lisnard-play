@@ -22,9 +22,10 @@ le site.
 
 ### Requirement: Aperçu du lien d'une citation
 Le HTML servi pour la page d'une citation DOIT porter, sans exécution de JavaScript :
-- un titre et une description propres à la citation ;
+- un titre et une description propres à la citation, compréhensibles hors du site
+  (« David Lisnard sur BFMTV, 13 octobre 2026 ») ;
 - `og:image` et `twitter:image` pointant vers la variante paysage de son image ;
-- `og:url` (adresse de la page) ;
+- `og:url` (adresse de la page, sur le domaine de production) ;
 - `twitter:card` de valeur `summary_large_image`.
 
 Si la citation est introuvable, la page DOIT garder ses métadonnées génériques.

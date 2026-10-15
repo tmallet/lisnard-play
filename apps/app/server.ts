@@ -26,7 +26,8 @@ const handle = createRequestHandler({ build: join(DIST, 'server') });
 const ALLOW_INDEXING = indexingAllowed(process.env.ALLOW_INDEXING);
 // Adresse du site en pied des images partagées : celle de la production, jamais celle
 // annoncée par la requête (un en-tête falsifié ne doit ni l'afficher ni vider le cache).
-const SITE_HOST = new URL(process.env.EXPO_PUBLIC_SITE_URL ?? 'https://play.projetlisnard.fr').host;
+const SITE_URL = new URL(process.env.EXPO_PUBLIC_SITE_URL ?? 'https://play.projetlisnard.fr');
+const SITE_HOST = SITE_URL.host;
 // Module d'image chargé à la première image : un échec (binaire absent) n'empêche pas
 // le site de démarrer, seule l'image répond 503.
 const quoteImage = createQuoteImageHandler(handle, async () => {
@@ -79,11 +80,15 @@ const server = Bun.serve({
     const page = quotePageParams(pathname);
     if (page) {
       // Citation introuvable ou API en erreur : gabarit inchangé (métadonnées génériques).
-      const quote = await readQuote(handle, req, page).catch(() => null);
-      const response = await handle(req);
+      // Lecture de la citation et rendu du gabarit en parallèle. Adresses de l'aperçu sur
+      // le domaine de production, jamais tirées des en-têtes de la requête.
+      const [quote, response] = await Promise.all([
+        readQuote(handle, req, page).catch(() => null),
+        handle(req),
+      ]);
       return withIndexingPolicy(
         quote && quote !== 'error'
-          ? withQuoteMeta(response, quotePageMeta(quote, publicOrigin(req)))
+          ? withQuoteMeta(response, quotePageMeta(quote, SITE_URL.origin))
           : response,
         ALLOW_INDEXING,
       );

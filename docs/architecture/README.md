@@ -45,7 +45,7 @@ lisnard-play/
 │  │  ├─ interventions/[id].tsx   détail (rendu côté client, ADR 0011), `?t=` pour un minutage
 │  │  ├─ interventions/[id]/citation/[t].tsx   page d'une citation (ADR 0028)
 │  │  ├─ +not-found.tsx   404
-│  │  ├─ sitemap.xml+api.ts   plan du site, depuis la base (cache de 10 min)
+│  │  ├─ sitemap.xml+api.ts   plan du site (interventions et citations), cache de 10 min
 │  │  │  (…/citation/<s>/image.png et apercu.png : images d'une citation, carrée et
 │  │  │   paysage, servies par server.ts avec satori et resvg, hors Metro, ADR 0029 ;
 │  │  │   en-tête des pages de citation réécrit par server.ts pour les aperçus de

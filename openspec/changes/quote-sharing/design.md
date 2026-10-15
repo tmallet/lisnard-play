@@ -31,9 +31,12 @@ Décision durable consignée dans l'ADR 0030. En résumé :
   - attendre le SDK 58, qui laisse les liens génériques pendant des mois ;
   - pré-rendre une page par citation au build, impossible puisque les citations
     arrivent chaque jour.
-- **Adresses absolues** : `og:url` et `og:image` sur le domaine public de la requête
-  (`publicOrigin`), pour que les prévisualisations restent cohérentes. Rien n'est mis
-  en cache par domaine.
+- **Adresses absolues** : `og:url` et `og:image` sur le domaine de production
+  (`EXPO_PUBLIC_SITE_URL`), jamais tiré des en-têtes de la requête, comme l'adresse
+  affichée sur l'image (ADR 0029). La lecture de la citation et le rendu du gabarit se
+  font en parallèle.
+- **Plan du site** : les pages de citation y reviennent. Leur HTML porte désormais leur
+  titre et leur description ; une ancienne adresse mène à l'intervention.
 - **Citation introuvable ou API en erreur** : le gabarit est servi tel quel, avec ses
   métadonnées génériques. La page s'occupe ensuite de la redirection côté client,
   comme aujourd'hui.
@@ -45,8 +48,10 @@ Décision durable consignée dans l'ADR 0030. En résumé :
   - web : adresse `https://twitter.com/intent/tweet?text=…&url=…`. Sur téléphone,
     l'app X l'ouvre dans sa rédaction native ; `x.com/intent/post`, essayée
     d'abord, s'affichait dans le navigateur intégré de l'app (constaté sur iPhone) ;
-  - app iOS et Android : schéma `twitter://post?message=…`, et l'adresse web si X
-    n'est pas installé ;
+  - app iOS : schéma `twitter://post?message=…` (documenté pour iOS), et l'adresse
+    web si X n'est pas installé ; Android : l'adresse web, que l'app X ouvre elle-même ;
+  - section « Citations » : un seul « Partager » qui déplie Lien, Image et X, pour ne pas
+    surcharger chaque citation sur téléphone ;
   - texte « « citation » — David Lisnard », raccourci à 280 caractères en comptant
     23 caractères pour le lien, comme X le fait ;
   - aucun script de X n'est chargé.

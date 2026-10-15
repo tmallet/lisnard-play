@@ -31,6 +31,8 @@ Aucune.
 
 ### Modified Capabilities
 
+- `app-shell` : le plan du site liste de nouveau les pages de citation, qui portent
+  désormais leur titre et leur description.
 - `intervention-quotes` :
   - nouvelle exigence « Partage sur X » ;
   - nouvelle exigence « Aperçu du lien d'une citation » ;

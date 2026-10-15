@@ -27,9 +27,11 @@ export function ShareXButton({
       onPress={() => {
         const url = `${siteOrigin()}${quotePath(itemId, startS)}`;
         const web = xShareUrl(text, url);
-        // App : rédaction native de X ; si X n'est pas installé, l'adresse web.
-        if (Platform.OS === 'web') Linking.openURL(web);
-        else Linking.openURL(xAppUrl(text, url)).catch(() => Linking.openURL(web));
+        // iOS : rédaction native de X (schéma documenté), sinon l'adresse web. Android et
+        // web : l'adresse web, que l'app X Android ouvre d'elle-même si elle est installée.
+        if (Platform.OS === 'ios')
+          Linking.openURL(xAppUrl(text, url)).catch(() => Linking.openURL(web));
+        else Linking.openURL(web);
       }}
     >
       <Text className="font-sans-semibold text-chamois text-sm underline">{label}</Text>

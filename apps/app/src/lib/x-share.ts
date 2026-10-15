@@ -28,6 +28,6 @@ export function xShareText(quote: string): string {
 export const xShareUrl = (quote: string, url: string) =>
   `https://twitter.com/intent/tweet?text=${encodeURIComponent(xShareText(quote))}&url=${encodeURIComponent(url)}`;
 
-/** Rédaction native de l'app X (iOS, Android) ; repli sur xShareUrl si X est absent. */
+/** Rédaction native de l'app X sur iOS ; repli sur xShareUrl si X est absent. */
 export const xAppUrl = (quote: string, url: string) =>
   `twitter://post?message=${encodeURIComponent(`${xShareText(quote)} ${url}`)}`;

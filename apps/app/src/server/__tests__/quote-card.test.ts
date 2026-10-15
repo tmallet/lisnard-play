@@ -124,7 +124,10 @@ describe('aperçu de la page d’une citation', () => {
   test('titre, description et balises d’aperçu, adresses absolues et échappées', () => {
     const meta = quotePageMeta({ ...quote, text: 'Il dit "non" & <oui>' }, 'https://play.test');
     expect(meta.title).toBe('« Il dit "non" & <oui> » · Lisnard Play');
-    expect(meta.description).toBe('David Lisnard, BFMTV, 13 octobre 2026');
+    expect(meta.description).toBe('David Lisnard sur BFMTV, 13 octobre 2026');
+    expect(quotePageMeta({ ...quote, official: true }, 'https://play.test').description).toBe(
+      'David Lisnard sur sa chaîne YouTube, 13 octobre 2026',
+    );
     expect(meta.tags).toContain('<meta name="twitter:card" content="summary_large_image"/>');
     expect(meta.tags).toContain(
       `<meta property="og:image" content="https://play.test/interventions/${id}/citation/641/apercu.png"/>`,
