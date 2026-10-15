@@ -56,8 +56,8 @@ La vue « Déplacements » de l'onglet « Campagne » DOIT afficher une carte de
 (régions de métropole, outre-mer en encarts) avec un repère par lieu, de taille
 croissante avec le nombre d'interventions qui s'y sont tenues, et le nombre de lieux
 et d'interventions représentés. Un repère approximatif DOIT être distingué. Toucher
-un repère DOIT afficher la liste des interventions du lieu (titre, date) avec un lien
-vers chacune. La carte DOIT être dessinée à partir de données intégrées à
+un repère DOIT afficher, à côté de lui et sans le masquer, la liste des interventions
+du lieu (titre, date) avec un lien vers chacune. La carte DOIT être dessinée à partir de données intégrées à
 l'application, aux couleurs de la charte, sans service tiers ni traceur.
 
 #### Scenario: Plusieurs interventions au même endroit

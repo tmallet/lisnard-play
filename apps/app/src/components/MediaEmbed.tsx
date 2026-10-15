@@ -10,7 +10,7 @@ import { colors } from '@/theme/colors';
  * contenu de l'iframe se chargent dans la vue ; tout lien suivi depuis le lecteur
  * (titre, « Regarder sur YouTube ») s'ouvre dans l'app ou le navigateur du système.
  */
-const ORIGIN = process.env.EXPO_PUBLIC_SITE_URL ?? 'https://lisnardplay.thimal.fr';
+const ORIGIN = process.env.EXPO_PUBLIC_SITE_URL ?? 'https://play.projetlisnard.fr';
 
 /** Navigation dans la vue : page enveloppe ou chargement d'un cadre (le lecteur lui-même). */
 export function allowsInWebView(
