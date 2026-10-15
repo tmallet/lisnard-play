@@ -11,7 +11,7 @@ export default function Home() {
     <Screen wide>
       <PageHead />
       <Title highlight="David Lisnard">Toutes les interventions de David Lisnard</Title>
-      <Text className="font-sans-bold text-blanc text-lg">
+      <Text className="font-sans-bold text-blanc text-sm md:text-lg">
         En direct, à venir et passées : télévision, radio, presse, meetings.
       </Text>
       <NotificationsEntry />

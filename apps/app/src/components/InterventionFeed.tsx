@@ -6,6 +6,7 @@ import { useTRPC } from '@/lib/trpc';
 
 import { CardGrid, GridRow } from './CardGrid';
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
+import { JoinBar } from './JoinBar';
 import { JoinCta } from './JoinCta';
 import { NotifyInvite } from './NotifyInvite';
 import { useOnEndReached } from './ScrollEnd';
@@ -18,10 +19,14 @@ import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
 const REFRESH_MS = 30_000;
 
 /**
- * Position de l'invitation à adhérer parmi les passées : six cartes remplissent des
- * rangées entières sur une, deux ou trois colonnes.
+ * Position de l'invitation à adhérer parmi les passées : après la première rangée de la
+ * grille (deux ou trois colonnes, voir CardGrid). Sur téléphone, une seule colonne : le
+ * bandeau fin JoinBar, au-dessus des cartes, reste visible sans défiler.
  */
-const JOIN_AFTER = 6;
+const JOIN_AFTER_ROW = [
+  { after: 2, visibility: 'hidden md:flex lg:hidden' },
+  { after: 3, visibility: 'hidden lg:flex' },
+] as const;
 
 function SectionTitle({ children, live = false }: { children: string; live?: boolean }) {
   return (
@@ -106,7 +111,7 @@ export function InterventionFeed() {
     (past.isError && !past.data);
 
   return (
-    <View className="gap-8">
+    <View className="gap-6 md:gap-8">
       <ThemeFilter value={themeFilter} onChange={setThemeFilter} />
       {failed ? (
         <Text className="font-sans text-base text-blanc/85">
@@ -124,6 +129,9 @@ export function InterventionFeed() {
           {upcomingItems.length > 0 && <Section title="À venir" items={upcomingItems} />}
           <View className="gap-3">
             <SectionTitle>Passées</SectionTitle>
+            <View className="md:hidden">
+              <JoinBar />
+            </View>
             {pastItems.length === 0 ? (
               <Text className="font-sans text-base text-blanc/85">
                 {theme
@@ -134,16 +142,19 @@ export function InterventionFeed() {
               <CardGrid>
                 {pastItems.flatMap((item, index) => {
                   const card = <InterventionCard key={item.id} item={item} />;
-                  // Invitation à adhérer après les premières interventions (ou la dernière,
-                  // s'il y en a moins) : le haut de l'accueil reste aux vidéos.
-                  return index === Math.min(JOIN_AFTER, pastItems.length) - 1
-                    ? [
-                        card,
-                        <GridRow key="join">
-                          <JoinCta compact />
-                        </GridRow>,
-                      ]
-                    : [card];
+                  // Invitation à adhérer après la première rangée de cartes (1, 2 ou 3 selon
+                  // la largeur) : visible sans défiler, sous les premières vidéos.
+                  const rows = JOIN_AFTER_ROW.filter(
+                    (r) => index === Math.min(r.after, pastItems.length) - 1,
+                  );
+                  return [
+                    card,
+                    ...rows.map((r) => (
+                      <GridRow key={`join-${r.after}`} className={r.visibility}>
+                        <JoinCta compact />
+                      </GridRow>
+                    )),
+                  ];
                 })}
               </CardGrid>
             )}

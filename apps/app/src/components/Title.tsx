@@ -18,7 +18,7 @@ export function Title({ children, highlight }: TitleProps) {
     <Text
       role="heading"
       aria-level={1}
-      className="font-sans-extrabold text-blanc text-4xl uppercase leading-tight tracking-tight"
+      className="font-sans-extrabold text-3xl text-blanc uppercase md:text-4xl leading-tight tracking-tight"
     >
       {before}
       {index >= 0 && (

@@ -4,7 +4,7 @@
  */
 export const JOIN = {
   url: 'https://soutenir.unenouvelleenergie.fr/p/HDEKQSMA',
-  title: 'Vous partagez ces idées ?',
+  title: 'Vous partagez ces idées\u00a0?',
   pitch:
     'Adhérez à Nouvelle Énergie, le parti de David Lisnard, pour soutenir sa candidature et faire entendre votre voix.',
   button: 'Adhérer à Nouvelle Énergie',

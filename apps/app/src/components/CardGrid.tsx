@@ -1,8 +1,11 @@
 import { Children, isValidElement, type ReactNode } from 'react';
 import { View } from 'react-native';
 
-/** Élément de la grille qui occupe toute une rangée (encart inséré entre les cartes). */
-export function GridRow({ children }: { children: ReactNode }) {
+/**
+ * Élément de la grille qui occupe toute une rangée (encart inséré entre les cartes).
+ * `className` s'applique à la cellule, par exemple pour ne l'afficher qu'à une largeur.
+ */
+export function GridRow({ children }: { children: ReactNode; className?: string }) {
   return <>{children}</>;
 }
 
@@ -17,7 +20,11 @@ export function CardGrid({ children }: { children: ReactNode }) {
     <View className="-mx-1.5 flex-row flex-wrap">
       {Children.map(children, (child) => (
         <View
-          className={`w-full px-1.5 pb-3 ${isValidElement(child) && child.type === GridRow ? '' : 'md:w-1/2 lg:w-1/3'}`}
+          className={`w-full px-1.5 pb-3 ${
+            isValidElement<{ className?: string }>(child) && child.type === GridRow
+              ? (child.props.className ?? '')
+              : 'md:w-1/2 lg:w-1/3'
+          }`}
         >
           {child}
         </View>

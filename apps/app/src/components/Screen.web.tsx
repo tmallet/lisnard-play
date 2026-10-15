@@ -18,7 +18,7 @@ export function Screen({ children, wide = false }: ScreenProps) {
     <ScrollEndProvider value={scrollEnd.listeners}>
       <ScrollView
         {...scrollEnd.scrollProps}
-        contentContainerClassName={`w-full self-center gap-6 px-6 py-10 ${wide ? 'max-w-6xl' : 'max-w-3xl'}`}
+        contentContainerClassName={`w-full self-center gap-4 px-6 py-6 md:gap-6 md:py-10 ${wide ? 'max-w-6xl' : 'max-w-3xl'}`}
       >
         {children}
       </ScrollView>

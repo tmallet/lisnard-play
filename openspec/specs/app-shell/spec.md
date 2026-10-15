@@ -148,10 +148,11 @@ DOIT indiquer :
 - **THEN** il y apprend que le bouton d'adhésion est un lien de parrainage de l'éditeur
 
 ### Requirement: Invitation à adhérer
-L'accueil, parmi les interventions passées après les six premières (ou après la
-dernière s'il y en a moins), et la page d'une intervention, après son contenu,
-DOIVENT proposer un encart d'invitation à adhérer à Nouvelle Énergie. Le haut de
-l'accueil reste réservé aux interventions. L'encart DOIT :
+L'accueil et la page d'une intervention, après son contenu, DOIVENT proposer un
+encart d'invitation à adhérer à Nouvelle Énergie. Sur l'accueil, l'invitation DOIT
+être visible sans défiler sans masquer la première intervention : sur téléphone, un
+bandeau fin au-dessus des interventions passées ; dès deux colonnes, un encart après
+la première rangée de cartes. L'encart DOIT :
 - ouvrir le site d'adhésion du parti hors de l'application (nouvel onglet sur le
   web, navigateur sur mobile) ;
 - indiquer qu'il mène au site du parti et qu'il s'agit d'un lien de parrainage de
