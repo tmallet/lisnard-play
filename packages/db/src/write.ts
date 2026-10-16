@@ -774,3 +774,38 @@ export async function listPendingGeocodes(db: Db, limit: number) {
     .where(sql`(${item.place}->>'geocodePending')::boolean`)
     .limit(limit);
 }
+
+/** Citation à noter (ADR 0031) : son texte et le titre de son intervention, pour le contexte. */
+export interface QuoteToScore {
+  id: string;
+  text: string;
+  title: string;
+}
+
+/**
+ * Citations sans note pour la version courante de la question, des interventions
+ * visibles d'abord les plus récentes : les récapitulatifs du jour sont servis en premier.
+ */
+export async function listQuotesToScore(
+  db: Db,
+  version: number,
+  limit: number,
+): Promise<QuoteToScore[]> {
+  return db
+    .select({ id: quote.id, text: quote.text, title: item.title })
+    .from(quote)
+    .innerJoin(item, eq(quote.itemId, item.id))
+    .where(
+      and(
+        sql`${quote.strikingVersion} is distinct from ${version}`,
+        eq(item.status, 'published'),
+        sql`${item.media} is not null`,
+      ),
+    )
+    .orderBy(desc(sql`coalesce(${item.startsAt}, ${item.publishedAt})`), quote.position)
+    .limit(limit);
+}
+
+export async function recordQuoteScore(db: Db, id: string, striking: number, version: number) {
+  await db.update(quote).set({ striking, strikingVersion: version }).where(eq(quote.id, id));
+}

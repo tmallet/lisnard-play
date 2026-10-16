@@ -26,6 +26,7 @@ import { notifyPending } from './notifications/task';
 import { createOpenRouterLocator } from './places/locate';
 import { locatePending } from './places/task';
 import { classifyPending } from './publish';
+import { createStrikingScorer, scorePendingQuotes } from './quotes/striking';
 import { Scheduler, type Task, tryAcquireLeaderLock } from './scheduler';
 import type { SourceContext } from './sources/types';
 import { SOURCES } from './sources.config';
@@ -80,6 +81,7 @@ const ctx: SourceContext = {
 
 const classifier = createSystemOneClassifier({ apiKey: requireEnv('OPENROUTER_API_KEY') });
 const summarizer = createOpenRouterSummarizer({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+const strikingScorer = createStrikingScorer({ apiKey: requireEnv('OPENROUTER_API_KEY') });
 const locator = createOpenRouterLocator({ apiKey: requireEnv('OPENROUTER_API_KEY') });
 
 const tasks: Task[] = [
@@ -167,6 +169,16 @@ const tasks: Task[] = [
         budgetReached: boolean;
       };
       return located === 0 && failed === 0 && !budgetReached;
+    },
+  },
+  {
+    // Note « marquante » des citations, pour les récapitulatifs (ADR 0031).
+    name: 'quotes:score',
+    everyMs: CADENCE_MS.scoreQuotes,
+    run: () => scorePendingQuotes(db, strikingScorer),
+    quiet: (r) => {
+      const { scored, failed } = r as { scored: number; failed: number };
+      return scored === 0 && failed === 0;
     },
   },
 ];

@@ -21,6 +21,7 @@ en cours : `docs/architecture/classifier.md`. Comportement attendu : spec
 | `packages/db/src/schema.ts` | `THEMES` : liste fermée des thèmes, partagée par le worker et l'API |
 | `apps/worker/src/publish.ts` | Classification, `recompute`, `reclassify` |
 | `apps/worker/eval/reference.jsonl` | Jeu de référence validé par le porteur du projet |
+| `apps/worker/src/quotes/striking.ts` | Question « marquante » des citations (`STRIKING_VERSION`), pour les récapitulatifs (ADR 0031) : changer son texte incrémente la version |
 
 ## Invariants
 

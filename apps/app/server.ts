@@ -16,9 +16,19 @@ import {
   robotsTxt,
   withIndexingPolicy,
 } from './src/server/indexing';
-import { createQuoteImageHandler, quoteImageParams } from './src/server/quote-image-route';
-import { quotePageMeta, quotePageParams, withQuoteMeta } from './src/server/quote-page';
-import { readQuote } from './src/server/quote-share';
+import {
+  createQuoteImageHandler,
+  createRecapImageHandler,
+  quoteImageParams,
+  quotePageMeta,
+  quotePageParams,
+  readQuote,
+  readRecap,
+  recapImageParams,
+  recapPageMeta,
+  recapPageParams,
+  withPageMeta,
+} from './src/server/share';
 
 const DIST = resolve(import.meta.dir, process.env.DIST_DIR ?? 'dist');
 const CLIENT = join(DIST, 'client');
@@ -34,6 +44,17 @@ const quoteImage = createQuoteImageHandler(handle, async () => {
   const { renderQuoteImage } = await import('./src/server/quote-image');
   return renderQuoteImage;
 });
+const recapImage = createRecapImageHandler(handle, async () => {
+  const { renderRecapImage } = await import('./src/server/quote-image');
+  return renderRecapImage;
+});
+
+/** Image servie ou 503 journalisé : une image en échec ne fait jamais tomber la page. */
+const imageOr503 = (image: Promise<Response>, what: string) =>
+  image.catch((error) => {
+    console.error(JSON.stringify({ msg: `${what} en échec`, error: String(error) }));
+    return new Response('Image indisponible', { status: 503 });
+  });
 
 async function staticFile(pathname: string): Promise<Response | null> {
   if (pathname === '/' || pathname.endsWith('/')) return null;
@@ -58,7 +79,8 @@ async function staticFile(pathname: string): Promise<Response | null> {
 const server = Bun.serve({
   port: Number(process.env.PORT ?? 3000),
   async fetch(req) {
-    const { pathname } = new URL(req.url);
+    const url = new URL(req.url);
+    const { pathname } = url;
     if (pathname === '/robots.txt')
       return withIndexingPolicy(
         new Response(robotsTxt(ALLOW_INDEXING, publicOrigin(req)), {
@@ -69,12 +91,7 @@ const server = Bun.serve({
     const image = quoteImageParams(pathname);
     if (image)
       return withIndexingPolicy(
-        await quoteImage(req, image, SITE_HOST).catch((error) => {
-          console.error(
-            JSON.stringify({ msg: 'image de citation en échec', error: String(error) }),
-          );
-          return new Response('Image indisponible', { status: 503 });
-        }),
+        await imageOr503(quoteImage(req, image, SITE_HOST), 'image de citation'),
         ALLOW_INDEXING,
       );
     const page = quotePageParams(pathname);
@@ -88,7 +105,27 @@ const server = Bun.serve({
       ]);
       return withIndexingPolicy(
         quote && quote !== 'error'
-          ? withQuoteMeta(response, quotePageMeta(quote, SITE_URL.origin))
+          ? withPageMeta(response, quotePageMeta(quote, SITE_URL.origin))
+          : response,
+        ALLOW_INDEXING,
+      );
+    }
+    const recapImageRequest = recapImageParams(pathname);
+    if (recapImageRequest)
+      return withIndexingPolicy(
+        await imageOr503(recapImage(req, recapImageRequest, SITE_HOST), 'image de récapitulatif'),
+        ALLOW_INDEXING,
+      );
+    // Récapitulatif (ADR 0031) : en-tête de la page Campagne réécrit pour l'aperçu.
+    const recap = recapPageParams(url);
+    if (recap) {
+      const [data, response] = await Promise.all([
+        readRecap(handle, req, recap).catch(() => null),
+        handle(req),
+      ]);
+      return withIndexingPolicy(
+        data && data !== 'error'
+          ? withPageMeta(response, recapPageMeta(data, SITE_URL.origin))
           : response,
         ALLOW_INDEXING,
       );

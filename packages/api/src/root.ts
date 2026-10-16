@@ -4,6 +4,7 @@ import { interventionsRouter } from './routers/interventions';
 import { membershipRouter } from './routers/membership';
 import { notificationsRouter } from './routers/notifications';
 import { quotesRouter, searchRouter } from './routers/quotes';
+import { recapRouter } from './routers/recap';
 import { createCallerFactory, router } from './trpc';
 
 export const appRouter = router({
@@ -14,6 +15,7 @@ export const appRouter = router({
   campaign: campaignRouter,
   quotes: quotesRouter,
   search: searchRouter,
+  recap: recapRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -325,6 +325,41 @@ try {
     gsc.status === 200 && (await gsc.text()).includes('google-site-verification'),
   );
 
+  // Récapitulatifs (spec campaign-recaps, ADR 0031) : image et aperçu de la page.
+  const recapPng = await fetch(`${BASE}/campagne/recap/jour/2026-06-01.png`);
+  const recapView = new DataView(await recapPng.arrayBuffer());
+  check(
+    'image de récapitulatif : PNG 1200 × 630',
+    recapPng.status === 200 &&
+      recapView.byteLength > 24 &&
+      recapView.getUint32(16) === 1200 &&
+      recapView.getUint32(20) === 630,
+  );
+  check(
+    'image de récapitulatif sans intervention : HTTP 404',
+    (await fetch(`${BASE}/campagne/recap/jour/2026-06-02.png`)).status === 404,
+  );
+  const recapHtml = await (await fetch(`${BASE}/campagne?jour=2026-06-01`)).text();
+  check(
+    'page Campagne d’un récapitulatif : titre et aperçu',
+    /<title[^>]*>La journée de David Lisnard, lundi 1er juin · /.test(recapHtml) &&
+      recapHtml.includes(
+        'content="https://play.projetlisnard.fr/campagne/recap/jour/2026-06-01.png?v=',
+      ),
+  );
+  const plainCampaign = await (await fetch(`${BASE}/campagne?jour=2026-06-02`)).text();
+  check(
+    'page Campagne d’un jour sans intervention : aperçu ordinaire',
+    !plainCampaign.includes('twitter:card'),
+  );
+  const recaps = (await (await fetch(trpcUrl('recap.list', undefined))).json()) as {
+    result?: { data?: { days?: { day: string }[] } };
+  };
+  check(
+    'recap.list : jour de l’intervention',
+    recaps.result?.data?.days?.[0]?.day === '2026-06-01',
+  );
+
   // Plan du site (spec app-shell) : adresses absolues sur le domaine demandé.
   const sitemap = await fetch(`${BASE}/sitemap.xml`, {
     headers: { 'x-forwarded-proto': 'https', 'x-forwarded-host': 'play.example.test' },

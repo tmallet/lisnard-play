@@ -310,6 +310,10 @@ export const quote = pgTable(
     search: text('search').notNull(),
     startS: integer('start_s').notNull(),
     theme: text('theme'),
+    /** Note « marquante » donnée par Jev (0 à 1), null tant qu'elle n'est pas calculée (ADR 0031). */
+    striking: doublePrecision('striking'),
+    /** Version de la question qui a donné la note : une nouvelle version renote tout. */
+    strikingVersion: integer('striking_version'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
