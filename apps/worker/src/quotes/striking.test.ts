@@ -9,6 +9,7 @@ import { eq } from 'drizzle-orm';
 import { PINNED_MODEL } from '../classifier/systemone';
 import {
   createStrikingScorer,
+  InvalidStrikingResponse,
   STRIKING_VERSION,
   type StrikingScorer,
   scorePendingQuotes,
@@ -93,4 +94,19 @@ test('tâche : note les citations une fois ; au premier échec, le cycle s’arr
   const rows = await db.select().from(quote);
   expect(rows.every((r) => r.strikingVersion === STRIKING_VERSION)).toBe(true);
   expect(rows.find((r) => r.text.includes('Bercy'))?.striking).toBe(0.9);
+});
+
+test('réponse inexploitable pour une citation : écartée sans bloquer les autres', async () => {
+  await db.update(quote).set({ striking: null, strikingVersion: null });
+  const scorer: StrikingScorer = {
+    score: async (q) => {
+      if (q.text.includes('Bercy')) throw new InvalidStrikingResponse('réponse invalide');
+      return { striking: 0.3, cost: 0 };
+    },
+  };
+  expect(await scorePendingQuotes(db, scorer)).toMatchObject({ scored: 1, failed: 1 });
+  // La citation écartée n'est pas redemandée tant que la question ne change pas.
+  expect(await scorePendingQuotes(db, scorer)).toEqual({ scored: 0, failed: 0, cost: 0 });
+  const bercy = (await db.select().from(quote)).find((r) => r.text.includes('Bercy'));
+  expect(bercy).toMatchObject({ striking: null, strikingVersion: STRIKING_VERSION });
 });

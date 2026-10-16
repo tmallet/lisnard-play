@@ -41,10 +41,13 @@ export default function Campaign() {
 
   return (
     <Screen wide>
-      <PageHead
-        title="Campagne"
-        description="Les adhésions à Nouvelle Énergie et les déplacements de David Lisnard au fil de sa campagne."
-      />
+      {/* Sur un récapitulatif, c'est RecapPanel qui pose le titre (un seul en-tête). */}
+      {recap ? null : (
+        <PageHead
+          title="Campagne"
+          description="Les adhésions à Nouvelle Énergie et les déplacements de David Lisnard au fil de sa campagne."
+        />
+      )}
       <Title highlight="campagne">La campagne en chiffres</Title>
       <View role="tablist" className="flex-row self-start rounded-full border border-blanc/20 p-1">
         {VIEWS.map((view) => {

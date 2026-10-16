@@ -800,12 +800,20 @@ export async function listQuotesToScore(
         sql`${quote.strikingVersion} is distinct from ${version}`,
         eq(item.status, 'published'),
         sql`${item.media} is not null`,
+        // Reprises masquées : aucun récapitulatif ne les montre.
+        sql`${item.duplicateOf} is null`,
       ),
     )
     .orderBy(desc(sql`coalesce(${item.startsAt}, ${item.publishedAt})`), quote.position)
     .limit(limit);
 }
 
-export async function recordQuoteScore(db: Db, id: string, striking: number, version: number) {
+/** Note d'une citation ; `null` si Jev n'a pas su répondre : elle n'est pas redemandée. */
+export async function recordQuoteScore(
+  db: Db,
+  id: string,
+  striking: number | null,
+  version: number,
+) {
   await db.update(quote).set({ striking, strikingVersion: version }).where(eq(quote.id, id));
 }

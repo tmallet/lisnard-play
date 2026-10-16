@@ -69,6 +69,22 @@ export function recapShareText(
   return `${head.charAt(0).toUpperCase()}${head.slice(1)} : ${recapSummary(count, delta)}.`;
 }
 
+/**
+ * Chiffre des adhésions : la hausse (« +1 955 ») et sa légende ; sans hausse connue
+ * (début de l'historique), le total seul.
+ */
+export function membersFigure(members: { total: number; delta: number | null }): {
+  value: string;
+  caption: string;
+} {
+  if (members.delta === null)
+    return { value: formatCount(members.total), caption: 'adhérents au total' };
+  return {
+    value: `${members.delta >= 0 ? '+' : ''}${formatCount(members.delta)}`,
+    caption: `adhérents · ${formatCount(members.total)} au total`,
+  };
+}
+
 /** Médias regroupés : « BFMTV ×10 », « Sa chaîne ×4 », puis « +N » au-delà de `max`. */
 export function outletChips(
   outlets: { name: string; official: boolean; count: number }[],

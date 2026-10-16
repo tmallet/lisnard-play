@@ -106,3 +106,30 @@ test('semaine et jours avec intervention', async () => {
     { day: '2026-10-13', count: 3 },
   ]);
 });
+
+test('intervention à venir exclue ; lieu sans nom gardé sur la carte', async () => {
+  const future = new Date(Date.now() + 3 * 3600_000).toISOString();
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Paris' }).format(new Date());
+  const upcoming = await publish('futur', 'yt:dl', future);
+  await db
+    .update(item)
+    .set({ liveStatus: 'upcoming', startsAt: new Date(future) })
+    .where(eq(item.id, upcoming));
+  await publish('passe', 'yt:dl', new Date(Date.now() - 3600_000).toISOString(), {
+    onSite: true,
+    label: null,
+    city: null,
+    lat: 45,
+    lon: 4,
+    approximate: true,
+  });
+  const recap = await getRecap(db, today, addDay(today));
+  expect(recap.interventions.map((i) => i.id)).not.toContain(upcoming);
+  expect(recap.places).toEqual([{ label: '', lat: 45, lon: 4, count: 1 }]);
+});
+
+function addDay(day: string): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + 1);
+  return d.toISOString().slice(0, 10);
+}

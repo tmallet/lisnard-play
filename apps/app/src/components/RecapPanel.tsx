@@ -5,7 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { PageHead } from '@/components/PageHead';
 import { formatTimestamp } from '@/lib/format';
 import {
-  formatCount,
+  membersFigure,
   outletChips,
   periodLabel,
   type RecapPeriod,
@@ -72,11 +72,10 @@ export function RecapPanel({ period, start }: { period: RecapPeriod; start: stri
         {r.members ? (
           <View>
             <Text className="font-sans-extrabold text-4xl text-chamois">
-              {r.members.delta >= 0 ? '+' : ''}
-              {formatCount(r.members.delta)}
+              {membersFigure(r.members).value}
             </Text>
             <Text className="font-sans text-blanc/70 text-sm">
-              adhérents · {formatCount(r.members.total)} au total
+              {membersFigure(r.members).caption}
             </Text>
           </View>
         ) : null}
@@ -84,9 +83,13 @@ export function RecapPanel({ period, start }: { period: RecapPeriod; start: stri
       <Text className="font-sans text-blanc/85 text-sm">
         {outletChips(r.outlets, 8).join(' · ')}
       </Text>
-      {r.places.length > 0 ? (
+      {r.places.some((p) => p.label) ? (
         <Text className="font-sans text-blanc/85 text-sm">
-          Déplacements : {r.places.map((p) => p.label).join(' · ')}
+          Déplacements :{' '}
+          {r.places
+            .filter((p) => p.label)
+            .map((p) => p.label)
+            .join(' · ')}
         </Text>
       ) : null}
       {r.quote ? (

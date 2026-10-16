@@ -73,10 +73,10 @@ test('périodes : jour valide, semaine désignée par son lundi', () => {
 });
 
 test('adhésions : total en fin, hausse depuis la veille, courbe', () => {
-  const days = new Map([
-    ['2026-10-12', 100],
-    ['2026-10-13', 130],
-  ]);
+  const days = [
+    { day: '2026-10-12', members: 100 },
+    { day: '2026-10-13', members: 130 },
+  ];
   expect(membersOf(days, '2026-10-13', '2026-10-13', '2026-10-12')).toEqual({
     total: 130,
     delta: 30,
@@ -85,7 +85,12 @@ test('adhésions : total en fin, hausse depuis la veille, courbe', () => {
       { day: '2026-10-13', members: 130 },
     ],
   });
-  expect(membersOf(days, '2026-10-12', '2026-10-12', '2026-10-12')).toBeNull();
+  // Veille hors de l'historique : total connu, sans hausse.
+  expect(membersOf(days, '2026-10-12', '2026-10-12', '2026-10-12')).toMatchObject({
+    total: 100,
+    delta: null,
+  });
+  expect(membersOf(days, '2026-10-01', '2026-10-01', '2026-10-01')).toBeNull();
 });
 
 test('récapitulatif du jour : interventions et adhésions ; jour vide : null', async () => {

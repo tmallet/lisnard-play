@@ -1,4 +1,5 @@
 import {
+  membersFigure,
   outletChips,
   periodLabel,
   recapImagePath,
@@ -36,4 +37,15 @@ test('adresses et médias regroupés', () => {
   ];
   expect(outletChips(outlets)).toEqual(['BFMTV ×10', 'Sa chaîne ×4', 'Capital']);
   expect(outletChips(outlets, 1)).toEqual(['BFMTV ×10', '+2']);
+});
+
+test('adhésions : hausse et total, ou total seul en début d’historique', () => {
+  expect(membersFigure({ total: 55943, delta: 1955 })).toEqual({
+    value: '+1 955',
+    caption: 'adhérents · 55 943 au total',
+  });
+  expect(membersFigure({ total: 20000, delta: null })).toEqual({
+    value: '20 000',
+    caption: 'adhérents au total',
+  });
 });

@@ -25,12 +25,14 @@ Un récapitulatif DOIT couvrir :
 - soit une semaine (du lundi au dimanche).
 
 Il DOIT contenir :
-- le nombre d'interventions visibles de la période ;
+- le nombre d'interventions visibles de la période qui ont eu lieu ou sont en cours (un
+  direct ou un meeting annoncé pour plus tard n'y entre pas encore) ;
 - les médias, regroupés avec leur nombre (sa chaîne comprise) ;
 - les lieux des déplacements situés sur la carte ;
 - la citation de plus haute note, avec son média ;
 - quand les données d'adhésion sont disponibles, le total d'adhérents en fin de période,
-  la hausse depuis la veille du début et la courbe des jours concernés.
+  la hausse depuis la veille du début (sauf si la veille précède l'historique) et la
+  courbe des jours concernés.
 
 Un jour sans intervention N'A PAS de récapitulatif.
 

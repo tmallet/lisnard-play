@@ -29,37 +29,49 @@ export function periodBounds(period: Period, start: string): { from: string; to:
   return mondayOf(start) === start ? { from: start, to: addDays(start, 6) } : null;
 }
 
-/** Adhérents par jour, le jour en cours compris (total en direct, comme le graphique). */
-function membersByDay(data: MembershipData | null, today: string): Map<string, number> {
+type MemberDays = { day: string; members: number }[];
+
+/**
+ * Adhérents par jour, triés une fois, le jour en cours compris (total en direct, comme
+ * le graphique).
+ */
+function membersByDay(data: MembershipData | null, today: string): MemberDays {
   const days = new Map((data?.history ?? []).map((d) => [d.day, d.members]));
   if (data && !days.has(today)) days.set(today, data.total.members);
-  return days;
+  return [...days]
+    .map(([day, members]) => ({ day, members }))
+    .sort((a, b) => a.day.localeCompare(b.day));
 }
 
-/** Valeur connue au plus tard ce jour-là. */
-function membersAt(days: Map<string, number>, day: string): number | null {
+/** Valeur connue au plus tard ce jour-là (jours triés). */
+function membersAt(days: MemberDays, day: string): number | null {
   let found: number | null = null;
-  for (const [d, members] of [...days].sort(([a], [b]) => a.localeCompare(b)))
-    if (d <= day) found = members;
+  for (const d of days) {
+    if (d.day > day) break;
+    found = d.members;
+  }
   return found;
 }
 
-/** Adhésions d'une période : total en fin, hausse depuis la veille du début, courbe. */
+/**
+ * Adhésions d'une période : total en fin, hausse depuis la veille du début (null si
+ * la veille précède l'historique), courbe.
+ */
 export function membersOf(
-  days: Map<string, number>,
+  days: MemberDays,
   from: string,
   to: string,
   curveFrom: string,
-): { total: number; delta: number; curve: { day: string; members: number }[] } | null {
+): { total: number; delta: number | null; curve: MemberDays } | null {
   const total = membersAt(days, to);
+  if (total === null) return null;
   const before = membersAt(days, addDays(from, -1));
-  if (total === null || before === null) return null;
   const curve: { day: string; members: number }[] = [];
   for (let d = curveFrom; d <= to; d = addDays(d, 1)) {
     const members = membersAt(days, d);
     if (members !== null) curve.push({ day: d, members });
   }
-  return { total, delta: total - before, curve };
+  return { total, delta: before === null ? null : total - before, curve };
 }
 
 /** Lectures gardées une minute, comme le graphique (plusieurs visiteurs, un aperçu). */

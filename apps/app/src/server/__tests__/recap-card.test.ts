@@ -69,6 +69,7 @@ test('noms des lieux, au plus trois', () => {
   expect(placeNames([{ label: 'A' }, { label: 'B' }, { label: 'C' }, { label: 'D' }])).toBe(
     'A · B · C +1',
   );
+  expect(placeNames([{ label: 'Nice' }, { label: '' }, { label: 'Cannes' }])).toBe('Nice · Cannes');
 });
 
 test('adresses : page Campagne avec jour ou semaine, image du récapitulatif', () => {

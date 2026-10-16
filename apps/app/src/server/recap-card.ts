@@ -5,7 +5,13 @@
  */
 import { APP_NAME, INDEPENDENCE_NOTICE } from '../config/app';
 import { FRANCE_MAP, projectPlace } from '../lib/franceMap';
-import { formatCount, outletChips, periodLabel, type RecapPeriod, recapTitle } from '../lib/recap';
+import {
+  membersFigure,
+  outletChips,
+  periodLabel,
+  type RecapPeriod,
+  recapTitle,
+} from '../lib/recap';
 import { blancSecondaire, colors } from '../theme/colors';
 import { type CardNode, el, withoutEmoji } from './quote-card';
 
@@ -18,7 +24,7 @@ export interface RecapCardData {
   count: number;
   outlets: { name: string; official: boolean; count: number }[];
   places: { label: string; lat: number; lon: number }[];
-  members: { total: number; delta: number; curve: { members: number }[] } | null;
+  members: { total: number; delta: number | null; curve: { members: number }[] } | null;
   quote: { text: string; outlet: string; official: boolean } | null;
   host: string;
 }
@@ -76,8 +82,10 @@ export function mapSvg(places: { lat: number; lon: number }[], width: number): s
 
 /** « Strasbourg · Benfeld · Cannes », puis « +N » au-delà de trois lieux. */
 export function placeNames(places: { label: string }[]): string {
-  const names = places.slice(0, 3).map((p) => p.label);
-  return places.length > 3 ? `${names.join(' · ')} +${places.length - 3}` : names.join(' · ');
+  // Un lieu sans nom garde son repère sur la carte, sans libellé.
+  const named = places.filter((p) => p.label);
+  const names = named.slice(0, 3).map((p) => p.label);
+  return named.length > 3 ? `${names.join(' · ')} +${named.length - 3}` : names.join(' · ');
 }
 
 export function recapCard(r: RecapCardData): CardNode {
@@ -164,7 +172,7 @@ export function recapCard(r: RecapCardData): CardNode {
                     lineHeight: 1,
                     whiteSpace: 'nowrap',
                   },
-                  `${r.members.delta >= 0 ? '+' : ''}${formatCount(r.members.delta)}`,
+                  membersFigure(r.members).value,
                 ),
                 el(
                   {
@@ -174,7 +182,7 @@ export function recapCard(r: RecapCardData): CardNode {
                     marginBottom: 6,
                     whiteSpace: 'nowrap',
                   },
-                  `adhérents · ${formatCount(r.members.total)} au total`,
+                  membersFigure(r.members).caption,
                 ),
               ),
               ...(r.members.curve.length > 1

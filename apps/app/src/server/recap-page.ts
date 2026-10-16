@@ -26,7 +26,11 @@ export interface RecapAt {
   outlets: { name: string; official: boolean; count: number }[];
   places: { label: string; lat: number; lon: number }[];
   quote: { text: string; outlet: string; official: boolean } | null;
-  members: { total: number; delta: number; curve: { day: string; members: number }[] } | null;
+  members: {
+    total: number;
+    delta: number | null;
+    curve: { day: string; members: number }[];
+  } | null;
 }
 
 export interface RecapParams {

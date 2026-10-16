@@ -31,7 +31,7 @@ Décision durable consignée dans l'ADR 0031. En résumé :
   - Tâche `quotes:score` : toutes les 5 min, 25 citations au plus par cycle, silencieuse
     sans travail. Commande `score-quotes` pour l'historique.
 - **Périodes** :
-  - jour : date de Paris de l'intervention (même règle que la courbe) ;
+  - jour : date de Paris de l'intervention (même règle que la courbe) ; seules comptent les interventions qui ont eu lieu ou sont en cours (pas un direct annoncé pour plus tard) ;
   - semaine : lundi au dimanche, désignée par son lundi.
 - **Données** :
   - `getRecap(db, du, au)` lit les interventions visibles, les médias, les lieux et la

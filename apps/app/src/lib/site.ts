@@ -15,6 +15,12 @@ export const quotePath = (itemId: string, startS: number) =>
 export const quoteImageUrl = (itemId: string, startS: number) =>
   `${siteOrigin()}${quotePath(itemId, startS)}/image.png`;
 
+/** Récapitulatif d'une période dans la page Campagne, en lien typé (spec campaign-recaps). */
+export const recapHref = (period: 'day' | 'week', start: string) => ({
+  pathname: '/campagne' as const,
+  params: period === 'day' ? { jour: start } : { semaine: start },
+});
+
 /** Même page, sous forme de lien typé pour expo-router. */
 export const quoteHref = (itemId: string, startS: number) => ({
   pathname: '/interventions/[id]/citation/[t]' as const,

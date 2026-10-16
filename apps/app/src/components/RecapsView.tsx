@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
-import { periodLabel, recapPath, recapSummary } from '@/lib/recap';
+import { periodLabel, recapSummary } from '@/lib/recap';
+import { recapHref } from '@/lib/site';
 import { useTRPC } from '@/lib/trpc';
 
 import { RecapShare } from './RecapShare';
@@ -26,13 +27,13 @@ export function RecapsView() {
     );
   const row = (
     key: string,
-    href: string,
+    href: ReturnType<typeof recapHref>,
     label: string,
     summary: string,
     share: React.ReactNode,
   ) => (
     <View key={key} className="gap-1.5 border-blanc/15 border-b pb-3">
-      <Link href={href as never} asChild>
+      <Link href={href} asChild>
         <Pressable accessibilityRole="link">
           <Text className="font-sans-bold text-base text-blanc">{label}</Text>
         </Pressable>
@@ -58,7 +59,7 @@ export function RecapsView() {
         {query.data.weeks.map((w) =>
           row(
             w.start,
-            recapPath('week', w.start),
+            recapHref('week', w.start),
             capitalize(`Semaine ${periodLabel('week', w.start, w.end)}`),
             recapSummary(w.count, w.delta),
             <RecapShare period="week" from={w.start} to={w.end} count={w.count} delta={w.delta} />,
@@ -76,7 +77,7 @@ export function RecapsView() {
         {query.data.days.map((d) =>
           row(
             d.day,
-            recapPath('day', d.day),
+            recapHref('day', d.day),
             capitalize(periodLabel('day', d.day, d.day)),
             recapSummary(d.count, d.delta),
             <RecapShare period="day" from={d.day} to={d.day} count={d.count} delta={d.delta} />,

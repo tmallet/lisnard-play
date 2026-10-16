@@ -20,6 +20,9 @@ export const STRIKING_QUESTION = {
   },
 } as const;
 
+/** Réponse inexploitable pour cette citation : on ne la redemande pas (pas de blocage). */
+export class InvalidStrikingResponse extends Error {}
+
 export interface StrikingScorer {
   score(quote: QuoteToScore): Promise<{ striking: number; cost: number }>;
 }
@@ -49,15 +52,17 @@ export function createStrikingScorer(options: {
         usage?: { cost?: number };
       };
       const p = body.answers?.marquante?.noul;
-      if (typeof p !== 'number' || p < 0 || p > 1) throw new Error('réponse invalide : marquante');
+      if (typeof p !== 'number' || p < 0 || p > 1)
+        throw new InvalidStrikingResponse('réponse invalide : marquante');
       return { striking: p, cost: body.usage?.cost ?? 0 };
     },
   };
 }
 
 /**
- * Note les citations en attente, `limit` au plus. Au premier échec (service
- * indisponible, réponse invalide), le cycle s'arrête : on réessaie au suivant.
+ * Note les citations en attente, `limit` au plus. Service indisponible : le cycle
+ * s'arrête et reprend au suivant. Réponse inexploitable pour une citation : elle est
+ * écartée sans note pour cette version, sinon elle bloquerait toutes les autres.
  */
 export async function scorePendingQuotes(
   db: Db,
@@ -74,7 +79,8 @@ export async function scorePendingQuotes(
     } catch (error) {
       stats.failed += 1;
       log.warn('citation non notée', { quote: quote.id, error: String(error) });
-      break;
+      if (!(error instanceof InvalidStrikingResponse)) break;
+      await recordQuoteScore(db, quote.id, null, STRIKING_VERSION);
     }
   }
   return stats;

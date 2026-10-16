@@ -449,6 +449,12 @@ export async function listSitemapEntries(db: Db): Promise<SitemapEntries> {
 /** Jour de l'intervention, heure de Paris (même règle que la courbe des adhésions). */
 const parisDay = sql<string>`to_char(${sortDate} at time zone 'Europe/Paris', 'YYYY-MM-DD')`;
 
+/**
+ * Intervention qui a eu lieu (ou est en cours) : un direct ou un meeting annoncé pour
+ * plus tard n'entre pas dans un récapitulatif publié avant qu'il ait lieu.
+ */
+const happened = sql`${item.liveStatus} <> 'upcoming' and ${sortDate} <= now()`;
+
 /** Récapitulatif d'une période (spec campaign-recaps, ADR 0031), sans les adhésions. */
 export interface RecapData {
   from: string;
@@ -464,7 +470,7 @@ export interface RecapData {
 
 /** Récapitulatif du jour `from` au jour `to` inclus (AAAA-MM-JJ, heure de Paris). */
 export async function getRecap(db: Db, from: string, to: string): Promise<RecapData> {
-  const inPeriod = and(visibleItem, sql`${parisDay} between ${from} and ${to}`);
+  const inPeriod = and(visibleItem, happened, sql`${parisDay} between ${from} and ${to}`);
   const [rows, [best]] = await Promise.all([
     db
       .select({
@@ -497,10 +503,12 @@ export async function getRecap(db: Db, from: string, to: string): Promise<RecapD
     outlets.set(key, entry);
     const p = row.place;
     if (p?.onSite && p.lat !== null && p.lon !== null) {
+      // Sans nom (centre de zone non nommé) : le repère reste sur la carte, sans libellé.
       const label = p.city ?? p.label ?? '';
-      const at = places.get(label) ?? { label, lat: p.lat, lon: p.lon, count: 0 };
+      const key = label || `${p.lat},${p.lon}`;
+      const at = places.get(key) ?? { label, lat: p.lat, lon: p.lon, count: 0 };
       at.count += 1;
-      places.set(label, at);
+      places.set(key, at);
     }
   }
   return {
@@ -521,7 +529,7 @@ export async function listRecapDays(
   return db
     .select({ day: parisDay, count: sql<number>`count(*)::int` })
     .from(item)
-    .where(visibleItem)
+    .where(and(visibleItem, happened))
     .groupBy(parisDay)
     .orderBy(desc(parisDay))
     .limit(limit);
