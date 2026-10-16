@@ -10,6 +10,7 @@ import { renderAsync } from '@resvg/resvg-js';
 import satori from 'satori';
 
 import { type CardFormat, cardSize, type QuoteCardData, quoteCard } from './quote-card';
+import { RECAP_SIZE, type RecapCardData, recapCard } from './recap-card';
 
 type Weight = 400 | 600 | 700 | 800;
 const WEIGHTS: [Weight, string][] = [
@@ -47,5 +48,11 @@ export async function renderQuoteImage(
     fonts: await loadFonts(),
   });
   // Conversion en PNG sur un fil à part : le serveur continue de répondre pendant ce temps.
+  return (await renderAsync(svg)).asPng();
+}
+
+/** Image d'un récapitulatif (ADR 0031), même rendu que les citations. */
+export async function renderRecapImage(data: RecapCardData): Promise<Uint8Array> {
+  const svg = await satori(recapCard(data) as never, { ...RECAP_SIZE, fonts: await loadFonts() });
   return (await renderAsync(svg)).asPng();
 }

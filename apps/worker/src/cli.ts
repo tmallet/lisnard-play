@@ -8,6 +8,7 @@
  *   bun run cli media --refresh [--source ID]    recalcule le rendu des contenus publiés
  *   bun run cli notify --test                    envoie une notification de test à tous les abonnés
  *   bun run cli places [--budget N]              détermine le lieu de toutes les interventions en attente
+ *   bun run cli score-quotes                     note « marquante » toutes les citations en attente (Jev)
  */
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
@@ -32,6 +33,7 @@ import { sendTestNotification } from './notifications/task';
 import { createOpenRouterLocator } from './places/locate';
 import { locatePending } from './places/task';
 import { reclassify, recompute } from './publish';
+import { createStrikingScorer, scorePendingQuotes } from './quotes/striking';
 import { SOURCES } from './sources.config';
 import { createOpenRouterSummarizer } from './summaries/openrouter';
 import { summarizePending } from './summaries/task';
@@ -83,6 +85,21 @@ switch (positionals[0]) {
       const done = stats.summarized + stats.notSpeaking + stats.skipped + stats.failed;
       if (stats.budgetReached || stats.unavailable || done === 0) break;
     }
+    break;
+  }
+  case 'score-quotes': {
+    const scorer = createStrikingScorer({ apiKey: requireEnv('OPENROUTER_API_KEY') });
+    // Lots successifs jusqu'à épuisement ; un lot sans aucune note (erreur) arrête la boucle.
+    const total = { scored: 0, failed: 0, cost: 0 };
+    for (;;) {
+      const stats = await scorePendingQuotes(db, scorer, { limit: 100 });
+      total.scored += stats.scored;
+      total.failed += stats.failed;
+      total.cost += stats.cost;
+      console.log(stats);
+      if (stats.scored === 0) break;
+    }
+    console.log({ total });
     break;
   }
   case 'places': {

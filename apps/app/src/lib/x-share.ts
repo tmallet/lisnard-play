@@ -25,9 +25,12 @@ export function xShareText(quote: string): string {
  * sur téléphone, l'app X reconnaît la première et ouvre sa rédaction native, alors que
  * la seconde s'affiche dans son navigateur intégré.
  */
-export const xShareUrl = (quote: string, url: string) =>
-  `https://twitter.com/intent/tweet?text=${encodeURIComponent(xShareText(quote))}&url=${encodeURIComponent(url)}`;
+export const xIntentUrl = (text: string, url: string) =>
+  `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
 
-/** Rédaction native de l'app X sur iOS ; repli sur xShareUrl si X est absent. */
-export const xAppUrl = (quote: string, url: string) =>
-  `twitter://post?message=${encodeURIComponent(`${xShareText(quote)} ${url}`)}`;
+/** Rédaction native de l'app X sur iOS ; repli sur l'adresse web si X est absent. */
+export const xAppIntentUrl = (text: string, url: string) =>
+  `twitter://post?message=${encodeURIComponent(`${text} ${url}`)}`;
+
+export const xShareUrl = (quote: string, url: string) => xIntentUrl(xShareText(quote), url);
+export const xAppUrl = (quote: string, url: string) => xAppIntentUrl(xShareText(quote), url);

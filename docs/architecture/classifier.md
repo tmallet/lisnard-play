@@ -106,6 +106,21 @@ Le jeu de référence compte 138 cas :
   projet.
 - **Coût du reclassement v3** : environ 0,00007 $ par contenu (10 questions).
 
+## Note « marquante » des citations (`quotes/striking.ts`, version 1)
+
+Question vrai/faux posée à Jev pour chaque citation, une fois par version
+(`STRIKING_VERSION`), avec la citation et le titre de l'intervention en contexte
+(ADR 0031, spec `campaign-recaps`). La probabilité est gardée dans `quote.striking` ;
+les récapitulatifs du jour et de la semaine prennent la plus haute.
+
+- Tâche `quotes:score` toutes les 5 min (25 citations au plus) ; `score-quotes` pour
+  l'historique.
+- Échantillon du 2026-10-16 (39 citations locales, 0,0007 $) : les formules fortes en
+  tête (« Le pouvoir peut rendre fou et con », « Au nom de l'égalité, on a fait de
+  l'injustice », 0,79 à 0,80), les anecdotes en bas (rencontre avec Mike Tyson, 0,22 à
+  0,35).
+- Changer le texte de la question impose d'incrémenter `STRIKING_VERSION`.
+
 ## Procédures
 
 | Besoin | Commande (depuis la racine) |

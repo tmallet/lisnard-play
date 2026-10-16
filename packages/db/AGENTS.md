@@ -34,6 +34,9 @@ Postgres intégré à Bun (`drizzle-orm/bun-sql`). Vue d'ensemble :
 - **Résumés** : `item.summary` ne garde que le dernier résumé, car aucune décision
   n'en dépend. `read` n'en expose que `{ text, points }`, et seulement si
   `kind = 'ok'` (ADR 0021).
+- **Récapitulatifs** : `getRecap` et `listRecapDays` comptent les jours en heure de Paris,
+  comme la courbe ; la citation retenue est celle de plus haute `striking` (note Jev,
+  écrite par le worker seul : `listQuotesToScore`, `recordQuoteScore`, ADR 0031).
 - **Citations** : table `quote`, remplacée avec le résumé dans la même transaction
   (`recordSummary`). La recherche s'appuie sur `lp_normalize` (fonction SQL immuable,
   sans extension `unaccent`) : garder la même expression que les index de la

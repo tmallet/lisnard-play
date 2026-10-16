@@ -99,6 +99,13 @@
       "when": 1792065439242,
       "tag": "0013_quote_search",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792134355322,
+      "tag": "0014_quote_striking",
+      "breakpoints": true
     }
   ]
 }

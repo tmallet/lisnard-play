@@ -445,3 +445,92 @@ export async function listSitemapEntries(db: Db): Promise<SitemapEntries> {
   ]);
   return { interventions, quotes };
 }
+
+/** Jour de l'intervention, heure de Paris (même règle que la courbe des adhésions). */
+const parisDay = sql<string>`to_char(${sortDate} at time zone 'Europe/Paris', 'YYYY-MM-DD')`;
+
+/**
+ * Intervention qui a eu lieu (ou est en cours) : un direct ou un meeting annoncé pour
+ * plus tard n'entre pas dans un récapitulatif publié avant qu'il ait lieu.
+ */
+const happened = sql`${item.liveStatus} <> 'upcoming' and ${sortDate} <= now()`;
+
+/** Récapitulatif d'une période (spec campaign-recaps, ADR 0031), sans les adhésions. */
+export interface RecapData {
+  from: string;
+  to: string;
+  interventions: { id: string; title: string; outlet: string; official: boolean; day: string }[];
+  /** Médias regroupés, du plus présent au moins présent ; sa chaîne a `official`. */
+  outlets: { name: string; official: boolean; count: number }[];
+  /** Lieux des déplacements situés sur la carte. */
+  places: { label: string; lat: number; lon: number; count: number }[];
+  /** Citation de plus haute note « marquante » ; à défaut de note, la plus récente. */
+  quote: QuoteHit | null;
+}
+
+/** Récapitulatif du jour `from` au jour `to` inclus (AAAA-MM-JJ, heure de Paris). */
+export async function getRecap(db: Db, from: string, to: string): Promise<RecapData> {
+  const inPeriod = and(visibleItem, happened, sql`${parisDay} between ${from} and ${to}`);
+  const [rows, [best]] = await Promise.all([
+    db
+      .select({
+        id: item.id,
+        title: item.title,
+        outlet: summaryColumns.outlet,
+        official: source.official,
+        day: parisDay,
+        place: item.place,
+      })
+      .from(item)
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(inPeriod)
+      .orderBy(sortDate, item.id),
+    db
+      .select(quoteHitColumns)
+      .from(quote)
+      .innerJoin(item, eq(quote.itemId, item.id))
+      .innerJoin(source, eq(item.sourceId, source.id))
+      .where(inPeriod)
+      .orderBy(sql`${quote.striking} desc nulls last`, desc(sortDate), quote.position)
+      .limit(1),
+  ]);
+  const outlets = new Map<string, { name: string; official: boolean; count: number }>();
+  const places = new Map<string, { label: string; lat: number; lon: number; count: number }>();
+  for (const row of rows) {
+    const key = row.official ? '' : row.outlet;
+    const entry = outlets.get(key) ?? { name: row.outlet, official: row.official, count: 0 };
+    entry.count += 1;
+    outlets.set(key, entry);
+    const p = row.place;
+    if (p?.onSite && p.lat !== null && p.lon !== null) {
+      // Sans nom (centre de zone non nommé) : le repère reste sur la carte, sans libellé.
+      const label = p.city ?? p.label ?? '';
+      const key = label || `${p.lat},${p.lon}`;
+      const at = places.get(key) ?? { label, lat: p.lat, lon: p.lon, count: 0 };
+      at.count += 1;
+      places.set(key, at);
+    }
+  }
+  return {
+    from,
+    to,
+    interventions: rows.map(({ place: _place, ...row }) => row),
+    outlets: [...outlets.values()].sort((a, b) => b.count - a.count),
+    places: [...places.values()],
+    quote: best ?? null,
+  };
+}
+
+/** Jours récents comptant au moins une intervention visible, du plus récent au plus ancien. */
+export async function listRecapDays(
+  db: Db,
+  limit: number,
+): Promise<{ day: string; count: number }[]> {
+  return db
+    .select({ day: parisDay, count: sql<number>`count(*)::int` })
+    .from(item)
+    .where(and(visibleItem, happened))
+    .groupBy(parisDay)
+    .orderBy(desc(parisDay))
+    .limit(limit);
+}

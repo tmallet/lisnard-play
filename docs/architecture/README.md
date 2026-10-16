@@ -89,7 +89,7 @@ lisnard-play/
 |-------|------|-------------|
 | `source` | Sources configurées, recopiées depuis `sources.config.ts` | `id` (« yt:bfmtv »), `kind`, `name`, `active` |
 | `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `duplicate_of` (reprise d'un article déjà enregistré, masquée partout), `place` (lieu du déplacement, ou son absence), `media` (rendu, dont l'URL de l'éditeur pour un article Google News), `summary` (résumé ou motif d'absence), `duration_s` |
-| `quote` | Citations horodatées d'une vidéo, remplacées avec son résumé (ADR 0028) | `item_id` (cascade), `start_s` (unique par vidéo), `text`, `search` (texte normalisé par `lp_normalize`, index plein texte français) ; un index plein texte couvre aussi titre et résumé de `item` |
+| `quote` | Citations horodatées d'une vidéo, remplacées avec son résumé (ADR 0028) | `item_id` (cascade), `start_s` (unique par vidéo), `text`, `search` (texte normalisé par `lp_normalize`, index plein texte français), `striking` et `striking_version` (note « marquante » de Jev, ADR 0031) ; un index plein texte couvre aussi titre et résumé de `item` |
 | `push_subscription` | Abonnements aux notifications, **écrits par l'API** (ADR 0024) | `kind` (`web` / `expo`), `endpoint` unique (adresse Web Push ou jeton Expo), `keys`, préférences `live` / `reminder` / `new_item`, `confirmed_at` (purge à 13 mois) |
 | `notification_sent` | Envois effectués, un par intervention et par type | clé (`item_id`, `kind`), `recipients` |
 | `classification` | Journal des décisions, en ajout seul | `model` (instantané servi), `questions_version`, `input_hash`, `answers` (probabilités brutes), `thresholds`, `outcome` |
@@ -110,6 +110,7 @@ lisnard-play/
 | `recheck:soon` | 30 s | directs programmés dans le quart d'heure : statut revérifié (aucun appel sinon) |
 | `collect:rss` | 15 min | Google News |
 | `notify` | 30 s (et après la voie rapide WebSub) | notifications : début de direct, rappel à 15 min, nouvelle intervention, une vidéo attendant son résumé 10 min au plus ; titre court avec emoji, titre de l'intervention et première phrase du résumé dans le texte (ADR 0024) |
+| `quotes:score` | 5 min | note « marquante » des citations par Jev, une fois par version de la question, pour les récapitulatifs (ADR 0031) |
 | `places` | 5 min | lieu des déplacements : modèle sur titre et description, puis Base adresse nationale ; plafond partagé avec les résumés (ADR 0027) |
 | `notify:purge` | 24 h | abonnements sans confirmation depuis 13 mois |
 | `classify` | 30 s | contenus en attente ou modifiés → Jev → décision journalisée |
@@ -145,7 +146,8 @@ SDK 58. Sur mobile, le client appelle `${EXPO_PUBLIC_API_URL}/api/trpc`.
   `notifications.subscribe` / `update` / `unsubscribe` (seules écritures de l'API,
   dans `push_subscription`, ADR 0024), `membership.timeline` (adhérents de Nouvelle
   Énergie lus sur le site du parti avec un cache de 90 s, et interventions posées sur la
-  courbe ; aucune copie en base, ADR 0026), `campaign.places` (déplacements regroupés
+  courbe ; aucune copie en base, ADR 0026), `recap.get` et `recap.list` (récapitulatifs du jour et de la semaine, avec les adhésions,
+  ADR 0031), `campaign.places` (déplacements regroupés
   par lieu pour la carte, ADR 0027), `quotes.at` (citation à 5 s près) et
   `search.query` (citations puis interventions, cache d'une minute, ADR 0028). Les éléments exposent
   `themes` ; le rôle n'est pas exposé, puisque tout contenu publié est

@@ -17,6 +17,8 @@ export const CADENCE_MS = {
   subscribe: 24 * 60 * 60_000,
   /** Lieu des déplacements (spec intervention-places, ADR 0027). */
   places: 5 * 60_000,
+  /** Note « marquante » des citations (spec campaign-recaps, ADR 0031). */
+  scoreQuotes: 5 * 60_000,
   /** Purge des abonnements aux notifications sans confirmation depuis 13 mois. */
   purgeSubscriptions: 24 * 60 * 60_000,
 } as const;

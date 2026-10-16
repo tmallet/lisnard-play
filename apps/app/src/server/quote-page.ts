@@ -18,7 +18,7 @@ export function quotePageParams(pathname: string): { id: string; t: number } | n
 const escapeAttr = (value: string) => value.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** Empreinte courte d'un texte (FNV-1a, hexadécimal). */
-function fingerprint(text: string): string {
+export function fingerprint(text: string): string {
   let hash = 0x811c9dc5;
   for (const char of text) {
     hash ^= char.codePointAt(0) ?? 0;
@@ -27,21 +27,27 @@ function fingerprint(text: string): string {
   return (hash >>> 0).toString(16);
 }
 
-/** Titre, description et balises d'aperçu d'une citation ; `origin` : domaine public. */
-export function quotePageMeta(quote: QuoteAt, origin: string) {
-  const page = `${origin}/interventions/${quote.itemId}/citation/${quote.startS}`;
-  // Adresse de l'image versionnée par le texte : les services d'aperçu (Slack, X) gardent
-  // en cache une image, même ratée ; une citation régénérée ou un échec passé ne collent
-  // pas à la nouvelle image.
-  const image = `${page}/apercu.png?v=${fingerprint(quote.text)}`;
-  const title = pageTitle(quotePageTitle(quote));
-  const description = quotePageDescription(quote);
+export interface PageMeta {
+  title: string;
+  description: string;
+  tags: string;
+}
+
+/** Balises d'aperçu d'une page (ADR 0030) ; image paysage 1200 × 630. */
+export function previewMeta(p: {
+  url: string;
+  image: string;
+  title: string;
+  description: string;
+  alt: string;
+}): PageMeta {
+  const { url: page, image, title, description } = p;
   const extra: [string, string, string][] = [
     ['property', 'og:url', page],
     ['property', 'og:image', image],
     ['property', 'og:image:width', '1200'],
     ['property', 'og:image:height', '630'],
-    ['property', 'og:image:alt', `${quotePageTitle(quote)} — David Lisnard`],
+    ['property', 'og:image:alt', p.alt],
     ['name', 'twitter:card', 'summary_large_image'],
     ['name', 'twitter:title', title],
     ['name', 'twitter:description', description],
@@ -53,16 +59,28 @@ export function quotePageMeta(quote: QuoteAt, origin: string) {
   return { title, description, tags };
 }
 
+/** Titre, description et balises d'aperçu d'une citation ; `origin` : domaine public. */
+export function quotePageMeta(quote: QuoteAt, origin: string): PageMeta {
+  const page = `${origin}/interventions/${quote.itemId}/citation/${quote.startS}`;
+  return previewMeta({
+    url: page,
+    // Adresse de l'image versionnée par le texte : les services d'aperçu (Slack, X)
+    // gardent en cache une image, même ratée ; une citation régénérée ou un échec passé
+    // ne collent pas à la nouvelle image.
+    image: `${page}/apercu.png?v=${fingerprint(quote.text)}`,
+    title: pageTitle(quotePageTitle(quote)),
+    description: quotePageDescription(quote),
+    alt: `${quotePageTitle(quote)} — David Lisnard`,
+  });
+}
+
 /**
  * Réécrit l'en-tête du gabarit ; toute autre réponse (erreur, autre type) est rendue
  * telle quelle. Les balises d'aperçu et l'encodage sont placés en tête : certains robots
  * ne lisent que le début de la page, et le gabarit porte d'abord une grande feuille de
  * style.
  */
-export function withQuoteMeta(
-  response: Response,
-  meta: ReturnType<typeof quotePageMeta>,
-): Response {
+export function withPageMeta(response: Response, meta: PageMeta): Response {
   if (!response.ok || !(response.headers.get('content-type') ?? '').includes('text/html'))
     return response;
   const setContent = (value: string) => ({

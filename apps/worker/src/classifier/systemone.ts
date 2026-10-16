@@ -7,7 +7,8 @@ import { type ClassifierAnswers, THEMES, type Theme } from '@lisnard/db/schema';
 import { KINDS, QUESTIONS, ROLES, themeQuestionKey } from './questions';
 import type { Classifier, ClassifierResult, ClassifierState } from './types';
 
-const ENDPOINT = 'https://openrouter.ai/api/v1/systemone';
+export const SYSTEM_ONE_ENDPOINT = 'https://openrouter.ai/api/v1/systemone';
+const ENDPOINT = SYSTEM_ONE_ENDPOINT;
 
 /** Instantané épinglé (ADR 0004) : jamais d'alias « latest ». */
 export const PINNED_MODEL = 'typesafe/jev-1.13-20260917';

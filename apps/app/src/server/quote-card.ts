@@ -81,7 +81,10 @@ export interface CardNode {
   props: { style: Record<string, unknown>; children?: CardNode | string | (CardNode | string)[] };
 }
 
-const el = (style: Record<string, unknown>, ...children: (CardNode | string)[]): CardNode => ({
+export const el = (
+  style: Record<string, unknown>,
+  ...children: (CardNode | string)[]
+): CardNode => ({
   type: 'div',
   props: {
     style: { display: 'flex', ...style },
