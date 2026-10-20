@@ -43,3 +43,4 @@ Règles :
 | [0029](0029-image-de-citation.md) | Image de partage d'une citation produite par le serveur (satori et resvg) | accepted | ui, partage, architecture, dependance |
 | [0030](0030-apercu-des-liens-de-citation.md) | Aperçu des liens de citation par réécriture de l'en-tête dans le serveur, partage sur X par l'adresse publique | accepted | partage, architecture, web, confidentialite |
 | [0031](0031-recapitulatifs-de-campagne.md) | Récapitulatifs du jour et de la semaine, citation la plus marquante notée par Jev, publication manuelle sur X | accepted | produit, ia, partage, donnees |
+| [0032](0032-backoffice-administration.md) | Backoffice d'administration sous /admin, service séparé, Better Auth avec TOTP, exception à la frontière d'écriture | proposed | architecture, securite, admin, donnees |
