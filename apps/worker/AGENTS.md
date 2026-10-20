@@ -19,6 +19,7 @@ des tâches : [docs/architecture/README.md](../../docs/architecture/README.md).
 | `src/classifier/` | `questions.ts` (version), `systemone.ts` (client REST), `thresholds.ts`, `decide.ts` |
 | `src/publish.ts` | `classifyPending`, `recompute`, `reclassify` |
 | `src/media/` | `safe-fetch.ts` (anti-SSRF, POST, lecture limitée à l'en-tête), `resolve.ts` (oEmbed, Open Graph), `google-news.ts` (décodage vers l'éditeur), `task.ts` (rendus, `refreshMedia`, `repairMediaEntities` au démarrage) |
+| Backoffice (ADR 0032) | Le worker ne touche jamais une vidéo masquée (`hidden_at`) ; une demande de résumé (`summary_requested_at`) passe avant les autres, quelle que soit la version, et est levée à l'enregistrement du résumé (y compris l'abandon) |
 | `src/quotes/striking.ts` | Note « marquante » des citations par Jev (`STRIKING_VERSION`, `scorePendingQuotes`), une fois par version. ADR 0031 |
 | `src/places/` | `prompt.ts` (consigne, `PLACE_PROMPT_VERSION`), `locate.ts` (modèle via OpenRouter, Base adresse nationale avec départage des homonymes par département), `task.ts` (`locatePending`, plafond partagé avec les résumés). ADR 0027 |
 | `src/dedupe.ts` | Reprises d'une même dépêche par plusieurs médias (titre identique à 3 jours près) : `markPressDuplicates` au démarrage et après chaque collecte RSS |

@@ -9,7 +9,7 @@
 import { join, normalize, resolve } from 'node:path';
 
 import { createRequestHandler } from 'expo-server/adapter/bun';
-
+import { isAdminPath, relayToAdmin } from './src/server/admin-relay';
 import {
   indexingAllowed,
   publicOrigin,
@@ -81,6 +81,8 @@ const server = Bun.serve({
   async fetch(req) {
     const url = new URL(req.url);
     const { pathname } = url;
+    // Backoffice (ADR 0032) : service séparé, joint par le réseau interne (ADMIN_INTERNAL_URL).
+    if (isAdminPath(pathname)) return relayToAdmin(req, process.env.ADMIN_INTERNAL_URL);
     if (pathname === '/robots.txt')
       return withIndexingPolicy(
         new Response(robotsTxt(ALLOW_INDEXING, publicOrigin(req)), {

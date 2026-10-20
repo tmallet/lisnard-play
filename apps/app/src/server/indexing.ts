@@ -12,7 +12,8 @@ export function indexingAllowed(value: string | undefined): boolean {
 /** robots.txt ; une fois l'indexation activée, il indique le plan du site (adresse absolue). */
 export function robotsTxt(allowed: boolean, origin?: string): string {
   if (!allowed) return 'User-agent: *\nDisallow: /\n';
-  return `User-agent: *\nAllow: /\n${origin ? `Sitemap: ${origin}/sitemap.xml\n` : ''}`;
+  // Le backoffice (/admin) n'est jamais exploré, même quand le site est indexé.
+  return `User-agent: *\nAllow: /\nDisallow: /admin\n${origin ? `Sitemap: ${origin}/sitemap.xml\n` : ''}`;
 }
 
 /**

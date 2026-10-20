@@ -34,6 +34,12 @@ Postgres intégré à Bun (`drizzle-orm/bun-sql`). Vue d'ensemble :
 - **Résumés** : `item.summary` ne garde que le dernier résumé, car aucune décision
   n'en dépend. `read` n'en expose que `{ text, points }`, et seulement si
   `kind = 'ok'` (ADR 0021).
+- **Backoffice (ADR 0032)** : `@lisnard/db/admin` est le seul point d'entrée du service
+  admin (masquer, réafficher, demander un résumé, journal `admin_action`). Une vidéo
+  masquée (`item.hidden_at`) est exclue de toute lecture publique (`visibleItem` et
+  les lectures du flux, du détail, de la carte, de la courbe) et des sélections du worker
+  (résumés, notifications, lieux, notes). Toute nouvelle lecture publique doit l'exclure
+  aussi. Tables `auth_*` : schéma de Better Auth 1.7, à ne pas modifier à la main.
 - **Récapitulatifs** : `getRecap` et `listRecapDays` comptent les jours en heure de Paris,
   comme la courbe ; la citation retenue est celle de plus haute `striking` (note Jev,
   écrite par le worker seul : `listQuotesToScore`, `recordQuoteScore`, ADR 0031).

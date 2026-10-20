@@ -41,7 +41,7 @@ Pour travailler en bac à sable (agents en autonomie) :
 | Comportement attendu           | `openspec/specs/`                          |
 | Changements en cours           | `openspec/changes/` (`openspec list`)      |
 | Procédures récurrentes         | `.agents/skills/`                          |
-| Règles d'un module             | [apps/app/AGENTS.md](apps/app/AGENTS.md), [apps/worker/AGENTS.md](apps/worker/AGENTS.md), [packages/api/AGENTS.md](packages/api/AGENTS.md), [packages/db/AGENTS.md](packages/db/AGENTS.md) |
+| Règles d'un module             | [apps/app/AGENTS.md](apps/app/AGENTS.md), [apps/admin/AGENTS.md](apps/admin/AGENTS.md), [apps/worker/AGENTS.md](apps/worker/AGENTS.md), [packages/api/AGENTS.md](packages/api/AGENTS.md), [packages/db/AGENTS.md](packages/db/AGENTS.md) |
 
 ## Règles
 
@@ -65,15 +65,17 @@ Pour travailler en bac à sable (agents en autonomie) :
   des questions incrémente `QUESTIONS_VERSION`. Skill `classifier-jev`.
 - **Frontière d'écriture (ADR 0017)** : seul le worker écrit en base
   (`@lisnard/db/write`) ; le backend lit (`@lisnard/db/read`) ; les clients ne
-  parlent qu'à l'API tRPC. Seule exception : les abonnements aux notifications
-  (`@lisnard/db/subscriptions`, ADR 0024).
+  parlent qu'à l'API tRPC. Exceptions : les abonnements aux notifications
+  (`@lisnard/db/subscriptions`, ADR 0024) et le backoffice (`@lisnard/db/admin`,
+  service séparé avec un rôle Postgres limité, ADR 0032).
 - **Médias (ADR 0007)** : intégration du lecteur officiel ou lien vers la
   source, jamais de téléchargement ni de réhébergement.
 - **Presse (ADR 0021)** : jamais de résumé d'article ni de lecture de son texte ;
   seules les balises de partage de l'en-tête sont lues.
 - **Secrets** : jamais dans le code, l'image ni un fichier commité.
   `OPENROUTER_API_KEY`, `YOUTUBE_API_KEY`, `VAPID_PRIVATE_KEY` et `WEBSUB_SECRET`
-  ne résident que dans le worker et le `.env` local : ne jamais les afficher.
+  ne résident que dans le worker et le `.env` local ; `BETTER_AUTH_SECRET` et
+  `ADMIN_DATABASE_URL` que dans le service admin : ne jamais les afficher.
 - **Commits** : Conventional Commits (skill `conventional-commit`).
 
 ## Skills du projet

@@ -1,7 +1,7 @@
 ---
 id: "0032"
 title: Backoffice d'administration sous /admin, service séparé, Better Auth avec TOTP, exception à la frontière d'écriture
-status: proposed
+status: accepted
 date: 2026-10-20
 tags: [architecture, securite, admin, donnees]
 supersedes: null

@@ -179,6 +179,8 @@ export async function listTimelineItems(db: Db): Promise<TimelineItem[]> {
     .where(
       and(
         eq(item.status, 'published'),
+        // Masquée par l'exploitant (ADR 0032) : invisible partout.
+        sql`${item.hiddenAt} is null`,
         sql`${item.media} is not null`,
         sql`${item.duplicateOf} is null`,
       ),
@@ -191,8 +193,8 @@ export async function listTimelineItems(db: Db): Promise<TimelineItem[]> {
   }));
 }
 
-/** Visible : publiée, dotée d'un rendu et pas reprise d'un autre article. */
-const visibleItem = sql`${item.status} = 'published' and ${item.media} is not null and ${item.duplicateOf} is null`;
+/** Visible : publiée, non masquée, dotée d'un rendu et pas reprise d'un autre article. */
+const visibleItem = sql`${item.status} = 'published' and ${item.hiddenAt} is null and ${item.media} is not null and ${item.duplicateOf} is null`;
 
 /** Citation trouvée, avec ce qu'il faut pour l'afficher hors de son intervention. */
 export interface QuoteHit extends PublicQuote {
@@ -311,6 +313,8 @@ export async function listPlaces(db: Db): Promise<PlacedIntervention[]> {
     .where(
       and(
         eq(item.status, 'published'),
+        // Masquée par l'exploitant (ADR 0032) : invisible partout.
+        sql`${item.hiddenAt} is null`,
         sql`${item.media} is not null`,
         sql`${item.duplicateOf} is null`,
         sql`(${item.place}->>'onSite')::boolean`,
@@ -344,6 +348,7 @@ export async function listPublished(
   // Un contenu n'est visible qu'une fois son rendu média calculé (spec intervention-media).
   const conditions: SQL[] = [
     sql`${item.status} = 'published'`,
+    sql`${item.hiddenAt} is null`,
     sql`${item.media} is not null`,
     // Reprise d'un article déjà listé (spec intervention-collection, « Dédoublonnage »).
     sql`${item.duplicateOf} is null`,
@@ -397,7 +402,12 @@ export async function getPublishedById(
       .from(item)
       .innerJoin(source, eq(item.sourceId, source.id))
       .where(
-        and(eq(item.id, id), sql`${item.status} = 'published'`, sql`${item.media} is not null`),
+        and(
+          eq(item.id, id),
+          sql`${item.status} = 'published'`,
+          sql`${item.hiddenAt} is null`,
+          sql`${item.media} is not null`,
+        ),
       )
       .limit(1),
     // En parallèle : ignorées si l'intervention n'est pas visible.

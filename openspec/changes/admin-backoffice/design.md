@@ -71,7 +71,11 @@ Décisions durables consignées dans l'ADR 0032. En résumé :
   - Refine le consomme par un fournisseur de données sur mesure (`getList`, `getOne`,
     et des actions personnalisées).
 - **Interface** :
-  - Vite, React, Refine (routeur React Router) et les composants shadcn/ui (Tailwind) ;
+  - Vite, React, Refine 5 (routeur React Router) avec **Refine UI**, son intégration
+    shadcn/ui officielle (registre `ui.refine.dev`) : mise en page avec barre latérale
+    et menu tiré des ressources, vues liste, tableau de données (`@refinedev/react-table`)
+    avec filtres de colonnes et pagination ; libellés en français par le fournisseur de
+    traduction de Refine ;
   - construite au build de l'image et servie par le service admin ;
   - en anglais dans le code, en français à l'écran.
 - **Indexation** : `X-Robots-Tag: noindex` sur tout `/admin`, et `robots.txt` du site
