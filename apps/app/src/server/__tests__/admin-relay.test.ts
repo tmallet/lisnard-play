@@ -8,6 +8,7 @@ test('prévisualisation : {pr} remplacé par le numéro tiré du nom du conteneu
   expect(withPreviewNumber(url, undefined)).toBeUndefined();
   expect(withPreviewNumber('http://admin:3001', 'app456-pr-40')).toBe('http://admin:3001');
   expect(withPreviewNumber(undefined, 'app456-pr-40')).toBeUndefined();
+  expect(withPreviewNumber('http://abc123-pr-{{pr}}:3001', 'app456-pr-40')).toBeUndefined();
 });
 
 test('chemins du backoffice', () => {

@@ -165,7 +165,7 @@ export function Videos() {
                   Masquer
                 </Button>
               )}
-              {v.summarizable ? (
+              {v.summarizable && !v.hiddenAt ? (
                 <Button
                   size="sm"
                   variant="outline"
@@ -211,6 +211,7 @@ export function Videos() {
             <FieldLabel htmlFor="hide-reason">Motif</FieldLabel>
             <Textarea
               id="hide-reason"
+              maxLength={300}
               placeholder="Hors campagne, doublon…"
               value={reason}
               onChange={(e) => setReason(e.target.value)}

@@ -199,12 +199,26 @@ if (pkg.engines?.node !== toolVersions.nodejs)
   );
 
 // Dockerfiles : ARG BUN_VERSION identique à .tool-versions (ADR 0010, ADR 0015).
-for (const dockerfile of ['apps/app/Dockerfile', 'apps/worker/Dockerfile']) {
+for (const dockerfile of [
+  'apps/app/Dockerfile',
+  'apps/admin/Dockerfile',
+  'apps/worker/Dockerfile',
+]) {
   const path = join(ROOT, dockerfile);
   if (!existsSync(path)) continue;
   const version = read(path).match(/^ARG BUN_VERSION=(\S+)/m)?.[1];
   if (version !== toolVersions.bun)
     fail(`${dockerfile} : BUN_VERSION « ${version} » ≠ ${toolVersions.bun} (.tool-versions)`);
+}
+
+// Image de l'app : server.ts n'est pas empaqueté, chacun de ses modules locaux doit être
+// copié (`.ts`) ou empaqueté (`.js`) dans l'image, sinon le conteneur plante au démarrage.
+{
+  const server = read(join(ROOT, 'apps/app/server.ts'));
+  const dockerfile = read(join(ROOT, 'apps/app/Dockerfile'));
+  for (const [, mod] of server.matchAll(/from '\.\/(src\/server\/[\w-]+)'/g))
+    if (!new RegExp(`^COPY .*\\./${mod}\\.(ts|js)\\s*$`, 'm').test(dockerfile))
+      fail(`apps/app/Dockerfile : ./${mod} (importé par server.ts) absent de l'image`);
 }
 
 // ─── Résultat ───────────────────────────────────────────────────────────────

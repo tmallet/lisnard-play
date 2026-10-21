@@ -7,5 +7,8 @@ export function withPreviewNumber(value: string, containerName: string | undefin
   if (!value.includes('{pr}')) return value;
   const pr = containerName?.match(/-pr-(\d+)$/)?.[1];
   if (!pr) throw new Error(`{pr} sans prévisualisation (conteneur ${containerName ?? 'inconnu'})`);
-  return value.replaceAll('{pr}', pr);
+  const resolved = value.replaceAll('{pr}', pr);
+  // `{{pr}}` (syntaxe de Coolify) laisserait `{40}` : origine que Better Auth refuserait.
+  if (/[{}]/.test(resolved)) throw new Error(`accolades en trop : ${value} (écrire {pr})`);
+  return resolved;
 }

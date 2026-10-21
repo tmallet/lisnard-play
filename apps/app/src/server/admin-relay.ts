@@ -15,7 +15,16 @@ export function withPreviewNumber(
 ): string | undefined {
   if (!value?.includes('{pr}')) return value;
   const pr = containerName?.match(/-pr-(\d+)$/)?.[1];
-  return pr ? value.replaceAll('{pr}', pr) : undefined;
+  const resolved = pr ? value.replaceAll('{pr}', pr) : undefined;
+  if (resolved && !/[{}]/.test(resolved)) return resolved;
+  console.error(
+    JSON.stringify({
+      level: 'error',
+      msg: 'ADMIN_INTERNAL_URL inutilisable : /admin répondra 503',
+      reason: pr ? 'accolades en trop (écrire {pr})' : '{pr} hors prévisualisation',
+    }),
+  );
+  return undefined;
 }
 
 export const isAdminPath = (pathname: string) =>

@@ -162,7 +162,8 @@ export async function requestSummary(db: Db, id: string): Promise<boolean> {
     const [row] = await tx
       .update(item)
       .set({ summaryRequestedAt: sql`now()`, summaryAttempts: 0, summaryRetryAt: null })
-      .where(and(eq(item.id, id), summarizable))
+      // Masquée : le worker l'ignore, la demande resterait en suspens.
+      .where(and(eq(item.id, id), summarizable, isNull(item.hiddenAt)))
       .returning({ id: item.id });
     if (!row) return false;
     await tx.insert(adminAction).values({ kind: 'request_summary', itemId: id });

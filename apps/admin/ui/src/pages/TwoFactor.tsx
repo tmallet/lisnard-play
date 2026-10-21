@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { AuthCard } from '@/components/auth/auth-card';
@@ -15,14 +15,19 @@ export function TwoFactor() {
   const [code, setCode] = useState('');
   const [backup, setBackup] = useState(false);
   const [pending, setPending] = useState(false);
+  // Le sixième chiffre et la touche Entrée lancent chacun la vérification.
+  const inFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   const verify = async (value: string) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setPending(true);
     setError(null);
     const { error: failed } = backup
       ? await authClient.twoFactor.verifyBackupCode({ code: value.trim() })
       : await authClient.twoFactor.verifyTotp({ code: value.trim() });
+    inFlight.current = false;
     setPending(false);
     if (failed) {
       setError('Code incorrect ou expiré.');

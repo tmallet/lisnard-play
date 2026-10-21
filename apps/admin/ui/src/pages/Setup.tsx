@@ -1,5 +1,5 @@
 import QRCode from 'qrcode';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { AuthCard } from '@/components/auth/auth-card';
@@ -29,6 +29,8 @@ export function Setup() {
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [code, setCode] = useState('');
   const [pending, setPending] = useState(false);
+  // Le sixième chiffre et la touche Entrée lancent chacun la vérification.
+  const inFlight = useRef(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!qr)
@@ -75,8 +77,11 @@ export function Setup() {
     );
 
   const activate = async (value: string) => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setPending(true);
     const { error: failed } = await authClient.twoFactor.verifyTotp({ code: value.trim() });
+    inFlight.current = false;
     setPending(false);
     if (failed) {
       setError('Code incorrect : vérifiez l’heure du téléphone et réessayez.');

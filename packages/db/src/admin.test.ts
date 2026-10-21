@@ -74,6 +74,8 @@ test('vidéo masquée : invisible partout, journalisée, réaffichable', async (
   expect((await listSummaryTargets(db, 10, 99)).map((t) => t.id)).toEqual([other]);
   expect(await listQuotesToScore(db, 1, 10)).toEqual([]);
   expect(await getAdminItem(db, video)).toMatchObject({ hiddenReason: 'Hors sujet' });
+  // Résumé : le worker ignore les vidéos masquées, aucune demande en suspens.
+  expect(await requestSummary(db, video)).toBe(false);
 
   expect(await unhideItem(db, video)).toBe(true);
   expect(await getPublishedById(db, video)).not.toBeNull();

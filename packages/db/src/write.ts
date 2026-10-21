@@ -680,7 +680,7 @@ export async function listPressItems(db: Db, since?: Date) {
       title: item.title,
       publishedAt: item.publishedAt,
       firstSeenAt: item.firstSeenAt,
-      visible: sql<boolean>`(${item.status} = 'published' and ${item.media} is not null)`,
+      visible: sql<boolean>`(${item.status} = 'published' and ${item.hiddenAt} is null and ${item.media} is not null)`,
       duplicateOf: item.duplicateOf,
     })
     .from(item)
