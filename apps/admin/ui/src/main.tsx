@@ -51,7 +51,12 @@ function App() {
             <Routes>
               <Route
                 element={
-                  <Authenticated key="admin" redirectOnFail="/connexion">
+                  // Sans « ?to= » : Refine le suivrait après le mot de passe, avant le code TOTP.
+                  <Authenticated
+                    key="admin"
+                    redirectOnFail="/connexion"
+                    appendCurrentPathToQuery={false}
+                  >
                     <Layout>
                       <Outlet />
                     </Layout>
