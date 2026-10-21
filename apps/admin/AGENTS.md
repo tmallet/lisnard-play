@@ -27,5 +27,6 @@ un service séparé que `apps/app/server.ts` relaie. Lire aussi le `AGENTS.md` r
 - **Charte** : thème shadcn aux couleurs du site (palette, Montserrat servie depuis
   `@expo-google-fonts/montserrat`) dans `ui/src/index.css`, sombre par défaut ; mention
   d'indépendance sur les écrans de connexion (ADR 0001). Composer avec les composants
-  shadcn (`Field`, `InputOTP`, `Empty`, `Spinner`, toasts `sonner`) plutôt qu'à la main.
+  shadcn (`Field`, `Empty`, `Spinner`, toasts `sonner`) plutôt qu'à la main. Code TOTP :
+  champ texte standard (`one-time-code`), pas `InputOTP`, que Bitwarden ne remplit pas.
 - **Versions** : épinglées, publiées depuis au moins deux semaines.
