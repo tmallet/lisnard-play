@@ -36,4 +36,11 @@ const handle = createAdminHandler({
 });
 
 const server = Bun.serve({ port: Number(process.env.ADMIN_PORT ?? 3001), fetch: handle });
-console.log(JSON.stringify({ msg: 'admin démarré', url: server.url.toString() }));
+// Origine acceptée par Better Auth : la seule depuis laquelle on peut se connecter.
+console.log(
+  JSON.stringify({
+    msg: 'admin démarré',
+    url: server.url.toString(),
+    origin: new URL(siteUrl).origin,
+  }),
+);
