@@ -35,6 +35,15 @@ export const dataProvider: DataProvider = {
   deleteOne: unsupported,
 };
 
+/** Message d'un refus de connexion, selon le code renvoyé par Better Auth. */
+export function signInError(status: number): string {
+  if (status === 401) return 'Adresse ou mot de passe incorrect.';
+  if (status === 429) return 'Trop de tentatives : réessayez dans quelques minutes.';
+  // 403 : origine refusée (SITE_URL ne correspond pas à l'adresse du site).
+  if (status === 403) return 'Connexion refusée par le serveur (origine non autorisée).';
+  return `Connexion impossible (erreur ${status}).`;
+}
+
 /**
  * Authentification Refine sur Better Auth : mot de passe, puis TOTP. Sans TOTP associé,
  * la session ne donne accès qu'à la page d'association.
@@ -45,7 +54,7 @@ export const authProvider: AuthProvider = {
     if (error)
       return {
         success: false,
-        error: { name: 'Connexion refusée', message: 'Adresse ou mot de passe incorrect.' },
+        error: { name: 'Connexion refusée', message: signInError(error.status) },
       };
     if (data && 'twoFactorRedirect' in data && data.twoFactorRedirect)
       return { success: true, redirectTo: '/code' };

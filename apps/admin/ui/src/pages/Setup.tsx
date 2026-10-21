@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { authClient } from '@/lib/api';
+import { signInError } from '@/lib/providers';
 
 /**
  * Association du TOTP, obligatoire avant tout accès : mot de passe, code QR à scanner,
@@ -46,7 +47,7 @@ export function Setup() {
             const { data, error: failed } = await authClient.twoFactor.enable({ password });
             setPending(false);
             if (failed || !data || data.method !== 'totp')
-              return setError('Mot de passe incorrect.');
+              return setError(failed ? signInError(failed.status) : 'Association impossible.');
             setError(null);
             setBackupCodes(data.backupCodes);
             setQr(await QRCode.toDataURL(data.totpURI, { margin: 1, width: 200 }));
@@ -84,7 +85,11 @@ export function Setup() {
     inFlight.current = false;
     setPending(false);
     if (failed) {
-      setError('Code incorrect : vérifiez l’heure du téléphone et réessayez.');
+      setError(
+        failed.status === 429
+          ? signInError(429)
+          : 'Code incorrect : vérifiez l’heure du téléphone et réessayez.',
+      );
       setCode('');
     } else navigate('/videos');
   };

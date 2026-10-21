@@ -8,6 +8,7 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/c
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { authClient } from '@/lib/api';
+import { signInError } from '@/lib/providers';
 
 /** Second facteur : code de l'application d'authentification, ou code de secours. */
 export function TwoFactor() {
@@ -30,7 +31,7 @@ export function TwoFactor() {
     inFlight.current = false;
     setPending(false);
     if (failed) {
-      setError('Code incorrect ou expiré.');
+      setError(failed.status === 429 ? signInError(429) : 'Code incorrect ou expiré.');
       setCode('');
     } else navigate('/videos');
   };

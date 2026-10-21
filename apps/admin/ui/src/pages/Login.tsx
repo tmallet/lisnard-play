@@ -9,7 +9,18 @@ import { Spinner } from '@/components/ui/spinner';
 
 /** Connexion par mot de passe ; le code TOTP est demandé ensuite. */
 export function Login() {
-  const { mutate: login, isPending, error } = useLogin<{ email: string; password: string }>();
+  const {
+    mutate: login,
+    isPending,
+    data,
+    error: thrown,
+  } = useLogin<{
+    email: string;
+    password: string;
+  }>();
+  // Refus renvoyé par le fournisseur (`success: false`) ou exception : tous deux affichés,
+  // l'admin n'ayant pas de fournisseur de notifications.
+  const error = data?.success === false ? data.error : thrown;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   return (
