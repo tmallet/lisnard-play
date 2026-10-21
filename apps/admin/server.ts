@@ -1,7 +1,8 @@
 /**
  * Service d'administration (ADR 0032) : relayé par le serveur public sous /admin, sans
  * domaine public. Variables : ADMIN_DATABASE_URL (rôle aux droits limités),
- * BETTER_AUTH_SECRET, SITE_URL (adresse publique), ADMIN_PORT (3001 par défaut).
+ * BETTER_AUTH_SECRET, SITE_URL (adresse publique ; `{pr}` en prévisualisation), ADMIN_PORT
+ * (3001 par défaut).
  */
 import { resolve } from 'node:path';
 
@@ -9,6 +10,7 @@ import { createDb } from '@lisnard/db/client';
 
 import { createAuth } from './src/auth';
 import { createAdminHandler } from './src/handler';
+import { withPreviewNumber } from './src/preview';
 
 const required = (name: string) => {
   const value = process.env[name];
@@ -17,7 +19,10 @@ const required = (name: string) => {
 };
 
 const db = createDb(required('ADMIN_DATABASE_URL'), { max: 3, idleTimeout: 30 });
-const siteUrl = process.env.SITE_URL ?? 'https://play.projetlisnard.fr';
+const siteUrl = withPreviewNumber(
+  process.env.SITE_URL ?? 'https://play.projetlisnard.fr',
+  process.env.COOLIFY_CONTAINER_NAME,
+);
 const auth = createAuth({
   db,
   secret: required('BETTER_AUTH_SECRET'),

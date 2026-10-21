@@ -5,7 +5,7 @@ un service séparé que `apps/app/server.ts` relaie. Lire aussi le `AGENTS.md` r
 
 | Emplacement | Rôle |
 |-------------|------|
-| `server.ts` | Serveur Bun (port 3001) : variables `ADMIN_DATABASE_URL`, `BETTER_AUTH_SECRET`, `SITE_URL` |
+| `server.ts` | Serveur Bun (port 3001) : variables `ADMIN_DATABASE_URL`, `BETTER_AUTH_SECRET`, `SITE_URL` (`{pr}` remplacé par le numéro de PR en prévisualisation, `src/preview.ts`) |
 | `cli.ts` | `create-account --email` (compte unique, mot de passe demandé au terminal), `reset-2fa` |
 | `src/auth.ts` | Better Auth : mot de passe sans inscription, extension `twoFactor` (TOTP), cookie `Path=/admin` `HttpOnly` `SameSite=Strict`, limitation des tentatives |
 | `src/router.ts` | API tRPC d'administration : toute procédure exige une session **dont le TOTP est activé** (`authed`) ; seule `me` répond sans |

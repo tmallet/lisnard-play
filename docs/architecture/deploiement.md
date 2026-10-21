@@ -214,13 +214,26 @@ chaque contenu est traité directement avec les règles en vigueur.
       Les tables viennent de la migration 0015, appliquée par le worker : déployer le
       worker d'abord.
     - service `admin` dans Coolify : `apps/admin/Dockerfile`, **aucun domaine**,
-      port exposé `3001`, sur le même réseau que l'app ;
+      port exposé `3001`, sur le même réseau que l'app, healthcheck Coolify désactivé
+      (l'image a le sien). Dans **Advanced**, activer **Consistent Container Names** avec
+      le nom `lisnard-admin` : sinon le nom du conteneur change à chaque déploiement
+      (`<uuid>-<horodatage>`) ;
     - variables du service `admin` : `ADMIN_DATABASE_URL` (rôle `lisnard_admin`),
       `BETTER_AUTH_SECRET` (`openssl rand -hex 32`, en secret), `SITE_URL`
       (`https://play.projetlisnard.fr`) ;
-    - variable de l'app : `ADMIN_INTERNAL_URL`, adresse interne du service admin
-      (nom du conteneur dans Coolify, par exemple `http://<conteneur-admin>:3001`) ;
-      sans elle, `/admin` répond 503 ;
+    - variable de l'app : `ADMIN_INTERNAL_URL=http://lisnard-admin:3001` ; sans elle,
+      `/admin` répond 503 ;
+    - **prévisualisations des PR** (facultatif) : activer Preview Deployments sur le
+      service `admin`, sans domaine, puis régler une fois pour toutes les PR, dans les
+      sections « Preview » des variables :
+      - app : `ADMIN_INTERNAL_URL=http://lisnard-admin-pr-{pr}:3001` ;
+      - admin : `SITE_URL=https://{pr}.lisnardplay.thimal.fr`, `ADMIN_DATABASE_URL` (la
+        base des prévisualisations du worker, migrée par lui) et un `BETTER_AUTH_SECRET`
+        distinct de la production.
+
+      `{pr}` est remplacé au démarrage par le numéro de la PR, tiré du nom du conteneur
+      que Coolify fournit (`COOLIFY_CONTAINER_NAME`, `…-pr-<n°>`). Le compte se crée
+      dans le terminal du conteneur admin de la PR, comme en production ;
     - créer le compte unique dans le terminal du service `admin` :
       `bun cli.js create-account --email <adresse>` (le mot de passe, 12 caractères au
       moins, est demandé au terminal) ;

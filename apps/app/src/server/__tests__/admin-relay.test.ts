@@ -1,4 +1,14 @@
-import { isAdminPath, relayToAdmin } from '../admin-relay';
+import { isAdminPath, relayToAdmin, withPreviewNumber } from '../admin-relay';
+
+test('prévisualisation : {pr} remplacé par le numéro tiré du nom du conteneur', () => {
+  const url = 'http://abc123-pr-{pr}:3001';
+  expect(withPreviewNumber(url, 'app456-pr-40')).toBe('http://abc123-pr-40:3001');
+  // Hors prévisualisation, {pr} ne vise aucun service : relais non configuré (503).
+  expect(withPreviewNumber(url, 'app456-20261021T080000')).toBeUndefined();
+  expect(withPreviewNumber(url, undefined)).toBeUndefined();
+  expect(withPreviewNumber('http://admin:3001', 'app456-pr-40')).toBe('http://admin:3001');
+  expect(withPreviewNumber(undefined, 'app456-pr-40')).toBeUndefined();
+});
 
 test('chemins du backoffice', () => {
   expect(isAdminPath('/admin')).toBe(true);
