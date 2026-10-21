@@ -24,4 +24,8 @@ un service séparé que `apps/app/server.ts` relaie. Lire aussi le `AGENTS.md` r
 - **Composants** `ui/src/components/ui` et `ui/src/components/refine-ui` : copiés depuis
   shadcn/ui et Refine UI (`bunx shadcn add …`, puis vérifier les imports `@/lib/utils` et
   `@/components/refine-ui/…` : la CLI les a déjà mal réécrits). Exclus du lint, formatés.
+- **Charte** : thème shadcn aux couleurs du site (palette, Montserrat servie depuis
+  `@expo-google-fonts/montserrat`) dans `ui/src/index.css`, sombre par défaut ; mention
+  d'indépendance sur les écrans de connexion (ADR 0001). Composer avec les composants
+  shadcn (`Field`, `InputOTP`, `Empty`, `Spinner`, toasts `sonner`) plutôt qu'à la main.
 - **Versions** : épinglées, publiées depuis au moins deux semaines.

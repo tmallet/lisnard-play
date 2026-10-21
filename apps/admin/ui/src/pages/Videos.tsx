@@ -1,7 +1,9 @@
 import { useInvalidate } from '@refinedev/core';
 import { useTable } from '@refinedev/react-table';
 import type { ColumnDef } from '@tanstack/react-table';
+import { EyeIcon, EyeOffIcon, RefreshCwIcon } from 'lucide-react';
 import { useCallback, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { DataTable } from '@/components/refine-ui/data-table/data-table';
 import {
@@ -19,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
 
@@ -51,10 +54,15 @@ export function Videos() {
   const invalidate = useInvalidate();
   const [hiding, setHiding] = useState<AdminItem | null>(null);
   const [reason, setReason] = useState('');
-  // Action puis rafraîchissement de la liste.
+  // Action, message de confirmation (ou d'erreur), puis rafraîchissement de la liste.
   const act = useCallback(
-    async (action: () => Promise<unknown>) => {
-      await action();
+    async (action: () => Promise<unknown>, done: string) => {
+      try {
+        await action();
+        toast.success(done);
+      } catch {
+        toast.error('L’action a échoué. Réessayez.');
+      }
       await invalidate({ resource: 'videos', invalidates: ['list'] });
     },
     [invalidate],
@@ -132,13 +140,16 @@ export function Videos() {
         cell: ({ row }) => {
           const v = row.original;
           return (
-            <div className="flex justify-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
               {v.hiddenAt ? (
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => act(() => api.items.unhide.mutate({ id: v.id }))}
+                  onClick={() =>
+                    act(() => api.items.unhide.mutate({ id: v.id }), 'Intervention réaffichée.')
+                  }
                 >
+                  <EyeIcon data-icon="inline-start" />
                   Réafficher
                 </Button>
               ) : (
@@ -150,6 +161,7 @@ export function Videos() {
                     setHiding(v);
                   }}
                 >
+                  <EyeOffIcon data-icon="inline-start" />
                   Masquer
                 </Button>
               )}
@@ -158,8 +170,14 @@ export function Videos() {
                   size="sm"
                   variant="outline"
                   disabled={v.summary === 'requested'}
-                  onClick={() => act(() => api.items.requestSummary.mutate({ id: v.id }))}
+                  onClick={() =>
+                    act(
+                      () => api.items.requestSummary.mutate({ id: v.id }),
+                      'Résumé demandé : le worker le refera au prochain cycle.',
+                    )
+                  }
                 >
+                  <RefreshCwIcon data-icon="inline-start" />
                   Relancer le résumé
                 </Button>
               ) : null}
@@ -189,11 +207,16 @@ export function Videos() {
               carte). Vous pourrez la réafficher.
             </DialogDescription>
           </DialogHeader>
-          <Textarea
-            placeholder="Motif (facultatif)"
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
+          <Field>
+            <FieldLabel htmlFor="hide-reason">Motif</FieldLabel>
+            <Textarea
+              id="hide-reason"
+              placeholder="Hors campagne, doublon…"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+            <FieldDescription>Facultatif, inscrit à l’historique.</FieldDescription>
+          </Field>
           <DialogFooter>
             <Button variant="outline" onClick={() => setHiding(null)}>
               Annuler
@@ -203,9 +226,14 @@ export function Videos() {
               onClick={async () => {
                 const target = hiding;
                 setHiding(null);
-                if (target) await act(() => api.items.hide.mutate({ id: target.id, reason }));
+                if (target)
+                  await act(
+                    () => api.items.hide.mutate({ id: target.id, reason }),
+                    'Intervention masquée.',
+                  );
               }}
             >
+              <EyeOffIcon data-icon="inline-start" />
               Masquer
             </Button>
           </DialogFooter>

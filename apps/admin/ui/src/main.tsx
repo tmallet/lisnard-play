@@ -8,6 +8,8 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router';
 
 import { Layout } from '@/components/refine-ui/layout/layout';
+import { ThemeProvider } from '@/components/refine-ui/theme/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { i18nProvider } from '@/lib/i18n';
 import { authProvider, dataProvider } from '@/lib/providers';
@@ -24,47 +26,51 @@ import { Videos } from '@/pages/Videos';
 function App() {
   return (
     <BrowserRouter basename="/admin">
-      <TooltipProvider>
-        <Refine
-          routerProvider={routerProvider}
-          dataProvider={dataProvider}
-          authProvider={authProvider}
-          i18nProvider={i18nProvider}
-          resources={[
-            { name: 'videos', list: '/videos', meta: { label: 'Vidéos', icon: <Video /> } },
-            {
-              name: 'actions',
-              list: '/historique',
-              meta: { label: 'Historique', icon: <HistoryIcon /> },
-            },
-          ]}
-          options={{
-            disableTelemetry: true,
-            syncWithLocation: true,
-            title: { text: 'Lisnard Play', icon: <ShieldCheck /> },
-          }}
-        >
-          <Routes>
-            <Route
-              element={
-                <Authenticated key="admin" redirectOnFail="/connexion">
-                  <Layout>
-                    <Outlet />
-                  </Layout>
-                </Authenticated>
-              }
-            >
-              <Route index element={<NavigateToResource resource="videos" />} />
-              <Route path="/videos" element={<Videos />} />
-              <Route path="/historique" element={<History />} />
-            </Route>
-            <Route path="/connexion" element={<Login />} />
-            <Route path="/code" element={<TwoFactor />} />
-            <Route path="/association" element={<Setup />} />
-            <Route path="*" element={<Navigate to="/videos" replace />} />
-          </Routes>
-        </Refine>
-      </TooltipProvider>
+      {/* Thème sombre par défaut, comme le site public ; bascule dans l'en-tête. */}
+      <ThemeProvider defaultTheme="dark" storageKey="lisnard-admin-theme">
+        <TooltipProvider>
+          <Refine
+            routerProvider={routerProvider}
+            dataProvider={dataProvider}
+            authProvider={authProvider}
+            i18nProvider={i18nProvider}
+            resources={[
+              { name: 'videos', list: '/videos', meta: { label: 'Vidéos', icon: <Video /> } },
+              {
+                name: 'actions',
+                list: '/historique',
+                meta: { label: 'Historique', icon: <HistoryIcon /> },
+              },
+            ]}
+            options={{
+              disableTelemetry: true,
+              syncWithLocation: true,
+              title: { text: 'Lisnard Play', icon: <ShieldCheck /> },
+            }}
+          >
+            <Routes>
+              <Route
+                element={
+                  <Authenticated key="admin" redirectOnFail="/connexion">
+                    <Layout>
+                      <Outlet />
+                    </Layout>
+                  </Authenticated>
+                }
+              >
+                <Route index element={<NavigateToResource resource="videos" />} />
+                <Route path="/videos" element={<Videos />} />
+                <Route path="/historique" element={<History />} />
+              </Route>
+              <Route path="/connexion" element={<Login />} />
+              <Route path="/code" element={<TwoFactor />} />
+              <Route path="/association" element={<Setup />} />
+              <Route path="*" element={<Navigate to="/videos" replace />} />
+            </Routes>
+          </Refine>
+          <Toaster position="bottom-right" />
+        </TooltipProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

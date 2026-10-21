@@ -76,6 +76,7 @@ Décisions durables consignées dans l'ADR 0032. En résumé :
     et menu tiré des ressources, vues liste, tableau de données (`@refinedev/react-table`)
     avec filtres de colonnes et pagination ; libellés en français par le fournisseur de
     traduction de Refine ;
+  - thème shadcn/ui aux couleurs et à la police du site (ADR 0001), sombre par défaut ;
   - construite au build de l'image et servie par le service admin ;
   - en anglais dans le code, en français à l'écran.
 - **Indexation** : `X-Robots-Tag: noindex` sur tout `/admin`, et `robots.txt` du site

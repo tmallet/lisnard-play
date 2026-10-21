@@ -4,9 +4,17 @@ import type { BaseRecord, HttpError } from '@refinedev/core';
 import type { UseTableReturnType } from '@refinedev/react-table';
 import type { Column } from '@tanstack/react-table';
 import { flexRender } from '@tanstack/react-table';
-import { Loader2 } from 'lucide-react';
+import { SearchX } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { DataTablePagination } from '@/components/refine-ui/data-table/data-table-pagination';
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from '@/components/ui/empty';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Table,
   TableBody,
@@ -125,12 +133,11 @@ export function DataTable<TData extends BaseRecord>({ table }: DataTableProps<TD
                     colSpan={columns.length}
                     className={cn('absolute', 'inset-0', 'pointer-events-none')}
                   >
-                    <Loader2
+                    <Spinner
                       className={cn(
                         'absolute',
                         'top-1/2',
                         'left-1/2',
-                        'animate-spin',
                         'text-primary',
                         'h-8',
                         'w-8',
@@ -222,12 +229,15 @@ function DataTableNoData({
             minWidth: '300px',
           }}
         >
-          <div className={cn('text-lg', 'font-semibold', 'text-foreground')}>
-            No data to display
-          </div>
-          <div className={cn('text-sm', 'text-muted-foreground')}>
-            This table is empty for the time being.
-          </div>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <SearchX />
+              </EmptyMedia>
+              <EmptyTitle>Aucun résultat</EmptyTitle>
+              <EmptyDescription>Rien à afficher pour ces critères.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         </div>
       </TableCell>
     </TableRow>

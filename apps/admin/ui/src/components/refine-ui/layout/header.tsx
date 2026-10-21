@@ -1,4 +1,9 @@
-import { useActiveAuthProvider, useLogout, useRefineOptions } from '@refinedev/core';
+import {
+  useActiveAuthProvider,
+  useGetIdentity,
+  useLogout,
+  useRefineOptions,
+} from '@refinedev/core';
 import { LogOutIcon } from 'lucide-react';
 import { UserAvatar } from '@/components/refine-ui/layout/user-avatar';
 import { ThemeToggle } from '@/components/refine-ui/theme/theme-toggle';
@@ -6,6 +11,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
@@ -111,6 +118,7 @@ const UserDropdown = () => {
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
   const authProvider = useActiveAuthProvider();
+  const { data: user } = useGetIdentity<{ fullName: string; email: string }>();
 
   if (!authProvider?.getIdentity) {
     return null;
@@ -121,16 +129,15 @@ const UserDropdown = () => {
       <DropdownMenuTrigger>
         <UserAvatar />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => {
-            logout();
-          }}
-        >
-          <LogOutIcon className={cn('text-destructive', 'hover:text-destructive')} />
-          <span className={cn('text-destructive', 'hover:text-destructive')}>
-            {isLoggingOut ? 'Déconnexion…' : 'Se déconnecter'}
-          </span>
+      <DropdownMenuContent align="end" className="min-w-56">
+        <DropdownMenuLabel>
+          <div className="font-medium text-foreground">{user?.fullName}</div>
+          <div className="font-normal text-muted-foreground text-xs">{user?.email}</div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={() => logout()}>
+          <LogOutIcon />
+          {isLoggingOut ? 'Déconnexion…' : 'Se déconnecter'}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
