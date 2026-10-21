@@ -1,0 +1,159 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/*
+ * Thème shadcn/ui aux couleurs de Lisnard Play (ADR 0001, ADR 0012) : palette du site
+ * public (bleu, bleu sombre, chamois, blanc, émeraude) et Montserrat. Sombre par défaut,
+ * comme le site ; un thème clair reste disponible.
+ */
+@custom-variant dark (&:is(.dark *));
+
+@font-face {
+  font-family: "Montserrat";
+  font-weight: 400;
+  font-display: swap;
+  src: url("@expo-google-fonts/montserrat/400Regular/Montserrat_400Regular.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-weight: 500;
+  font-display: swap;
+  src: url("@expo-google-fonts/montserrat/500Medium/Montserrat_500Medium.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-weight: 600;
+  font-display: swap;
+  src: url("@expo-google-fonts/montserrat/600SemiBold/Montserrat_600SemiBold.ttf")
+    format("truetype");
+}
+@font-face {
+  font-family: "Montserrat";
+  font-weight: 700;
+  font-display: swap;
+  src: url("@expo-google-fonts/montserrat/700Bold/Montserrat_700Bold.ttf") format("truetype");
+}
+
+:root {
+  /* Palette de la charte (apps/app/src/theme/colors.ts). */
+  --lp-bleu: #1d257a;
+  --lp-bleu-sombre: #0f1752;
+  --lp-chamois: #b0ad85;
+  --lp-blanc: #f9f9f9;
+  --lp-emeraude: #52c985;
+  --lp-rose: #f62a72;
+  --lp-encre: #171b3e;
+
+  --radius: 0.625rem;
+  --background: var(--lp-blanc);
+  --foreground: var(--lp-encre);
+  --card: #ffffff;
+  --card-foreground: var(--lp-encre);
+  --popover: #ffffff;
+  --popover-foreground: var(--lp-encre);
+  --primary: var(--lp-bleu);
+  --primary-foreground: var(--lp-blanc);
+  --secondary: color-mix(in oklab, var(--lp-chamois) 22%, var(--lp-blanc));
+  --secondary-foreground: var(--lp-bleu-sombre);
+  --muted: #e9eaee;
+  --muted-foreground: #4a5464;
+  --accent: color-mix(in oklab, var(--lp-bleu) 9%, var(--lp-blanc));
+  --accent-foreground: var(--lp-bleu);
+  --destructive: var(--lp-rose);
+  --border: #dcdfdf;
+  --input: #cfd3d8;
+  --ring: var(--lp-emeraude);
+  --chart-1: var(--lp-bleu);
+  --chart-2: var(--lp-chamois);
+  --chart-3: var(--lp-emeraude);
+  --chart-4: var(--lp-rose);
+  --chart-5: var(--lp-bleu-sombre);
+  --sidebar: #ffffff;
+  --sidebar-foreground: var(--lp-encre);
+  --sidebar-primary: var(--lp-bleu);
+  --sidebar-primary-foreground: var(--lp-blanc);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--lp-bleu);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--lp-emeraude);
+}
+
+.dark {
+  --background: var(--lp-bleu-sombre);
+  --foreground: var(--lp-blanc);
+  --card: var(--lp-bleu);
+  --card-foreground: var(--lp-blanc);
+  --popover: var(--lp-bleu);
+  --popover-foreground: var(--lp-blanc);
+  --primary: var(--lp-chamois);
+  --primary-foreground: var(--lp-bleu-sombre);
+  --secondary: color-mix(in oklab, var(--lp-blanc) 12%, var(--lp-bleu-sombre));
+  --secondary-foreground: var(--lp-blanc);
+  --muted: color-mix(in oklab, var(--lp-blanc) 8%, var(--lp-bleu-sombre));
+  --muted-foreground: rgba(249, 249, 249, 0.7);
+  --accent: color-mix(in oklab, var(--lp-blanc) 12%, var(--lp-bleu));
+  --accent-foreground: var(--lp-blanc);
+  --destructive: var(--lp-rose);
+  --border: color-mix(in oklab, var(--lp-blanc) 16%, var(--lp-bleu-sombre));
+  --input: color-mix(in oklab, var(--lp-blanc) 22%, var(--lp-bleu-sombre));
+  --ring: var(--lp-emeraude);
+  /* Barre latérale plus sombre que le fond ; élément actif en chamois. */
+  --sidebar: color-mix(in oklab, black 22%, var(--lp-bleu-sombre));
+  --sidebar-foreground: var(--lp-blanc);
+  --sidebar-primary: var(--lp-chamois);
+  --sidebar-primary-foreground: var(--lp-bleu-sombre);
+  --sidebar-accent: var(--lp-bleu);
+  --sidebar-accent-foreground: var(--lp-blanc);
+  --sidebar-border: color-mix(in oklab, var(--lp-blanc) 12%, var(--lp-bleu-sombre));
+}
+
+@theme inline {
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}

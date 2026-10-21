@@ -7,6 +7,7 @@ ARG BUN_VERSION=1.4.3
 FROM oven/bun:${BUN_VERSION} AS build
 WORKDIR /repo
 COPY package.json bun.lock bunfig.toml ./
+COPY apps/admin/package.json apps/admin/
 COPY apps/app/package.json apps/app/
 COPY apps/worker/package.json apps/worker/
 COPY packages/api/package.json packages/api/

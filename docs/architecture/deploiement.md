@@ -20,7 +20,8 @@ Postgres reste sur le réseau interne.
 |---------|--------|-----------|-------|
 | `postgres` | service Coolify « PostgreSQL », **version 18** (identique au local et à la CI) | géré par Coolify | géré par Coolify |
 | `worker` | `apps/worker/Dockerfile`, contexte = racine du dépôt | prend le verrou de leader (une instance en attente continue de battre), applique les migrations, puis lance la boucle | fichier de pulsation de moins de 5 min (`HEALTHCHECK` de l'image), écrit avant chaque tâche |
-| `app` | `apps/app/Dockerfile`, contexte = racine du dépôt | `bun server.ts` (export Expo servi par l'adaptateur Bun) | `GET /api/trpc/health` (`HEALTHCHECK` de l'image) |
+| `app` | `apps/app/Dockerfile`, contexte = racine du dépôt | `bun server.ts` (export Expo servi par l'adaptateur Bun) ; relaie `/admin/*` vers `admin` | `GET /api/trpc/health` (`HEALTHCHECK` de l'image) |
+| `admin` | `apps/admin/Dockerfile`, contexte = racine du dépôt, **sans domaine public** (ADR 0032) | `bun server.js` (backoffice Refine, Better Auth, API d'administration), port 3001 | `GET /admin/health` (`HEALTHCHECK` de l'image) |
 
 **Journaux et confidentialité** : les mentions légales annoncent des journaux
 techniques (adresses IP) conservés au plus 30 jours. Garder les journaux d'accès du
@@ -40,6 +41,8 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 
 - **Image de l'app** : Bun « slim », l'export `dist/`, `server.ts` et le seul
   paquet `expo-server`. Le bundle des API routes est autonome.
+- **Image du backoffice** : l'interface construite par Vite (`dist/`), `server.js` et
+  `cli.js` empaquetés par `bun build` ; ni `node_modules` ni secret.
 - **Image du worker** : `index.js` et `cli.js` empaquetés par `bun build`,
   plus les migrations (`/app/drizzle`).
 
@@ -190,6 +193,54 @@ dépense sur la clé OpenRouter.
 
 Sur une base neuve, ni `recompute` ni `media --refresh` ne sont nécessaires :
 chaque contenu est traité directement avec les règles en vigueur.
+
+11. **Backoffice** (ADR 0032, spec `admin-backoffice`) :
+    - rôle Postgres aux droits limités, créé une fois (terminal Postgres de Coolify),
+      avec un mot de passe généré :
+
+      ```sql
+      CREATE ROLE lisnard_admin LOGIN PASSWORD '<mot de passe généré>';
+      GRANT CONNECT ON DATABASE lisnard TO lisnard_admin;
+      GRANT USAGE ON SCHEMA public TO lisnard_admin;
+      GRANT SELECT ON item, source TO lisnard_admin;
+      GRANT UPDATE (hidden_at, hidden_reason, summary_requested_at, summary_attempts, summary_retry_at)
+        ON item TO lisnard_admin;
+      GRANT SELECT, INSERT ON admin_action TO lisnard_admin;
+      GRANT SELECT, INSERT, UPDATE, DELETE
+        ON auth_user, auth_session, auth_account, auth_verification, auth_two_factor
+        TO lisnard_admin;
+      ```
+
+      Les tables viennent de la migration 0015, appliquée par le worker : déployer le
+      worker d'abord.
+    - service `admin` dans Coolify : `apps/admin/Dockerfile`, **aucun domaine**,
+      port exposé `3001`, sur le même réseau que l'app, healthcheck Coolify désactivé
+      (l'image a le sien). Dans **Advanced**, activer **Consistent Container Names** avec
+      le nom `lisnard-admin` : sinon le nom du conteneur change à chaque déploiement
+      (`<uuid>-<horodatage>`) ;
+    - variables du service `admin` : `ADMIN_DATABASE_URL` (rôle `lisnard_admin`),
+      `BETTER_AUTH_SECRET` (`openssl rand -hex 32`, en secret), `SITE_URL`
+      (`https://play.projetlisnard.fr`) ;
+    - variable de l'app : `ADMIN_INTERNAL_URL=http://lisnard-admin:3001` ; sans elle,
+      `/admin` répond 503 ;
+    - **prévisualisations des PR** (facultatif) : activer Preview Deployments sur le
+      service `admin`, sans domaine, puis régler une fois pour toutes les PR, dans les
+      sections « Preview » des variables :
+      - app : `ADMIN_INTERNAL_URL=http://lisnard-admin-pr-{pr}:3001` ;
+      - admin : `SITE_URL=https://{pr}.lisnardplay.thimal.fr`, `ADMIN_DATABASE_URL` (la
+        base des prévisualisations du worker, migrée par lui) et un `BETTER_AUTH_SECRET`
+        distinct de la production.
+
+      `{pr}` est remplacé au démarrage par le numéro de la PR, tiré du nom du conteneur
+      que Coolify fournit (`COOLIFY_CONTAINER_NAME`, `…-pr-<n°>`). Le compte se crée
+      dans le terminal du conteneur admin de la PR, comme en production ;
+    - créer le compte unique dans le terminal du service `admin` :
+      `bun cli.js create-account --email <adresse>` (le mot de passe, 12 caractères au
+      moins, est demandé au terminal) ;
+    - ouvrir `https://play.projetlisnard.fr/admin`, se connecter, scanner le code QR avec
+      l'application d'authentification et **garder les codes de secours** ;
+    - téléphone perdu, sans code de secours : `bun cli.js reset-2fa` dans le même
+      terminal, puis nouvelle association.
 
 ## Déploiement automatique
 

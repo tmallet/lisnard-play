@@ -27,5 +27,14 @@
     "enabled": true,
     "rules": { "preset": "recommended" }
   },
-  "assist": { "enabled": true, "actions": { "source": { "organizeImports": "on" } } }
+  "assist": { "enabled": true, "actions": { "source": { "organizeImports": "on" } } },
+  "overrides": [
+    {
+      "includes": [
+        "apps/admin/ui/src/components/ui/**",
+        "apps/admin/ui/src/components/refine-ui/**"
+      ],
+      "linter": { "enabled": false }
+    }
+  ]
 }

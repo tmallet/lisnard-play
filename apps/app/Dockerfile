@@ -6,6 +6,7 @@ ARG BUN_VERSION=1.4.3
 FROM oven/bun:${BUN_VERSION} AS build
 WORKDIR /repo
 COPY package.json bun.lock bunfig.toml ./
+COPY apps/admin/package.json apps/admin/
 COPY apps/app/package.json apps/app/
 COPY apps/worker/package.json apps/worker/
 COPY packages/api/package.json packages/api/
@@ -29,6 +30,7 @@ COPY --from=build /repo/node_modules/expo-server ./node_modules/expo-server
 COPY --from=build /repo/apps/app/dist ./dist
 COPY --from=build /repo/apps/app/server.ts ./server.ts
 COPY --from=build /repo/apps/app/src/server/indexing.ts ./src/server/indexing.ts
+COPY --from=build /repo/apps/app/src/server/admin-relay.ts ./src/server/admin-relay.ts
 COPY --from=build /repo/image/quote-image.js ./src/server/quote-image.js
 COPY --from=build /repo/image/share.js ./src/server/share.js
 COPY --from=build /repo/node_modules/@resvg ./node_modules/@resvg

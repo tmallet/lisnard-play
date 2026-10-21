@@ -50,6 +50,9 @@ réutiliser `apps/app/dist`.
 | `bun apps/worker/src/cli.ts recompute` | Applique les seuils et la règle actuels aux décisions journalisées (sans appel au modèle) |
 | `bun apps/worker/src/cli.ts reclassify [--model M] [--version N]` | Reclasse en rappelant le modèle |
 | `bun apps/worker/src/cli.ts summarize [--budget N] [--retry]` | Résume les vidéos jusqu'au plafond du jour (N $) ; `--retry` relance les abandons |
+| `bun cli.js create-account --email <adresse>` (terminal du service admin) | Crée le compte unique du backoffice ; mot de passe demandé au terminal (ADR 0032) |
+| `bun cli.js reset-2fa` (terminal du service admin) | Dissocie le TOTP du compte (téléphone perdu) |
+| `bun --filter @lisnard/admin build` | Construit l'interface du backoffice (`apps/admin/dist`) ; `bunx vite` dans `apps/admin` pour la développer (API sur le port 3001) |
 | `bun apps/worker/src/cli.ts score-quotes` | Note « marquante » (Jev) toutes les citations en attente, d'un coup (historique après déploiement ; environ 0,00002 $ par citation) |
 | `bun apps/worker/src/cli.ts places [--budget N]` | Détermine d'un coup le lieu de toutes les interventions en attente (historique après déploiement), dans la limite du plafond du jour ou de N $ |
 | `bun apps/worker/src/cli.ts notify --test` | Envoie à tous les abonnés la dernière intervention publiée, au format réel des notifications (vérifie les clés VAPID, la chaîne d'envoi et le rendu sur l'appareil) |

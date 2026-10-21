@@ -197,6 +197,11 @@ export const item = pgTable(
     summaryAttempts: integer('summary_attempts').notNull().default(0),
     /** Pas de nouvel essai de résumé avant cette date (attente croissante après un échec). */
     summaryRetryAt: timestamp('summary_retry_at', { withTimezone: true }),
+    /** Masquée par l'exploitant (ADR 0032) : invisible partout, quel que soit le classement. */
+    hiddenAt: timestamp('hidden_at', { withTimezone: true }),
+    hiddenReason: text('hidden_reason'),
+    /** Nouveau résumé demandé depuis le backoffice : le worker le fait en priorité. */
+    summaryRequestedAt: timestamp('summary_requested_at', { withTimezone: true }),
     /**
      * Reprise d'un article déjà enregistré (même titre, autre média) : masquée partout,
      * gardée pour la traçabilité (spec intervention-collection, « Dédoublonnage »).
@@ -331,3 +336,97 @@ export type Source = typeof source.$inferSelect;
 export type Item = typeof item.$inferSelect;
 export type NewItem = typeof item.$inferInsert;
 export type Classification = typeof classification.$inferSelect;
+
+/** Actions du backoffice (spec admin-backoffice, ADR 0032), en ajout seul. */
+export const adminActionKind = pgEnum('admin_action_kind', ['hide', 'unhide', 'request_summary']);
+
+export const adminAction = pgTable(
+  'admin_action',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    at: timestamp('at', { withTimezone: true }).notNull().defaultNow(),
+    kind: adminActionKind('kind').notNull(),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => item.id, { onDelete: 'cascade' }),
+    reason: text('reason'),
+  },
+  (t) => [index('admin_action_at_idx').on(t.at)],
+);
+
+export type AdminAction = typeof adminAction.$inferSelect;
+
+/*
+ * Tables de Better Auth (ADR 0032), au schéma attendu par sa version 1.7 et son
+ * extension twoFactor ; préfixe « auth_ ». Écrites par le service admin seul.
+ */
+const authTimestamps = {
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+};
+
+export const authUser = pgTable('auth_user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: boolean('email_verified').notNull().default(false),
+  image: text('image'),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  ...authTimestamps,
+});
+
+export const authSession = pgTable('auth_session', {
+  id: text('id').primaryKey(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  token: text('token').notNull().unique(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  userId: text('user_id')
+    .notNull()
+    .references(() => authUser.id, { onDelete: 'cascade' }),
+  ...authTimestamps,
+});
+
+export const authAccount = pgTable('auth_account', {
+  id: text('id').primaryKey(),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => authUser.id, { onDelete: 'cascade' }),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  idToken: text('id_token'),
+  accessTokenExpiresAt: timestamp('access_token_expires_at', { withTimezone: true }),
+  refreshTokenExpiresAt: timestamp('refresh_token_expires_at', { withTimezone: true }),
+  scope: text('scope'),
+  password: text('password'),
+  ...authTimestamps,
+});
+
+export const authVerification = pgTable('auth_verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  ...authTimestamps,
+});
+
+export const authTwoFactor = pgTable(
+  'auth_two_factor',
+  {
+    id: text('id').primaryKey(),
+    secret: text('secret').notNull(),
+    backupCodes: text('backup_codes').notNull(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => authUser.id, { onDelete: 'cascade' }),
+    verified: boolean('verified').default(true),
+    failedVerificationCount: integer('failed_verification_count').default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+  },
+  (t) => [
+    index('auth_two_factor_secret_idx').on(t.secret),
+    index('auth_two_factor_user_idx').on(t.userId),
+  ],
+);

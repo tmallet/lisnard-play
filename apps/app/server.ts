@@ -9,7 +9,7 @@
 import { join, normalize, resolve } from 'node:path';
 
 import { createRequestHandler } from 'expo-server/adapter/bun';
-
+import { isAdminPath, relayToAdmin, withPreviewNumber } from './src/server/admin-relay';
 import {
   indexingAllowed,
   publicOrigin,
@@ -76,11 +76,19 @@ async function staticFile(pathname: string): Promise<Response | null> {
   });
 }
 
+// Prévisualisations Coolify : `{pr}` devient le numéro de la PR (voir withPreviewNumber).
+const ADMIN_INTERNAL_URL = withPreviewNumber(
+  process.env.ADMIN_INTERNAL_URL,
+  process.env.COOLIFY_CONTAINER_NAME,
+);
+
 const server = Bun.serve({
   port: Number(process.env.PORT ?? 3000),
   async fetch(req) {
     const url = new URL(req.url);
     const { pathname } = url;
+    // Backoffice (ADR 0032) : service séparé, joint par le réseau interne (ADMIN_INTERNAL_URL).
+    if (isAdminPath(pathname)) return relayToAdmin(req, ADMIN_INTERNAL_URL);
     if (pathname === '/robots.txt')
       return withIndexingPolicy(
         new Response(robotsTxt(ALLOW_INDEXING, publicOrigin(req)), {

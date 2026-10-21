@@ -8,7 +8,12 @@
  * Requiert un Postgres joignable via DATABASE_URL (local : docker compose up -d).
  */
 import { resolve } from 'node:path';
+import { eq } from 'drizzle-orm';
+import { createAccount } from '../apps/admin/src/account';
+import { createAuth } from '../apps/admin/src/auth';
 
+import { hideItem } from '../packages/db/src/admin';
+import { item } from '../packages/db/src/schema';
 import { createTestDb } from '../packages/db/src/testing';
 import {
   recordClassification,
@@ -73,6 +78,16 @@ const trpcUrl = (procedure: string, input: unknown) =>
 // Export sous Node quand il est installé : sous Bun, Metro (SDK 57) échoue sur Linux quand Node est
 // aussi présent (« Cannot find module './Worker.js' »). L'export n'exécute pas les API routes.
 if (!process.env.SKIP_EXPORT) await run(['bunx', 'expo', 'export', '--platform', 'web']);
+// Interface du backoffice (ADR 0032), servie par le service admin.
+const ADMIN_DIR = resolve(import.meta.dir, '../apps/admin');
+if (!process.env.SKIP_EXPORT) {
+  const build = Bun.spawn(['bunx', 'vite', 'build'], {
+    cwd: ADMIN_DIR,
+    stdout: 'ignore',
+    stderr: 'inherit',
+  });
+  if ((await build.exited) !== 0) throw new Error('build du backoffice en échec');
+}
 
 // Base jetable avec une intervention publiée (rendu média compris).
 const { db, url, drop } = await createTestDb();
@@ -150,10 +165,44 @@ await recordPlace(db, id, {
   cost: 0,
 });
 
+// Vidéo masquée par le backoffice : invisible partout (spec admin-backoffice).
+const { id: hiddenId } = await upsertItem(db, {
+  sourceId: 'yt:smoke',
+  platformId: 'yt:smoke-hidden',
+  url: 'https://www.youtube.com/watch?v=smoke-hidden',
+  title: 'Intervention masquée',
+  description: '',
+  publishedAt: new Date('2026-06-01T09:00:00Z'),
+});
+await db.update(item).set({ status: 'published' }).where(eq(item.id, hiddenId));
+await setMedia(db, hiddenId, {
+  kind: 'embed',
+  provider: 'youtube',
+  embedUrl: 'https://www.youtube.com/embed/h',
+});
+await hideItem(db, hiddenId, 'smoke');
+
+// Service admin, joint par le serveur public par l'adresse interne (ADR 0032).
+const ADMIN_PORT = PORT + 3;
+const ADMIN_SECRET = 'secret-du-smoke-test-assez-long-pour-better-auth';
+const admin = Bun.spawn(['bun', 'server.ts'], {
+  cwd: ADMIN_DIR,
+  env: {
+    ...process.env,
+    ADMIN_PORT: String(ADMIN_PORT),
+    ADMIN_DATABASE_URL: url,
+    BETTER_AUTH_SECRET: ADMIN_SECRET,
+    SITE_URL: BASE,
+  },
+  stdout: 'ignore',
+  stderr: 'inherit',
+});
+
 const server = Bun.spawn(['bun', 'server.ts'], {
   cwd: APP_DIR,
   env: {
     ...process.env,
+    ADMIN_INTERNAL_URL: `http://localhost:${ADMIN_PORT}`,
     PORT: String(PORT),
     DATABASE_URL: url,
     NODE_ENV: 'production',
@@ -167,6 +216,62 @@ const server = Bun.spawn(['bun', 'server.ts'], {
 
 try {
   await waitForServer();
+
+  // Backoffice (spec admin-backoffice, ADR 0032), par le relais du serveur public.
+  for (let i = 0; i < 50; i++) {
+    if ((await fetch(`${BASE}/admin/health`).catch(() => null))?.ok) break;
+    await Bun.sleep(200);
+  }
+  const adminPage = await fetch(`${BASE}/admin/videos`);
+  check(
+    '/admin : interface servie par le relais, non indexable',
+    adminPage.status === 200 &&
+      (await adminPage.text()).includes('Administration') &&
+      adminPage.headers.get('x-robots-tag') === 'noindex, nofollow',
+  );
+  check(
+    '/admin : aucune donnée sans connexion',
+    (await fetch(`${BASE}/admin/api/trpc/items.list?input=%7B%7D`)).status === 401,
+  );
+  const signUp = await fetch(`${BASE}/admin/api/auth/sign-up/email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Origin: BASE },
+    body: JSON.stringify({
+      email: 'intrus@example.test',
+      password: 'mot-de-passe-solide',
+      name: 'x',
+    }),
+  });
+  check('/admin : inscription refusée', signUp.status >= 400 && signUp.status !== 404);
+  await createAccount(
+    createAuth({ db, secret: ADMIN_SECRET, baseURL: BASE, secure: false }),
+    db,
+    'admin@example.test',
+    'mot-de-passe-solide',
+  );
+  const signIn = await fetch(`${BASE}/admin/api/auth/sign-in/email`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Origin: BASE },
+    body: JSON.stringify({ email: 'admin@example.test', password: 'mot-de-passe-solide' }),
+  });
+  const cookie = signIn.headers.getSetCookie().find((c) => c.includes('session_token')) ?? '';
+  check(
+    '/admin : connexion par le relais, cookie limité à /admin',
+    signIn.status === 200 && /Path=\/admin/.test(cookie) && /SameSite=Strict/i.test(cookie),
+  );
+  const sessionCookie = cookie.split(';')[0] ?? '';
+  check(
+    '/admin : mot de passe seul, sans TOTP, refusé',
+    (
+      await fetch(`${BASE}/admin/api/trpc/items.list?input=%7B%7D`, {
+        headers: { Cookie: sessionCookie },
+      })
+    ).status === 403,
+  );
+  check(
+    'vidéo masquée : introuvable',
+    (await fetch(trpcUrl('interventions.byId', { id: hiddenId }))).status === 404,
+  );
   const { INDEPENDENCE_NOTICE, pageTitle } = await import('../apps/app/src/config/app');
 
   checkPage('/', await (await fetch(`${BASE}/`)).text(), pageTitle(), INDEPENDENCE_NOTICE);
@@ -372,6 +477,7 @@ try {
   check(
     '/sitemap.xml : intervention publiée et ses citations, sur le domaine du proxy',
     sitemapXml.includes(`<loc>https://play.example.test/interventions/${id}</loc>`) &&
+      !sitemapXml.includes(hiddenId) &&
       sitemapXml.includes(`<loc>https://play.example.test/interventions/${id}/citation/125</loc>`),
   );
 
@@ -503,7 +609,10 @@ try {
     const page = await fetch(`${openBase}/`);
     check('indexation activée : pas d’en-tête X-Robots-Tag', !page.headers.has('x-robots-tag'));
     const allowed = await (await fetch(`${openBase}/robots.txt`)).text();
-    check('indexation activée : robots.txt autorise', !allowed.includes('Disallow'));
+    check(
+      'indexation activée : robots.txt autorise, sauf /admin',
+      !allowed.includes('Disallow: /\n') && allowed.includes('Disallow: /admin'),
+    );
     check(
       'indexation activée : robots.txt indique le plan du site',
       allowed.includes('Sitemap: http'),
@@ -514,7 +623,9 @@ try {
   }
 } finally {
   server.kill();
+  admin.kill();
   await server.exited;
+  await admin.exited;
   membershipFixture.stop(true);
   await drop();
 }

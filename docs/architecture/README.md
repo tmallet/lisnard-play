@@ -59,6 +59,9 @@ lisnard-play/
 │  ├─ shims/bun.js        module `bun` pour Metro → objet global Bun (ADR 0019)
 │  ├─ server.ts           serveur de production (adaptateur Bun d'expo-server)
 │  └─ Dockerfile
+├─ apps/admin/            @lisnard/admin : backoffice sous /admin (ADR 0032), service
+│                         séparé relayé par server.ts ; Better Auth (mot de passe + TOTP),
+│                         API tRPC d'administration, interface Refine + shadcn/ui (ui/)
 ├─ apps/worker/           @lisnard/worker : ingestion
 │  ├─ src/index.ts        démarrage : migrations, sources, verrou de leader, boucle
 │  ├─ src/scheduler.ts    tâches à cadence propre + advisory lock Postgres
@@ -89,6 +92,8 @@ lisnard-play/
 |-------|------|-------------|
 | `source` | Sources configurées, recopiées depuis `sources.config.ts` | `id` (« yt:bfmtv »), `kind`, `name`, `active` |
 | `item` | Un contenu, quel que soit le nombre de sources qui l'ont trouvé | `platform_id` unique (« yt:<id> » ou hash d'URL), `outlet` (média réel), `live_status`, `status` / `role` / `kind` / `themes` (`text[]`, index GIN) dénormalisés depuis la dernière décision, `duplicate_of` (reprise d'un article déjà enregistré, masquée partout), `place` (lieu du déplacement, ou son absence), `media` (rendu, dont l'URL de l'éditeur pour un article Google News), `summary` (résumé ou motif d'absence), `duration_s` |
+| `admin_action` | Journal des actions du backoffice, en ajout seul (ADR 0032) | `kind` (`hide`, `unhide`, `request_summary`), `item_id`, `reason`, `at` |
+| `auth_*` | Tables de Better Auth (compte unique, sessions, TOTP), écrites par le service admin seul | `auth_user`, `auth_session`, `auth_account`, `auth_verification`, `auth_two_factor` |
 | `quote` | Citations horodatées d'une vidéo, remplacées avec son résumé (ADR 0028) | `item_id` (cascade), `start_s` (unique par vidéo), `text`, `search` (texte normalisé par `lp_normalize`, index plein texte français), `striking` et `striking_version` (note « marquante » de Jev, ADR 0031) ; un index plein texte couvre aussi titre et résumé de `item` |
 | `push_subscription` | Abonnements aux notifications, **écrits par l'API** (ADR 0024) | `kind` (`web` / `expo`), `endpoint` unique (adresse Web Push ou jeton Expo), `keys`, préférences `live` / `reminder` / `new_item`, `confirmed_at` (purge à 13 mois) |
 | `notification_sent` | Envois effectués, un par intervention et par type | clé (`item_id`, `kind`), `recipients` |

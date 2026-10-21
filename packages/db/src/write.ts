@@ -381,13 +381,18 @@ export async function listSummaryTargets(
     .where(
       and(
         eq(item.status, 'published'),
+        sql`${item.hiddenAt} is null`,
         sql`${item.media}->>'provider' = 'youtube'`,
         inArray(item.liveStatus, ['none', 'ended']),
-        sql`(${item.summary} is null or (${item.summary}->>'promptVersion')::int <> ${promptVersion})`,
+        // Demande du backoffice (ADR 0032) : refaite même si le résumé est à jour.
+        sql`(${item.summaryRequestedAt} is not null or ${item.summary} is null or (${item.summary}->>'promptVersion')::int <> ${promptVersion})`,
         sql`(${item.summaryRetryAt} is null or ${item.summaryRetryAt} <= now())`,
       ),
     )
-    .orderBy(desc(sql`coalesce(${item.startsAt}, ${item.publishedAt})`))
+    .orderBy(
+      sql`${item.summaryRequestedAt} is null`,
+      desc(sql`coalesce(${item.startsAt}, ${item.publishedAt})`),
+    )
     .limit(limit);
 }
 
@@ -411,7 +416,7 @@ export async function recordSummary(
   await db.transaction(async (tx) => {
     await tx
       .update(item)
-      .set({ summary, summaryAttempts: 0, summaryRetryAt: null })
+      .set({ summary, summaryAttempts: 0, summaryRetryAt: null, summaryRequestedAt: null })
       .where(eq(item.id, itemId));
     await tx.delete(quote).where(eq(quote.itemId, itemId));
     // Minutage unique par intervention : une citation au même instant est ignorée.
@@ -537,6 +542,7 @@ export async function latestNotificationSample(db: Db): Promise<NotificationEven
     .where(
       and(
         eq(item.status, 'published'),
+        sql`${item.hiddenAt} is null`,
         sql`${item.media} is not null and ${item.duplicateOf} is null`,
       ),
     )
@@ -561,7 +567,9 @@ export async function listNotificationEvents(db: Db): Promise<NotificationEvent[
       .select(eventColumns(kind))
       .from(item)
       .innerJoin(source, eq(item.sourceId, source.id))
-      .where(and(eq(item.status, 'published'), where, notSent(kind)));
+      .where(
+        and(eq(item.status, 'published'), sql`${item.hiddenAt} is null`, where, notSent(kind)),
+      );
   const visible = sql`(${item.media} is not null and ${item.duplicateOf} is null)`;
   const [live, reminder, newItem] = await Promise.all([
     event(
@@ -672,7 +680,7 @@ export async function listPressItems(db: Db, since?: Date) {
       title: item.title,
       publishedAt: item.publishedAt,
       firstSeenAt: item.firstSeenAt,
-      visible: sql<boolean>`(${item.status} = 'published' and ${item.media} is not null)`,
+      visible: sql<boolean>`(${item.status} = 'published' and ${item.hiddenAt} is null and ${item.media} is not null)`,
       duplicateOf: item.duplicateOf,
     })
     .from(item)
@@ -728,6 +736,7 @@ export async function listPlaceTargets(db: Db, promptVersion: number, limit: num
       .where(
         and(
           eq(item.status, 'published'),
+          sql`${item.hiddenAt} is null`,
           sql`${item.media} is not null`,
           sql`${item.duplicateOf} is null`,
           sql`(${item.place} is null or (${item.place}->>'promptVersion')::int <> ${promptVersion})`,
@@ -799,6 +808,7 @@ export async function listQuotesToScore(
       and(
         sql`${quote.strikingVersion} is distinct from ${version}`,
         eq(item.status, 'published'),
+        sql`${item.hiddenAt} is null`,
         sql`${item.media} is not null`,
         // Reprises masquées : aucun récapitulatif ne les montre.
         sql`${item.duplicateOf} is null`,

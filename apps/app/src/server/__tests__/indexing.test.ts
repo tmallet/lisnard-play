@@ -11,9 +11,9 @@ test('indexation bloquée par défaut, levée seulement par « true »', () => {
 
 test('robots.txt selon la politique', () => {
   expect(robotsTxt(false)).toBe('User-agent: *\nDisallow: /\n');
-  expect(robotsTxt(true)).toBe('User-agent: *\nAllow: /\n');
+  expect(robotsTxt(true)).toBe('User-agent: *\nAllow: /\nDisallow: /admin\n');
   expect(robotsTxt(true, 'https://play.projetlisnard.fr')).toBe(
-    'User-agent: *\nAllow: /\nSitemap: https://play.projetlisnard.fr/sitemap.xml\n',
+    'User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: https://play.projetlisnard.fr/sitemap.xml\n',
   );
   expect(robotsTxt(false, 'https://play.projetlisnard.fr')).not.toContain('Sitemap');
 });
