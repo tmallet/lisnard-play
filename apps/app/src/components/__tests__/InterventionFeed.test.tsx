@@ -22,12 +22,24 @@ jest.mock('expo-router', () => ({
 
 type Lists = Record<'live' | 'upcoming' | 'past', InterventionCardData[]>;
 const lists: Lists = { live: [], upcoming: [], past: [] };
+/** Format simulé de chaque intervention : le serveur le déduit, il n'est pas renvoyé. */
+const formats = new Map<string, string>();
 
-type Input = { status: keyof Lists; theme?: string };
+type Input = { status: keyof Lists; theme?: string; format?: string };
 // Préfixe « mock » : jest autorise cette variable dans la fabrique de jest.mock.
-const mockPaging = { size: Number.POSITIVE_INFINITY, failNextPage: false };
+const mockPaging = {
+  size: Number.POSITIVE_INFINITY,
+  failNextPage: false,
+  /** Requête filtrée par format : attente simulée, puis échec éventuel. */
+  formatGate: null as Promise<void> | null,
+  failFormat: false,
+};
 const select = (input: Input) =>
-  lists[input.status].filter((i) => !input.theme || (i.themes as string[]).includes(input.theme));
+  lists[input.status].filter(
+    (i) =>
+      (!input.theme || (i.themes as string[]).includes(input.theme)) &&
+      (!input.format || formats.get(i.id) === input.format),
+  );
 
 // Client tRPC simulé : renvoie les listes ci-dessus selon le statut et le thème demandés.
 jest.mock('@/lib/trpc', () => ({
@@ -47,6 +59,8 @@ jest.mock('@/lib/trpc', () => ({
           queryFn: async ({ pageParam }: { pageParam: string | null }) => {
             const start = Number(pageParam ?? 0);
             if (pageParam && mockPaging.failNextPage) throw new Error('réseau');
+            if (input.format) await mockPaging.formatGate;
+            if (input.format && mockPaging.failFormat) throw new Error('réseau');
             const all = select(input);
             const end = start + mockPaging.size;
             return {
@@ -103,6 +117,8 @@ beforeEach(() => {
   lists.past = [];
   mockPaging.size = Number.POSITIVE_INFINITY;
   mockPaging.failNextPage = false;
+  mockPaging.formatGate = null;
+  mockPaging.failFormat = false;
 });
 
 test('aucune intervention : message, sans sections vides', async () => {
@@ -133,6 +149,59 @@ test('filtre par thème : seules les interventions du thème, filtre signalé ac
   expect(screen.getByRole('radio', { name: 'Sécurité' }).props.accessibilityState).toEqual({
     selected: true,
   });
+});
+
+test('filtre par format : passées filtrées, combiné au thème, direct toujours visible', async () => {
+  lists.live = [item('direct', 'live')];
+  lists.past = [item('clip', 'past', ['security']), item('long', 'past', ['economy'])];
+  formats.set('clip', 'clip').set('long', 'long');
+  await renderFeed();
+  await screen.findByText('Intervention clip');
+  await fireEvent.press(screen.getByRole('radio', { name: 'Vidéos longues' }));
+  expect(await screen.findByText('Intervention long')).toBeTruthy();
+  expect(screen.queryByText('Intervention clip')).toBeNull();
+  expect(screen.getByText('Intervention direct')).toBeTruthy();
+  expect(screen.getByRole('radio', { name: 'Vidéos longues' }).props.accessibilityState).toEqual({
+    selected: true,
+  });
+
+  await fireEvent.press(screen.getByRole('radio', { name: 'Sécurité' }));
+  expect(
+    await screen.findByText('Aucune intervention ne correspond à ces filtres pour l’instant.'),
+  ).toBeTruthy();
+});
+
+test('format en cours de chargement : le direct reste affiché', async () => {
+  let release = () => {};
+  mockPaging.formatGate = new Promise((resolve) => {
+    release = resolve;
+  });
+  lists.live = [item('direct', 'live')];
+  lists.past = [item('clip', 'past')];
+  formats.set('clip', 'clip');
+  await renderFeed();
+  await screen.findByText('Intervention clip');
+  await fireEvent.press(screen.getByRole('radio', { name: 'Clips' }));
+  expect(await screen.findByText('Chargement…')).toBeTruthy();
+  expect(screen.getByText('Intervention direct')).toBeTruthy();
+  expect(screen.queryByText('Chargement des interventions…')).toBeNull();
+  await act(async () => release());
+  expect(await screen.findByText('Intervention clip')).toBeTruthy();
+});
+
+test('format en échec : le direct reste affiché, on peut réessayer', async () => {
+  mockPaging.failFormat = true;
+  lists.live = [item('direct', 'live')];
+  lists.past = [item('clip', 'past')];
+  formats.set('clip', 'clip');
+  await renderFeed();
+  await screen.findByText('Intervention clip');
+  await fireEvent.press(screen.getByRole('radio', { name: 'Clips' }));
+  const retry = await screen.findByText('Chargement impossible. Réessayer');
+  expect(screen.getByText('Intervention direct')).toBeTruthy();
+  mockPaging.failFormat = false;
+  await fireEvent.press(retry);
+  expect(await screen.findByText('Intervention clip')).toBeTruthy();
 });
 
 test('thème sans intervention : message dédié', async () => {

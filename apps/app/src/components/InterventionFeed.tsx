@@ -5,12 +5,18 @@ import { Pressable, Text, View } from 'react-native';
 import { useTRPC } from '@/lib/trpc';
 
 import { CardGrid, GridRow } from './CardGrid';
+import {
+  FilterPills,
+  FORMAT_OPTIONS,
+  type FormatFilterValue,
+  THEME_OPTIONS,
+  type ThemeFilterValue,
+} from './FilterPills';
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
 import { JoinBar } from './JoinBar';
 import { JoinCta } from './JoinCta';
 import { NotifyInvite } from './NotifyInvite';
 import { useOnEndReached } from './ScrollEnd';
-import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
 
 /**
  * Rafraîchissement des directs et des interventions à venir (spec intervention-feed),
@@ -61,11 +67,16 @@ function Section({
   );
 }
 
-/** Accueil : « En direct », « À venir », « Passées », filtrables par thème. */
+/**
+ * Accueil : « En direct », « À venir », « Passées », filtrables par thème. Le format ne
+ * filtre que les passées (ADR 0033) : un direct reste visible quel que soit le choix.
+ */
 export function InterventionFeed() {
   const trpc = useTRPC();
   const [themeFilter, setThemeFilter] = useState<ThemeFilterValue>('all');
   const theme = themeFilter === 'all' ? undefined : themeFilter;
+  const [formatFilter, setFormatFilter] = useState<FormatFilterValue>('all');
+  const format = formatFilter === 'all' ? undefined : formatFilter;
 
   const live = useQuery(
     trpc.interventions.list.queryOptions(
@@ -81,7 +92,7 @@ export function InterventionFeed() {
   );
   const past = useInfiniteQuery(
     trpc.interventions.list.infiniteQueryOptions(
-      { status: 'past', theme, limit: 20 },
+      { status: 'past', theme, format, limit: 20 },
       {
         getNextPageParam: (last) => last.nextCursor ?? undefined,
         // Au retour au premier plan, seules les sections « En direct » et « À venir » se
@@ -102,17 +113,30 @@ export function InterventionFeed() {
   const liveItems = live.data?.items ?? [];
   const upcomingItems = upcoming.data?.items ?? [];
   const pastItems = past.data?.pages.flatMap((p) => p.items) ?? [];
-  const loading = live.isPending || upcoming.isPending || past.isPending;
+  const loading = live.isPending || upcoming.isPending;
   // Échec seulement si une section n'a aucune donnée : un rafraîchissement ou une page
   // suivante en échec n'efface pas ce qui est déjà affiché.
-  const failed =
-    (live.isError && !live.data) ||
-    (upcoming.isError && !upcoming.data) ||
-    (past.isError && !past.data);
+  const failed = (live.isError && !live.data) || (upcoming.isError && !upcoming.data);
+  // Les passées chargent et échouent dans leur section : changer de format laisse les
+  // directs et les interventions à venir à l'écran (ADR 0033).
+  const pastFailed = past.isError && !past.data;
 
   return (
     <View className="gap-6 md:gap-8">
-      <ThemeFilter value={themeFilter} onChange={setThemeFilter} />
+      <View className="gap-2">
+        <FilterPills
+          label="Filtrer par thème"
+          options={THEME_OPTIONS}
+          value={themeFilter}
+          onChange={setThemeFilter}
+        />
+        <FilterPills
+          label="Filtrer par format"
+          options={FORMAT_OPTIONS}
+          value={formatFilter}
+          onChange={setFormatFilter}
+        />
+      </View>
       {failed ? (
         <Text className="font-sans text-base text-blanc/85">
           Les interventions n’ont pas pu être chargées. Réessayez dans un instant.
@@ -132,11 +156,13 @@ export function InterventionFeed() {
             <View className="md:hidden">
               <JoinBar />
             </View>
-            {pastItems.length === 0 ? (
+            {past.isPending || pastFailed ? null : pastItems.length === 0 ? (
               <Text className="font-sans text-base text-blanc/85">
-                {theme
-                  ? 'Aucune intervention ne correspond à ce thème pour l’instant.'
-                  : 'Les interventions de David Lisnard apparaîtront ici.'}
+                {format
+                  ? 'Aucune intervention ne correspond à ces filtres pour l’instant.'
+                  : theme
+                    ? 'Aucune intervention ne correspond à ce thème pour l’instant.'
+                    : 'Les interventions de David Lisnard apparaîtront ici.'}
               </Text>
             ) : (
               <CardGrid>
@@ -158,10 +184,12 @@ export function InterventionFeed() {
                 })}
               </CardGrid>
             )}
-            {past.isFetchNextPageError && !past.isFetchingNextPage && (
+            {(pastFailed || (past.isFetchNextPageError && !past.isFetchingNextPage)) && (
               <Pressable
                 accessibilityRole="button"
-                onPress={() => past.fetchNextPage({ cancelRefetch: false })}
+                onPress={() =>
+                  pastFailed ? past.refetch() : past.fetchNextPage({ cancelRefetch: false })
+                }
                 className="self-center rounded-full border border-chamois px-5 py-2"
               >
                 <Text className="font-sans-semibold text-chamois">
@@ -169,7 +197,7 @@ export function InterventionFeed() {
                 </Text>
               </Pressable>
             )}
-            {past.isFetchingNextPage && (
+            {(past.isPending || past.isFetchingNextPage) && (
               <Text
                 accessibilityLiveRegion="polite"
                 className="self-center font-sans text-blanc/70"

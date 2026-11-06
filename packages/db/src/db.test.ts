@@ -194,6 +194,51 @@ describe('lecture publique', () => {
     expect(page2.nextCursor).toBeNull();
   });
 
+  test('filtre par format : lien, puis durée au seuil de 5 minutes, curseur compris', async () => {
+    const video = async (key: string, durationS: number | null, day: number) => {
+      const { id } = await candidate(key, {
+        durationS,
+        publishedAt: new Date(Date.UTC(2026, 5, day)),
+      });
+      await publish(id);
+      return id;
+    };
+    const limit = await video('yt:limit', 300, 1);
+    const over = await video('yt:over', 301, 2);
+    const unknown = await video('yt:unknown', null, 3);
+    const short = await video('yt:short', 42, 4);
+    const link = await video('yt:link', null, 5);
+    // Direct programmé dont l'heure est passée sans démarrer : aucun format.
+    const { id: neverAired } = await candidate('yt:never', {
+      liveStatus: 'upcoming',
+      startsAt: new Date('2026-06-06T10:00:00Z'),
+      publishedAt: new Date('2026-06-06T10:00:00Z'),
+    });
+    await publish(neverAired);
+    await setMedia(db, link, { kind: 'link', og: { title: 'Article' } });
+    await db.execute(sql`update ${item} set themes = '{economy}' where ${item.id} = ${short}`);
+
+    const ids = async (format: 'long' | 'clip' | 'article', theme?: 'economy') =>
+      (await listPublished(db, { status: 'past', limit: 50, format, theme })).items.map(
+        (i) => i.id,
+      );
+    expect(await ids('clip')).toEqual([short, limit]);
+    expect(await ids('long')).toEqual([unknown, over]);
+    expect(await ids('article')).toEqual([link]);
+    expect(await ids('clip', 'economy')).toEqual([short]);
+    expect(await ids('long', 'economy')).toEqual([]);
+
+    const first = await listPublished(db, { status: 'past', limit: 1, format: 'clip' });
+    expect(first.items.map((i) => i.id)).toEqual([short]);
+    const next = await listPublished(db, {
+      status: 'past',
+      limit: 1,
+      format: 'clip',
+      cursor: first.nextCursor ?? '',
+    });
+    expect(next.items.map((i) => i.id)).toEqual([limit]);
+  });
+
   test('un contenu publié sans rendu média n’est pas encore visible', async () => {
     const { id } = await candidate('yt:nomedia');
     await recordClassification(db, decision(id));

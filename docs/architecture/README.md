@@ -52,7 +52,7 @@ lisnard-play/
 │  │  │   lien, ADR 0030)
 │  │  └─ api/trpc/[trpc]+api.ts   point d'accès tRPC (connexion Postgres partagée, src/server/db.ts)
 │  ├─ src/components/     Screen, WebChrome, AppNavigation, InterventionFeed,
-│  │                      InterventionCard, LiveBadge, ThemeFilter, MediaEmbed, LinkCard…
+│  │                      InterventionCard, LiveBadge, FilterPills, MediaEmbed, LinkCard…
 │  ├─ src/config/         identity.json (nom), app.ts, navigation.ts
 │  ├─ src/lib/            client tRPC, URL de l'API, formats (dates, libellés)
 │  ├─ src/theme/          colors.ts, fonts.ts
@@ -146,7 +146,7 @@ SDK 58. Sur mobile, le client appelle `${EXPO_PUBLIC_API_URL}/api/trpc`.
 
 ## Contrat tRPC
 
-- Procédures : `health`, `interventions.list` (statut, thème, curseur,
+- Procédures : `health`, `interventions.list` (statut, thème, format, curseur,
   `limit ≤ 50`), `interventions.byId` (`NOT_FOUND`), `notifications.config`,
   `notifications.subscribe` / `update` / `unsubscribe` (seules écritures de l'API,
   dans `push_subscription`, ADR 0024), `membership.timeline` (adhérents de Nouvelle
