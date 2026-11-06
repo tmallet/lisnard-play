@@ -68,8 +68,9 @@ const embedded = sql`${item.media}->>'kind' = 'embed'`;
 const FORMAT_CONDITIONS: Record<InterventionFormat, SQL> = {
   article: sql`${item.media}->>'kind' = 'link'`,
   clip: sql`${embedded} and ${item.durationS} <= ${CLIP_MAX_S}`,
-  // Durée inconnue : vidéo longue, comme pour le choix du modèle de résumé.
-  long: sql`${embedded} and (${item.durationS} is null or ${item.durationS} > ${CLIP_MAX_S})`,
+  // Durée inconnue : vidéo longue, comme pour le choix du modèle de résumé, sauf un direct
+  // resté programmé, qui n'a jamais été diffusé.
+  long: sql`${embedded} and (${item.durationS} > ${CLIP_MAX_S} or (${item.durationS} is null and ${item.liveStatus} <> 'upcoming'))`,
 };
 
 export interface ListOptions {

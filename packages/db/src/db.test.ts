@@ -208,6 +208,13 @@ describe('lecture publique', () => {
     const unknown = await video('yt:unknown', null, 3);
     const short = await video('yt:short', 42, 4);
     const link = await video('yt:link', null, 5);
+    // Direct programmé dont l'heure est passée sans démarrer : aucun format.
+    const { id: neverAired } = await candidate('yt:never', {
+      liveStatus: 'upcoming',
+      startsAt: new Date('2026-06-06T10:00:00Z'),
+      publishedAt: new Date('2026-06-06T10:00:00Z'),
+    });
+    await publish(neverAired);
     await setMedia(db, link, { kind: 'link', og: { title: 'Article' } });
     await db.execute(sql`update ${item} set themes = '{economy}' where ${item.id} = ${short}`);
 

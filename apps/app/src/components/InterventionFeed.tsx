@@ -113,13 +113,13 @@ export function InterventionFeed() {
   const liveItems = live.data?.items ?? [];
   const upcomingItems = upcoming.data?.items ?? [];
   const pastItems = past.data?.pages.flatMap((p) => p.items) ?? [];
-  const loading = live.isPending || upcoming.isPending || past.isPending;
+  const loading = live.isPending || upcoming.isPending;
   // Échec seulement si une section n'a aucune donnée : un rafraîchissement ou une page
   // suivante en échec n'efface pas ce qui est déjà affiché.
-  const failed =
-    (live.isError && !live.data) ||
-    (upcoming.isError && !upcoming.data) ||
-    (past.isError && !past.data);
+  const failed = (live.isError && !live.data) || (upcoming.isError && !upcoming.data);
+  // Les passées chargent et échouent dans leur section : changer de format laisse les
+  // directs et les interventions à venir à l'écran (ADR 0033).
+  const pastFailed = past.isError && !past.data;
 
   return (
     <View className="gap-6 md:gap-8">
@@ -156,7 +156,7 @@ export function InterventionFeed() {
             <View className="md:hidden">
               <JoinBar />
             </View>
-            {pastItems.length === 0 ? (
+            {past.isPending || pastFailed ? null : pastItems.length === 0 ? (
               <Text className="font-sans text-base text-blanc/85">
                 {format
                   ? 'Aucune intervention ne correspond à ces filtres pour l’instant.'
@@ -184,10 +184,12 @@ export function InterventionFeed() {
                 })}
               </CardGrid>
             )}
-            {past.isFetchNextPageError && !past.isFetchingNextPage && (
+            {(pastFailed || (past.isFetchNextPageError && !past.isFetchingNextPage)) && (
               <Pressable
                 accessibilityRole="button"
-                onPress={() => past.fetchNextPage({ cancelRefetch: false })}
+                onPress={() =>
+                  pastFailed ? past.refetch() : past.fetchNextPage({ cancelRefetch: false })
+                }
                 className="self-center rounded-full border border-chamois px-5 py-2"
               >
                 <Text className="font-sans-semibold text-chamois">
@@ -195,7 +197,7 @@ export function InterventionFeed() {
                 </Text>
               </Pressable>
             )}
-            {past.isFetchingNextPage && (
+            {(past.isPending || past.isFetchingNextPage) && (
               <Text
                 accessibilityLiveRegion="polite"
                 className="self-center font-sans text-blanc/70"

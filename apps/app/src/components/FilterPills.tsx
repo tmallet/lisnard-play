@@ -1,9 +1,19 @@
+import type { AppRouter } from '@lisnard/api';
+import type { inferRouterInputs } from '@trpc/server';
 import { Pressable, Text, View } from 'react-native';
 
 import { THEME_LABELS, THEME_ORDER, type Theme } from '@/lib/format';
 
 export type ThemeFilterValue = 'all' | Theme;
-export type FormatFilterValue = 'all' | 'long' | 'clip' | 'article';
+type Format = NonNullable<inferRouterInputs<AppRouter>['interventions']['list']['format']>;
+export type FormatFilterValue = 'all' | Format;
+
+/** Un format ajouté côté serveur échoue ici à la compilation tant qu'il n'a pas de libellé. */
+const FORMAT_LABELS: Record<Format, string> = {
+  long: 'Vidéos longues',
+  clip: 'Clips',
+  article: 'Presse et médias',
+};
 
 export const THEME_OPTIONS: { value: ThemeFilterValue; label: string }[] = [
   { value: 'all', label: 'Tout' },
@@ -11,10 +21,11 @@ export const THEME_OPTIONS: { value: ThemeFilterValue; label: string }[] = [
 ];
 
 export const FORMAT_OPTIONS: { value: FormatFilterValue; label: string }[] = [
-  { value: 'all', label: 'Tous' },
-  { value: 'long', label: 'Vidéos longues' },
-  { value: 'clip', label: 'Clips' },
-  { value: 'article', label: 'Presse et médias' },
+  { value: 'all', label: 'Tout' },
+  ...(Object.keys(FORMAT_LABELS) as Format[]).map((format) => ({
+    value: format,
+    label: FORMAT_LABELS[format],
+  })),
 ];
 
 /**

@@ -41,7 +41,8 @@ sans lecteur, dont au moins 30 mènent à une page vidéo du média (`bfmtv.com/
 - Le format est **déduit à la lecture**, sans colonne ni appel à Jev :
   - `article` : rendu par un lien, sans lecteur intégré ;
   - `clip` : lecteur intégré et durée de 300 secondes au plus ;
-  - `long` : lecteur intégré et durée supérieure, ou inconnue.
+  - `long` : lecteur intégré et durée supérieure, ou inconnue ;
+  - aucun format pour un direct resté programmé, jamais diffusé.
 - La pastille du format `article` s'appelle **« Presse et médias »**, et non « Articles » :
   elle réunit tout ce qui s'ouvre sur le site d'un média, pages vidéo comprises.
 - Le filtre de l'accueil ne s'applique qu'aux interventions passées : un direct ou une
