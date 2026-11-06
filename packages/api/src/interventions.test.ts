@@ -149,6 +149,16 @@ describe('interventions.list', () => {
     expect((error as TRPCError).code).toBe('BAD_REQUEST');
   });
 
+  test('filtre par format : transmis à la liste, format inconnu refusé', async () => {
+    const { items } = await caller().interventions.list({ status: 'past', format: 'article' });
+    expect(items).toEqual([]);
+    const error = await caller()
+      // @ts-expect-error valeur hors de la liste des formats
+      .interventions.list({ status: 'past', format: 'podcast' })
+      .catch((e) => e);
+    expect((error as TRPCError).code).toBe('BAD_REQUEST');
+  });
+
   test('n’expose ni contenu écarté ni donnée interne', async () => {
     const { items } = await caller().interventions.list({ status: 'past', limit: 50 });
     expect(items.map((i) => i.id)).not.toContain(id('rejected'));

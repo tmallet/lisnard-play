@@ -57,9 +57,25 @@ function toPublicSummary(summary: SummaryRecord | null): PublicSummary | null {
   return summary?.kind === 'ok' ? { text: summary.text, points: summary.points } : null;
 }
 
+/** Formats d'une intervention (spec intervention-feed, ADR 0033). */
+export const FORMATS = ['long', 'clip', 'article'] as const;
+export type InterventionFormat = (typeof FORMATS)[number];
+
+/** Durée maximale d'un clip (ADR 0033). */
+const CLIP_MAX_S = 300;
+
+const embedded = sql`${item.media}->>'kind' = 'embed'`;
+const FORMAT_CONDITIONS: Record<InterventionFormat, SQL> = {
+  article: sql`${item.media}->>'kind' = 'link'`,
+  clip: sql`${embedded} and ${item.durationS} <= ${CLIP_MAX_S}`,
+  // Durée inconnue : vidéo longue, comme pour le choix du modèle de résumé.
+  long: sql`${embedded} and (${item.durationS} is null or ${item.durationS} > ${CLIP_MAX_S})`,
+};
+
 export interface ListOptions {
   status: TemporalStatus;
   theme?: Theme;
+  format?: InterventionFormat;
   cursor?: string;
   limit: number;
   now?: Date;
@@ -341,7 +357,7 @@ export async function listPlaces(db: Db): Promise<PlacedIntervention[]> {
 /** Liste paginée par curseur des interventions publiées (spec intervention-feed). */
 export async function listPublished(
   db: Db,
-  { status, theme, cursor, limit, now = new Date() }: ListOptions,
+  { status, theme, format, cursor, limit, now = new Date() }: ListOptions,
 ): Promise<{ items: InterventionSummary[]; nextCursor: string | null }> {
   // À venir : de la plus proche à la plus lointaine ; sinon de la plus récente à la plus ancienne.
   const ascending = status === 'upcoming';
@@ -355,6 +371,7 @@ export async function listPublished(
     statusCondition(status, now),
   ];
   if (theme) conditions.push(sql`${item.themes} @> array[${theme}]::text[]`);
+  if (format) conditions.push(FORMAT_CONDITIONS[format]);
   const after = cursor ? decodeCursor(cursor) : null;
   if (after) {
     conditions.push(

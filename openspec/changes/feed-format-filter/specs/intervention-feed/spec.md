@@ -26,8 +26,8 @@ sa durée, sans appel au classifieur :
 ### Requirement: Filtre par format
 La procédure publique de liste DOIT accepter un format facultatif, combinable avec le
 statut temporel et le thème ; une valeur inconnue DOIT être rejetée comme requête
-invalide. L'accueil DOIT proposer, sous le filtre par thème, un filtre « Tous formats »,
-« Vidéos longues », « Clips », « Articles », qui reste utilisable sur un écran de
+invalide. L'accueil DOIT proposer, sous le filtre par thème, un filtre « Tous »,
+« Vidéos longues », « Clips », « Presse et médias », qui reste utilisable sur un écran de
 téléphone. Ce filtre NE DOIT s'appliquer qu'à la section « Passées » : les sections
 « En direct » et « À venir » restent affichées quel que soit le format choisi.
 
@@ -40,7 +40,7 @@ téléphone. Ce filtre NE DOIT s'appliquer qu'à la section « Passées » : les
 - **THEN** la section « Passées » n'affiche que les clips portant le thème `security`
 
 #### Scenario: Direct pendant un filtre par format
-- **WHEN** une intervention est en direct et que l'utilisateur a choisi « Articles »
+- **WHEN** une intervention est en direct et que l'utilisateur a choisi « Presse et médias »
 - **THEN** la section « En direct » reste affichée
 
 #### Scenario: Aucun résultat pour les filtres

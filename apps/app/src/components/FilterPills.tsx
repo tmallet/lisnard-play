@@ -3,31 +3,43 @@ import { Pressable, Text, View } from 'react-native';
 import { THEME_LABELS, THEME_ORDER, type Theme } from '@/lib/format';
 
 export type ThemeFilterValue = 'all' | Theme;
+export type FormatFilterValue = 'all' | 'long' | 'clip' | 'article';
 
-const OPTIONS: { value: ThemeFilterValue; label: string }[] = [
+export const THEME_OPTIONS: { value: ThemeFilterValue; label: string }[] = [
   { value: 'all', label: 'Tout' },
   ...THEME_ORDER.map((theme) => ({ value: theme, label: THEME_LABELS[theme] })),
 ];
 
+export const FORMAT_OPTIONS: { value: FormatFilterValue; label: string }[] = [
+  { value: 'all', label: 'Tous' },
+  { value: 'long', label: 'Vidéos longues' },
+  { value: 'clip', label: 'Clips' },
+  { value: 'article', label: 'Presse et médias' },
+];
+
 /**
- * Filtre par thème (spec intervention-feed) : « Tout » puis les sept thèmes, en
- * pastilles qui passent à la ligne. Toutes restent visibles, y compris sur un
- * téléphone : une ligne défilante masquait les thèmes au-delà du bord de l'écran.
+ * Filtre en pastilles (spec intervention-feed), par thème ou par format. Elles passent à
+ * la ligne et restent toutes visibles, y compris sur un téléphone : une ligne défilante
+ * masquait les options au-delà du bord de l'écran.
  */
-export function ThemeFilter({
+export function FilterPills<T extends string>({
+  label,
+  options,
   value,
   onChange,
 }: {
-  value: ThemeFilterValue;
-  onChange: (value: ThemeFilterValue) => void;
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (value: T) => void;
 }) {
   return (
     <View
       accessibilityRole="radiogroup"
-      accessibilityLabel="Filtrer par thème"
+      accessibilityLabel={label}
       className="flex-row flex-wrap gap-1.5 md:gap-2"
     >
-      {OPTIONS.map((option) => {
+      {options.map((option) => {
         const selected = option.value === value;
         return (
           <Pressable

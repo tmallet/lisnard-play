@@ -5,12 +5,18 @@ import { Pressable, Text, View } from 'react-native';
 import { useTRPC } from '@/lib/trpc';
 
 import { CardGrid, GridRow } from './CardGrid';
+import {
+  FilterPills,
+  FORMAT_OPTIONS,
+  type FormatFilterValue,
+  THEME_OPTIONS,
+  type ThemeFilterValue,
+} from './FilterPills';
 import { InterventionCard, type InterventionCardData } from './InterventionCard';
 import { JoinBar } from './JoinBar';
 import { JoinCta } from './JoinCta';
 import { NotifyInvite } from './NotifyInvite';
 import { useOnEndReached } from './ScrollEnd';
-import { ThemeFilter, type ThemeFilterValue } from './ThemeFilter';
 
 /**
  * Rafraîchissement des directs et des interventions à venir (spec intervention-feed),
@@ -61,11 +67,16 @@ function Section({
   );
 }
 
-/** Accueil : « En direct », « À venir », « Passées », filtrables par thème. */
+/**
+ * Accueil : « En direct », « À venir », « Passées », filtrables par thème. Le format ne
+ * filtre que les passées (ADR 0033) : un direct reste visible quel que soit le choix.
+ */
 export function InterventionFeed() {
   const trpc = useTRPC();
   const [themeFilter, setThemeFilter] = useState<ThemeFilterValue>('all');
   const theme = themeFilter === 'all' ? undefined : themeFilter;
+  const [formatFilter, setFormatFilter] = useState<FormatFilterValue>('all');
+  const format = formatFilter === 'all' ? undefined : formatFilter;
 
   const live = useQuery(
     trpc.interventions.list.queryOptions(
@@ -81,7 +92,7 @@ export function InterventionFeed() {
   );
   const past = useInfiniteQuery(
     trpc.interventions.list.infiniteQueryOptions(
-      { status: 'past', theme, limit: 20 },
+      { status: 'past', theme, format, limit: 20 },
       {
         getNextPageParam: (last) => last.nextCursor ?? undefined,
         // Au retour au premier plan, seules les sections « En direct » et « À venir » se
@@ -112,7 +123,20 @@ export function InterventionFeed() {
 
   return (
     <View className="gap-6 md:gap-8">
-      <ThemeFilter value={themeFilter} onChange={setThemeFilter} />
+      <View className="gap-2">
+        <FilterPills
+          label="Filtrer par thème"
+          options={THEME_OPTIONS}
+          value={themeFilter}
+          onChange={setThemeFilter}
+        />
+        <FilterPills
+          label="Filtrer par format"
+          options={FORMAT_OPTIONS}
+          value={formatFilter}
+          onChange={setFormatFilter}
+        />
+      </View>
       {failed ? (
         <Text className="font-sans text-base text-blanc/85">
           Les interventions n’ont pas pu être chargées. Réessayez dans un instant.
@@ -134,9 +158,11 @@ export function InterventionFeed() {
             </View>
             {pastItems.length === 0 ? (
               <Text className="font-sans text-base text-blanc/85">
-                {theme
-                  ? 'Aucune intervention ne correspond à ce thème pour l’instant.'
-                  : 'Les interventions de David Lisnard apparaîtront ici.'}
+                {format
+                  ? 'Aucune intervention ne correspond à ces filtres pour l’instant.'
+                  : theme
+                    ? 'Aucune intervention ne correspond à ce thème pour l’instant.'
+                    : 'Les interventions de David Lisnard apparaîtront ici.'}
               </Text>
             ) : (
               <CardGrid>

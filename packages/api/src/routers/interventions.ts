@@ -1,4 +1,4 @@
-import { getPublishedById, listPublished, THEMES } from '@lisnard/db/read';
+import { FORMATS, getPublishedById, listPublished, THEMES } from '@lisnard/db/read';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 
@@ -12,6 +12,7 @@ export const interventionsRouter = router({
       z.object({
         status: z.enum(['live', 'upcoming', 'past']),
         theme: z.enum(THEMES).optional(),
+        format: z.enum(FORMATS).optional(),
         cursor: z.string().max(500).optional(),
         limit: z.number().int().min(1).max(50).default(20),
       }),

@@ -29,9 +29,8 @@ porte l'état du filtre dans `InterventionFeed`.
 
 ## Risks / Trade-offs
 
-- [Un lien `tv` ou `radio` peut mener à une vidéo sur le site du média, et se retrouver
-  sous « Articles »] → Contrôler un échantillon au développement ; le libellé se change
-  sans toucher à la règle.
+- [Un lien peut mener à une vidéo sur le site du média : au moins 30 des 70 liens hors
+  `presse` en production] → Pastille « Presse et médias » plutôt qu'« Articles » (ADR 0033).
 - [Deux rangées de pastilles repoussent le flux sur téléphone] → Rangée courte de quatre
   pastilles, à vérifier à 375 px.
 - [Le seuil de 5 minutes vieillit si la chaîne change de formats] → Constante unique,

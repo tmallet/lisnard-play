@@ -28,7 +28,7 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 | `src/app/interventions/[id].tsx` | Détail d'une intervention : média, métadonnées, résumé, citations (`QuotesBlock`), lien source ; `?t=` lance le lecteur au minutage ; distingue `NOT_FOUND` d'une erreur réseau |
 | `src/app/interventions/[id]/citation/[t].tsx` | Page partageable d'une citation ; renvoie vers l'intervention si la citation n'existe plus (ADR 0028) |
 | `src/app/api/trpc/[trpc]+api.ts` | Point d'accès tRPC (`GET`/`POST /api/trpc/*`), client Postgres partagé sur `globalThis` (ADR 0019) |
-| `src/components/` | Composants partagés (hors routes) : `InterventionFeed`, `InterventionCard`, `LiveBadge`, `ThemeFilter`, `MediaEmbed(.web)`, `LinkCard`… |
+| `src/components/` | Composants partagés (hors routes) : `InterventionFeed`, `InterventionCard`, `LiveBadge`, `FilterPills`, `MediaEmbed(.web)`, `LinkCard`… |
 | `src/lib/site.ts`, `src/lib/share.ts` | URL publiques (`quotePath`, `quoteHref` typé) et partage (feuille native, `navigator.share` ou presse-papiers) |
 | `src/lib/format.ts` | Minutages (`formatTimestamp`, `playerUrl`), dates en heure de Paris, libellés de type, libellés des thèmes (`THEME_LABELS`, type `Theme` inféré depuis `AppRouter`) |
 | `shims/bun.js`, `metro.config.js` | Module `bun` résolu vers `globalThis.Bun` pour Metro (ADR 0019) |
