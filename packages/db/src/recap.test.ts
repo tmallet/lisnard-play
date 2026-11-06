@@ -125,7 +125,6 @@ test('intervention à venir exclue ; lieu sans nom gardé sur la carte', async (
     lon: 4,
     approximate: true,
   });
-  // Starts on the past item's Paris day: between 00:00 and 01:00 it is still yesterday.
   const recap = await getRecap(db, parisDay.format(past), addDay(today));
   expect(recap.interventions.map((i) => i.id)).not.toContain(upcoming);
   expect(recap.places).toEqual([{ label: '', lat: 45, lon: 4, count: 1 }]);
