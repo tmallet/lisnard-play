@@ -27,7 +27,7 @@ export function LinkCard({ url, og, outlet, shownTexts }: LinkCardProps) {
       accessibilityRole="link"
       accessibilityHint="Ouvre la source dans le navigateur"
       onPress={() => Linking.openURL(url)}
-      className="overflow-hidden rounded-xl border border-blanc/15 bg-blanc/5 active:bg-blanc/10"
+      className="overflow-hidden rounded-[20px] border border-blanc/15 bg-blanc/5 active:bg-blanc/10"
     >
       {og.image ? (
         <Image

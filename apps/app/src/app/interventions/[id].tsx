@@ -4,6 +4,7 @@ import { Link, router, Stack, useLocalSearchParams } from 'expo-router';
 import { useRef, useState } from 'react';
 import { Linking, Platform, Pressable, type ScrollView, Text, View } from 'react-native';
 
+import { DescriptionBlock } from '@/components/DescriptionBlock';
 import { JoinCta } from '@/components/JoinCta';
 import { LinkCard } from '@/components/LinkCard';
 import { LiveBadge } from '@/components/LiveBadge';
@@ -87,22 +88,45 @@ export default function InterventionDetail() {
             </Link>
           </View>
         ) : (
-          <View className="gap-5">
-            {data.status === 'live' ? <LiveBadge /> : null}
-            <Text className="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
-              {data.outlet} · {kindLabelFor(data.status, data.kind)}
-              {data.themes.length > 0 ? ` · ${themesLabel(data.themes)}` : ''}
-            </Text>
-            <Text
-              role="heading"
-              aria-level={1}
-              className="font-sans-extrabold text-2xl text-blanc leading-tight"
-            >
-              {data.title}
-            </Text>
-            <Text className="font-sans text-blanc/70 text-sm">
-              {whenLabel(data.status, data.date, now)}
-            </Text>
+          <View className="gap-6">
+            <Link href="/" asChild>
+              <Pressable
+                accessibilityRole="link"
+                className="min-h-10 flex-row items-center gap-1.5 self-start"
+              >
+                <Text aria-hidden className="font-sans-bold text-chamois text-base">
+                  ‹
+                </Text>
+                <Text className="font-sans-semibold text-chamois text-sm">
+                  Toutes les interventions
+                </Text>
+              </Pressable>
+            </Link>
+            <View className="gap-3">
+              {data.status === 'live' ? <LiveBadge /> : null}
+              <Text className="font-sans-bold text-chamois text-xs uppercase tracking-widest">
+                {data.outlet} · {kindLabelFor(data.status, data.kind)}
+              </Text>
+              <Text
+                role="heading"
+                aria-level={1}
+                className="font-sans-extrabold text-3xl text-blanc uppercase leading-tight tracking-tight md:text-4xl"
+              >
+                {data.title}
+              </Text>
+              <View className="flex-row flex-wrap items-center gap-2">
+                <Text className="font-sans-semibold text-blanc/70 text-sm">
+                  {whenLabel(data.status, data.date, now)}
+                </Text>
+                {data.themes.length > 0 ? (
+                  <View className="rounded-full border border-blanc/45 px-3 py-1">
+                    <Text className="font-sans-semibold text-blanc text-xs">
+                      {themesLabel(data.themes)}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+            </View>
             {data.media.kind === 'embed' ? (
               <View nativeID="lecteur">
                 <PlayerConsent
@@ -127,15 +151,15 @@ export default function InterventionDetail() {
             {data.media.kind === 'embed' ? (
               <QuotesBlock itemId={data.id} title={data.title} quotes={data.quotes} onPlay={play} />
             ) : null}
-            {description ? (
-              <Text className="font-sans text-base text-blanc/85 leading-relaxed">
-                {description}
-              </Text>
-            ) : null}
+            {description ? <DescriptionBlock text={description} /> : null}
             {/* Pour un rendu `link`, la carte est déjà le lien vers la source. */}
             {data.media.kind === 'embed' ? (
-              <Pressable accessibilityRole="link" onPress={() => Linking.openURL(data.url)}>
-                <Text className="font-sans-semibold text-base text-chamois underline">
+              <Pressable
+                accessibilityRole="link"
+                onPress={() => Linking.openURL(data.url)}
+                className="min-h-11 justify-center self-start rounded-xl border border-chamois px-5 transition-colors duration-200 hover:bg-chamois/15 active:bg-chamois/25 motion-reduce:transition-none"
+              >
+                <Text className="font-sans-bold text-chamois text-sm uppercase tracking-wider">
                   Voir la source sur {data.outlet} ↗
                 </Text>
               </Pressable>

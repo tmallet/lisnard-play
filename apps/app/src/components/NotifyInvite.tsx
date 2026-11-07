@@ -12,7 +12,7 @@ export function NotifyInvite() {
   const availability = usePushAvailability();
   if (!shouldInvite(availability)) return null;
   return (
-    <View className="flex-row flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-blanc/15 px-4 py-3">
+    <View className="flex-row flex-wrap items-center gap-x-3 gap-y-1 rounded-[20px] border border-blanc/15 px-4 py-3">
       <Text className="font-sans text-base text-blanc/85">Aucun direct en ce moment.</Text>
       <Link href="/notifications" asChild>
         <Pressable accessibilityRole="link">

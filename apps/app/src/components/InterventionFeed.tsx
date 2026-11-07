@@ -3,8 +3,10 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { useTRPC } from '@/lib/trpc';
+import { useUrlFilter } from '@/lib/useUrlFilter';
 
 import { CardGrid, GridRow } from './CardGrid';
+import { FeedSkeleton } from './FeedSkeleton';
 import {
   FilterPills,
   FORMAT_OPTIONS,
@@ -73,10 +75,20 @@ function Section({
  */
 export function InterventionFeed() {
   const trpc = useTRPC();
-  const [themeFilter, setThemeFilter] = useState<ThemeFilterValue>('all');
+  const [themeFilter, setThemeFilter] = useUrlFilter<ThemeFilterValue>(
+    'theme',
+    'all',
+    THEME_OPTIONS.map((o) => o.value),
+  );
   const theme = themeFilter === 'all' ? undefined : themeFilter;
-  const [formatFilter, setFormatFilter] = useState<FormatFilterValue>('all');
+  const [formatFilter, setFormatFilter] = useUrlFilter<FormatFilterValue>(
+    'format',
+    'all',
+    FORMAT_OPTIONS.map((o) => o.value),
+  );
   const format = formatFilter === 'all' ? undefined : formatFilter;
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const activeFilters = (theme ? 1 : 0) + (format ? 1 : 0);
 
   const live = useQuery(
     trpc.interventions.list.queryOptions(
@@ -123,14 +135,33 @@ export function InterventionFeed() {
 
   return (
     <View className="gap-6 md:gap-8">
-      <View className="gap-2">
+      <Pressable
+        accessibilityRole="button"
+        accessibilityState={{ expanded: filtersOpen }}
+        onPress={() => setFiltersOpen(!filtersOpen)}
+        className="min-h-11 flex-row items-center justify-between rounded-[20px] border-t-2 border-chamois bg-blanc/5 px-4 md:hidden"
+      >
+        <Text className="font-sans-bold text-blanc text-sm uppercase tracking-wider">
+          Filtres
+          {activeFilters > 0 ? ` · ${activeFilters} actif${activeFilters > 1 ? 's' : ''}` : ''}
+        </Text>
+        <Text aria-hidden className="font-sans-bold text-chamois text-base">
+          {filtersOpen ? '−' : '+'}
+        </Text>
+      </Pressable>
+      <View
+        className={`${filtersOpen ? 'flex' : 'hidden'} gap-4 rounded-[20px] border-t-2 border-chamois bg-blanc/5 p-4 md:flex md:gap-5 md:p-5`}
+      >
         <FilterPills
+          title="Thème"
           label="Filtrer par thème"
           options={THEME_OPTIONS}
           value={themeFilter}
           onChange={setThemeFilter}
         />
         <FilterPills
+          title="Format"
+          segmented
           label="Filtrer par format"
           options={FORMAT_OPTIONS}
           value={formatFilter}
@@ -142,7 +173,7 @@ export function InterventionFeed() {
           Les interventions n’ont pas pu être chargées. Réessayez dans un instant.
         </Text>
       ) : loading ? (
-        <Text className="font-sans text-base text-blanc/70">Chargement des interventions…</Text>
+        <FeedSkeleton />
       ) : (
         <>
           {liveItems.length > 0 ? (
@@ -153,6 +184,12 @@ export function InterventionFeed() {
           {upcomingItems.length > 0 && <Section title="À venir" items={upcomingItems} />}
           <View className="gap-3">
             <SectionTitle>Passées</SectionTitle>
+            {past.isPending || pastFailed ? null : (
+              <Text accessibilityLiveRegion="polite" className="font-sans text-blanc/70 text-sm">
+                {pastItems.length}
+                {past.hasNextPage ? '+' : ''} intervention{pastItems.length > 1 ? 's' : ''}
+              </Text>
+            )}
             <View className="md:hidden">
               <JoinBar />
             </View>

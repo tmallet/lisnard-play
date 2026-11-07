@@ -50,7 +50,7 @@ export function SearchResults({ q }: { q: string }) {
             >
               <Pressable
                 accessibilityRole="link"
-                className="gap-1.5 rounded-xl border border-blanc/15 bg-blanc/5 p-4 active:bg-blanc/10"
+                className="gap-1.5 rounded-[20px] border border-blanc/15 bg-blanc/5 p-4 active:bg-blanc/10"
               >
                 <Text className="font-sans-bold text-base text-blanc leading-snug">
                   « {quote.text} »

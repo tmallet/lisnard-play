@@ -33,7 +33,7 @@ figure que dans la liste sans filtre.
 ### Requirement: Filtre par format
 La procédure publique de liste DOIT accepter un format facultatif, combinable avec le
 statut temporel et le thème ; une valeur inconnue DOIT être rejetée comme requête
-invalide. L'accueil DOIT proposer, sous le filtre par thème, un filtre « Tout »,
+invalide. L'accueil DOIT proposer, sous le filtre par thème, un filtre « Tous les formats »,
 « Vidéos longues », « Clips », « Presse et médias », qui reste utilisable sur un écran de
 téléphone. Ce filtre NE DOIT s'appliquer qu'à la section « Passées » : les sections
 « En direct » et « À venir » restent affichées quel que soit le format choisi.

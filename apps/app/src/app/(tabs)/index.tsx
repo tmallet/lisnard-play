@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Text } from 'react-native';
 
+import { Eyebrow } from '@/components/Eyebrow';
 import { InterventionFeed } from '@/components/InterventionFeed';
 import { NotificationsEntry } from '@/components/NotificationsEntry';
 import { PageHead } from '@/components/PageHead';
@@ -16,6 +17,7 @@ export default function Home() {
   return (
     <Screen wide>
       <PageHead />
+      <Eyebrow>Présidentielle 2027</Eyebrow>
       <Title highlight="David Lisnard">Toutes les interventions de David Lisnard</Title>
       <Text className="font-sans-bold text-blanc text-sm md:text-lg">
         En direct, à venir et passées : télévision, radio, presse, meetings.

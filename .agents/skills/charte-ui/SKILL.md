@@ -13,7 +13,8 @@ exclus sont dans l'**ADR 0012**.
 ## Interdits
 
 - Le logo Nouvelle Énergie, l'hexagone signature, ou tout visuel officiel de
-  la campagne (photos officielles, slogans).
+  la campagne (photos officielles, slogans). Le logo du collectif Projet Lisnard,
+  lui, figure dans l'en-tête web (ADR 0034).
 - Tout nom d'application ou formulation qui suggère un lien officiel.
 - Retirer ou masquer la mention d'indépendance (`INDEPENDENCE_NOTICE`).
 - Une couleur hors palette. Pour ajouter un token, partir des valeurs
@@ -58,6 +59,11 @@ valeurs viennent de `colors` et `blancSecondaire`, jamais d'un code hex en dur.
 
 ## Composants existants
 
+- `Eyebrow` : surtitre chamois en petites capitales, au-dessus du `Title` (ADR 0034).
+  Sans tiret ni trait devant.
+- Cartes : coins à 20 px (`rounded-[20px]`), liseré chamois sur le bord haut pour les
+  panneaux (`border-t-2 border-chamois`). Animations de 200 ms au plus, toujours avec
+  `motion-reduce:` pour les couper.
 - `Title` : titre de page, en Montserrat 800 et en majuscules. La prop
   `highlight` met **un seul** mot ou groupe de mots en chamois.
   `<Title highlight="David Lisnard">Toutes les interventions de David Lisnard</Title>`

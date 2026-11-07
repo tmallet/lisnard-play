@@ -28,7 +28,7 @@ export function TimelineCard({ marker }: { marker: Marker }) {
   const day = `${formatDate(`${marker.day}T12:00:00Z`)} · ${members.format(marker.members)} adhérents ce jour-là`;
   if (marker.type === 'more')
     return (
-      <View className="gap-2 rounded-xl border border-blanc/15 bg-blanc/5 p-3">
+      <View className="gap-2 rounded-[20px] border border-blanc/15 bg-blanc/5 p-3">
         <Text className="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
           {day}
         </Text>
@@ -42,7 +42,7 @@ export function TimelineCard({ marker }: { marker: Marker }) {
     );
   const { item } = marker;
   return (
-    <View className="flex-row gap-3 rounded-xl border border-blanc/15 bg-blanc/5 p-3">
+    <View className="flex-row gap-3 rounded-[20px] border border-blanc/15 bg-blanc/5 p-3">
       {item.thumbnailUrl ? (
         <Image
           source={{ uri: largeThumbnail(item.thumbnailUrl) }}
