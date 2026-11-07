@@ -1,6 +1,6 @@
 import { Link } from 'expo-router';
 import type { ReactNode } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 
 import { APP_NAME } from '@/config/app';
 import { NAV_ITEMS } from '@/config/navigation';
@@ -36,7 +36,13 @@ export function WebChrome({ children }: { children: ReactNode }) {
       <View role="banner" className="flex-row items-center gap-3 px-6 py-4 md:gap-6">
         {/* Sous 640 px, le nom laisse la place aux quatre entrées ; « Accueil » y mène aussi. */}
         <Link href="/" asChild>
-          <Pressable className="mr-auto hidden sm:flex">
+          <Pressable className="mr-auto hidden flex-row items-center gap-3 sm:flex">
+            <Image
+              source={require('../../assets/images/projet-lisnard.webp')}
+              accessible={false}
+              alt=""
+              className="size-14"
+            />
             <Text className="font-sans-extrabold text-blanc uppercase tracking-widest">
               {APP_NAME}
             </Text>

@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 
+import { Eyebrow } from '@/components/Eyebrow';
 import { MembershipView } from '@/components/MembershipView';
 import { PageHead } from '@/components/PageHead';
 import { RecapPanel } from '@/components/RecapPanel';
@@ -48,6 +49,7 @@ export default function Campaign() {
           description="Les adhésions à Nouvelle Énergie et les déplacements de David Lisnard au fil de sa campagne."
         />
       )}
+      <Eyebrow>Présidentielle 2027</Eyebrow>
       <Title highlight="campagne">La campagne en chiffres</Title>
       <View role="tablist" className="flex-row self-start rounded-full border border-blanc/20 p-1">
         {VIEWS.map((view) => {

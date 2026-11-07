@@ -30,6 +30,8 @@ directement : seul `expo install` choisit une version compatible avec le SDK.
 | `src/app/api/trpc/[trpc]+api.ts` | Point d'accès tRPC (`GET`/`POST /api/trpc/*`), client Postgres partagé sur `globalThis` (ADR 0019) |
 | `src/components/` | Composants partagés (hors routes) : `InterventionFeed`, `InterventionCard`, `LiveBadge`, `FilterPills`, `MediaEmbed(.web)`, `LinkCard`… |
 | `src/lib/site.ts`, `src/lib/share.ts` | URL publiques (`quotePath`, `quoteHref` typé) et partage (feuille native, `navigator.share` ou presse-papiers) |
+| `src/components/Eyebrow.tsx`, `FeedSkeleton.tsx`, `DescriptionBlock.tsx` | Surtitre chamois des titres de page, cartes fantômes du premier chargement de l'accueil, description YouTube repliée sur quatre lignes (ADR 0034) |
+| `src/lib/useUrlFilter(.web).ts` | Filtres de l'accueil : dans l'adresse sur le web (lus après le montage, HTML pré-rendu), en mémoire sur mobile |
 | `src/lib/format.ts` | Minutages (`formatTimestamp`, `playerUrl`), dates en heure de Paris, libellés de type, libellés des thèmes (`THEME_LABELS`, type `Theme` inféré depuis `AppRouter`) |
 | `shims/bun.js`, `metro.config.js` | Module `bun` résolu vers `globalThis.Bun` pour Metro (ADR 0019) |
 | `server.ts` | Serveur de production Bun (`expo-server/adapter/bun`) qui sert `dist/` |

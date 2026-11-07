@@ -24,7 +24,7 @@ export function PlaceCard({
       (closeRef.current as unknown as HTMLElement | null)?.focus({ preventScroll: true });
   }, []);
   return (
-    <View className="gap-2 rounded-xl border border-blanc/25 bg-bleu-sombre p-3 shadow-lg">
+    <View className="gap-2 rounded-[20px] border border-blanc/25 bg-bleu-sombre p-3 shadow-lg">
       <View className="flex-row items-start gap-2">
         <Text className="flex-1 font-sans-semibold text-chamois text-xs uppercase tracking-wider">
           {place.label}

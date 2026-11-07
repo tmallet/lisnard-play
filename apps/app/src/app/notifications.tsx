@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { Platform, Text } from 'react-native';
 
+import { Eyebrow } from '@/components/Eyebrow';
 import { NotificationSettings } from '@/components/NotificationSettings';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
@@ -29,6 +30,7 @@ export default function NotificationsScreen() {
           title="Notifications"
           description={`Être prévenu des directs et des nouvelles interventions sur ${APP_NAME}.`}
         />
+        <Eyebrow>Notifications</Eyebrow>
         <Title highlight="prévenu">Être prévenu</Title>
         <Text className="font-sans text-base text-blanc/85 leading-relaxed">
           Recevez une notification au début d’un direct de David Lisnard, un quart d’heure avant un

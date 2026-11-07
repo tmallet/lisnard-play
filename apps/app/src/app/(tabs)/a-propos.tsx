@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { Text } from 'react-native';
 
+import { Eyebrow } from '@/components/Eyebrow';
 import { LegalLink } from '@/components/LegalLink';
 import { PageHead } from '@/components/PageHead';
 import { Screen } from '@/components/Screen';
@@ -11,6 +12,7 @@ export default function About() {
   return (
     <Screen footer={false}>
       <PageHead title="À propos" description={INDEPENDENCE_NOTICE} />
+      <Eyebrow>Le projet</Eyebrow>
       <Title highlight="propos">À propos</Title>
       <Text className="font-sans text-base text-blanc/85 leading-relaxed">
         {APP_NAME} recense les interventions publiques de David Lisnard, candidat à l’élection

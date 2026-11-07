@@ -44,21 +44,26 @@ export function QuotesBlock({
         Citations
       </Text>
       {quotes.map((quote) => (
-        <View key={quote.startS} className="gap-2 border-chamois border-l-2 pl-3">
-          <Text className="font-sans-bold text-base text-blanc leading-snug">« {quote.text} »</Text>
+        <View
+          key={quote.startS}
+          className="gap-2 rounded-r-2xl border-chamois border-l-2 bg-blanc/5 py-3 pr-4 pl-4"
+        >
+          <Text className="font-sans-bold text-base text-blanc leading-snug md:text-lg">
+            « {quote.text} »
+          </Text>
           <View className="flex-row flex-wrap items-center gap-x-4 gap-y-1">
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={`Écouter le passage à ${formatTimestamp(quote.startS)}`}
               onPress={() => onPlay(quote.startS)}
-              className="rounded-full bg-chamois px-3 py-1 active:opacity-80"
+              className="min-h-10 justify-center rounded-full bg-chamois px-4 transition-opacity duration-200 active:opacity-80 motion-reduce:transition-none"
             >
               <Text className="font-sans-bold text-bleu-sombre text-sm">
                 ▶ {formatTimestamp(quote.startS)}
               </Text>
             </Pressable>
             <Link href={quoteHref(itemId, quote.startS)} asChild>
-              <Pressable accessibilityRole="link">
+              <Pressable accessibilityRole="link" className="min-h-10 justify-center">
                 <Text className="font-sans-semibold text-chamois text-sm underline">
                   Voir la citation
                 </Text>
@@ -70,6 +75,7 @@ export function QuotesBlock({
               accessibilityState={{ expanded: sharing === quote.startS }}
               accessibilityLabel={`Partager la citation à ${formatTimestamp(quote.startS)}`}
               onPress={() => setSharing(sharing === quote.startS ? null : quote.startS)}
+              className="min-h-10 justify-center"
             >
               <Text className="font-sans-semibold text-chamois text-sm underline">Partager</Text>
             </Pressable>
