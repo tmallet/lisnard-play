@@ -137,6 +137,9 @@ DOIT indiquer :
 - le nom et l'adresse de l'hébergeur ;
 - les données traitées et leur finalité (journaux techniques du serveur), et
   l'absence de cookie propre au site ;
+- pour la mesure d'audience du site web (Umami, ADR 0035) : les données
+  recueillies, l'absence de cookie et de conservation de l'adresse IP, la
+  finalité statistique, la durée de conservation et le moyen de s'y opposer ;
 - pour les notifications : les données d'abonnement conservées (adresse ou
   jeton fourni par le service push, préférences), leur finalité, leur
   transmission aux services push du navigateur ou de la plateforme, et leur
@@ -159,9 +162,28 @@ DOIT indiquer :
 - **WHEN** un visiteur ouvre la page des mentions légales
 - **THEN** il y trouve les données conservées pour les notifications et leur durée de conservation
 
+#### Scenario: Mesure d'audience
+- **WHEN** un visiteur ouvre la page des mentions légales
+- **THEN** il y trouve la description de la mesure d'audience Umami et comment s'y opposer
+
 #### Scenario: Lien d'adhésion
 - **WHEN** un visiteur ouvre la page des mentions légales
 - **THEN** il y apprend que le bouton d'adhésion est un lien de parrainage de l'éditeur
+
+### Requirement: Mesure d'audience
+Le site web DOIT mesurer son audience avec le script Umami de l'éditeur, sans
+cookie ni stockage local, chargé en différé depuis le document HTML racine. Le
+script NE DOIT envoyer de données que depuis le domaine de production et NE DOIT
+rien envoyer si le navigateur demande à ne pas être suivi. Seules les pages vues
+sont mesurées. L'application mobile NE DOIT PAS mesurer l'audience.
+
+#### Scenario: Page servie en production
+- **WHEN** un visiteur charge une page de `https://play.projetlisnard.fr/`
+- **THEN** le HTML contient le script Umami avec `data-domains="play.projetlisnard.fr"` et `data-do-not-track="true"`
+
+#### Scenario: Ne pas me suivre
+- **WHEN** le navigateur du visiteur envoie le signal « Do Not Track »
+- **THEN** aucune donnée de mesure d'audience n'est envoyée
 
 ### Requirement: Invitation à adhérer
 L'accueil et la page d'une intervention, après son contenu, DOIVENT proposer un

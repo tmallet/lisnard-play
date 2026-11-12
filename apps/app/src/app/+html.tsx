@@ -1,6 +1,7 @@
 import { ScrollViewStyleReset } from 'expo-router/html';
 import type { ReactNode } from 'react';
 
+import { ANALYTICS } from '@/config/analytics';
 import { APP_NAME } from '@/config/app';
 import { colors } from '@/theme/colors';
 
@@ -24,6 +25,14 @@ export default function Root({ children }: { children: ReactNode }) {
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        {/* Mesure d'audience sans cookie (ADR 0035), limitée au domaine de production. */}
+        <script
+          defer
+          src={ANALYTICS.scriptUrl}
+          data-website-id={ANALYTICS.websiteId}
+          data-domains={ANALYTICS.domains}
+          data-do-not-track="true"
+        />
         <ScrollViewStyleReset />
       </head>
       <body style={{ backgroundColor: colors.bleuSombre }}>{children}</body>
