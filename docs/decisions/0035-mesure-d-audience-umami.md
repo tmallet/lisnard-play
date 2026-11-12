@@ -36,7 +36,12 @@ ne conserve pas les données plus de 25 mois.
   `play.projetlisnard.fr` ; préproduction et développement ne comptent pas.
 - **Pages vues uniquement** : aucun événement personnalisé, en particulier pas
   sur le bouton d'adhésion (spec `app-shell`, aucun traceur sur ce lien).
-- **Conservation de 25 mois au plus** : à appliquer sur l'instance Umami.
+- **Conservation de 25 mois au plus** : deux tâches planifiées Coolify du service
+  `umami` (conteneur `postgresql`) purgent chaque nuit les données de ce site :
+  `purge-25-mois-lisnard-play-evenements` (03:43, `website_event`, `event_data`,
+  `session_data`) puis `purge-25-mois-lisnard-play-sessions` (03:53, sessions
+  sans événement restant). Deux tâches, car Coolify limite une commande à
+  255 caractères.
 
 ## Alternatives écartées
 
@@ -56,7 +61,3 @@ ne conserve pas les données plus de 25 mois.
   `apps/app/src/config/analytics.ts`.
 - Une politique de sécurité du contenu (CSP) future devra autoriser
   `umami.thimal.fr` en `script-src` et `connect-src`.
-
-## Points ouverts
-
-- Vérifier que l'instance Umami purge les données de plus de 25 mois.
