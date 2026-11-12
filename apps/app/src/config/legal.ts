@@ -16,6 +16,6 @@ export const LEGAL = {
     url: 'https://oneprovider.com',
     datacenter: 'un centre de données de Scaleway SAS à Paris',
   },
-  updatedAt: '14 octobre 2026',
+  updatedAt: '12 novembre 2026',
   googlePrivacyUrl: 'https://policies.google.com/privacy',
 } as const;

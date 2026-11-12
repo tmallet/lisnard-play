@@ -106,10 +106,22 @@ export default function LegalNotice() {
 
         <Section title="Données personnelles">
           <P>
-            {APP_NAME} ne demande aucun compte, ne mesure pas l’audience et ne dépose aucun cookie.
-            Le serveur conserve des journaux techniques (adresse IP, page demandée, date) pendant au
-            plus 30 jours, pour la sécurité et le bon fonctionnement du service ; ils ne sont ni
-            exploités à d’autres fins ni transmis à des tiers, hors l’hébergeur.
+            {APP_NAME} ne demande aucun compte et ne dépose aucun cookie. Le serveur conserve des
+            journaux techniques (adresse IP, page demandée, date) pendant au plus 30 jours, pour la
+            sécurité et le bon fonctionnement du service ; ils ne sont ni exploités à d’autres fins
+            ni transmis à des tiers, hors l’hébergeur.
+          </P>
+          <P>
+            Sur le site web, l’audience est mesurée avec Umami, un outil libre installé sur un
+            serveur de l’éditeur, sans cookie ni stockage dans votre navigateur. Il enregistre la
+            page consultée, la page d’origine, le type d’appareil, la taille d’écran, le navigateur,
+            le système, la langue, ainsi que le pays, la région et la ville déduits de l’adresse IP.
+            L’adresse IP n’est pas conservée : elle sert seulement à calculer un identifiant de
+            visite anonyme, renouvelé chaque mois, qui ne permet pas de vous suivre d’un site à
+            l’autre. Ces données servent uniquement à produire des statistiques de fréquentation, ne
+            sont transmises à personne et sont conservées au plus 25 mois. Pour vous y opposer,
+            activez l’option « Ne pas me suivre » (Do Not Track) de votre navigateur : aucune donnée
+            n’est alors envoyée. L’application mobile ne mesure pas l’audience.
           </P>
           <P>
             Si vous activez les notifications, le serveur conserve l’adresse d’abonnement fournie

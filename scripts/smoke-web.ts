@@ -294,9 +294,14 @@ try {
   check('/mentions-legales : adresse de contact', legal.includes(LEGAL.contactEmail));
   check('/mentions-legales : hébergeur', legal.includes(LEGAL.host.name));
   check('/mentions-legales : lien de parrainage signalé', legal.includes('lien de parrainage'));
+  check('/mentions-legales : mesure d’audience décrite', legal.includes('Umami'));
   check(
     'pied de page : lien vers les mentions légales',
     (await (await fetch(`${BASE}/`)).text()).includes('href="/mentions-legales"'),
+  );
+  check(
+    'mesure d’audience : script Umami limité au domaine de production (ADR 0035)',
+    (await (await fetch(`${BASE}/`)).text()).includes('data-domains="play.projetlisnard.fr"'),
   );
 
   const detail = await fetch(`${BASE}/interventions/${id}`);
