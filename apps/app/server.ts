@@ -4,7 +4,8 @@
  * l'adaptateur Bun d'expo-server. Usage : bun server.ts (PORT, défaut 3000).
  * Indexation bloquée sauf ALLOW_INDEXING=true (spec app-shell). Images de partage des
  * citations (ADR 0029), produites ici : leur module natif ne passe pas par Metro.
- * En-tête des pages de citation réécrit pour les aperçus de lien (ADR 0030).
+ * En-tête des pages de citation réécrit pour les aperçus de lien (ADR 0030), et celui des
+ * pages d'intervention et de l'accueil pour les moteurs de recherche (ADR 0036).
  */
 import { join, normalize, resolve } from 'node:path';
 
@@ -12,6 +13,7 @@ import { createRequestHandler } from 'expo-server/adapter/bun';
 import { isAdminPath, relayToAdmin, withPreviewNumber } from './src/server/admin-relay';
 import {
   indexingAllowed,
+  NOINDEX_HEADER,
   publicOrigin,
   robotsTxt,
   withIndexingPolicy,
@@ -19,9 +21,13 @@ import {
 import {
   createQuoteImageHandler,
   createRecapImageHandler,
+  homePageMeta,
+  interventionPageMeta,
+  interventionPageParams,
   quoteImageParams,
   quotePageMeta,
   quotePageParams,
+  readIntervention,
   readQuote,
   readRecap,
   recapImageParams,
@@ -118,6 +124,26 @@ const server = Bun.serve({
         ALLOW_INDEXING,
       );
     }
+    // Intervention : titre, description, canonique et JSON-LD propres à la page ; inconnue :
+    // 404 réel (le gabarit est servi pour l'affichage), API en erreur : gabarit inchangé.
+    const intervention = interventionPageParams(pathname);
+    if (intervention) {
+      const [found, response] = await Promise.all([
+        readIntervention(handle, req, intervention).catch(() => 'error' as const),
+        handle(req),
+      ]);
+      if (found === null) {
+        const missing = new Response(response.body, { status: 404, headers: response.headers });
+        missing.headers.set('X-Robots-Tag', NOINDEX_HEADER);
+        return missing;
+      }
+      return withIndexingPolicy(
+        found === 'error'
+          ? response
+          : withPageMeta(response, interventionPageMeta(found, SITE_URL.origin)),
+        ALLOW_INDEXING,
+      );
+    }
     const recapImageRequest = recapImageParams(pathname);
     if (recapImageRequest)
       return withIndexingPolicy(
@@ -138,6 +164,11 @@ const server = Bun.serve({
         ALLOW_INDEXING,
       );
     }
+    if (pathname === '/')
+      return withIndexingPolicy(
+        withPageMeta(await handle(req), homePageMeta(SITE_URL.origin)),
+        ALLOW_INDEXING,
+      );
     return withIndexingPolicy((await staticFile(pathname)) ?? (await handle(req)), ALLOW_INDEXING);
   },
 });

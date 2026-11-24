@@ -47,3 +47,4 @@ Règles :
 | [0033](0033-format-des-interventions.md) | Format des interventions déduit du rendu et de la durée, seuil de 5 minutes | accepted | produit, ui, donnees |
 | [0034](0034-logo-projet-lisnard.md) | Logo Projet Lisnard dans l'en-tête web | accepted | charte, ui, produit |
 | [0035](0035-mesure-d-audience-umami.md) | Mesure d'audience Umami sans cookie, web seulement | accepted | produit, confidentialite, juridique, web |
+| [0036](0036-metadonnees-seo-des-interventions.md) | Métadonnées de référencement des interventions et de l'accueil par réécriture de l'en-tête | accepted | seo, architecture, web, partage |

@@ -306,7 +306,30 @@ try {
 
   const detail = await fetch(`${BASE}/interventions/${id}`);
   check('/interventions/<id> : HTTP 200 (URL partageable)', detail.status === 200);
-  checkPage('/interventions/<id>', await detail.text(), null, INDEPENDENCE_NOTICE);
+  const detailHtml = await detail.text();
+  checkPage('/interventions/<id>', detailHtml, null, INDEPENDENCE_NOTICE);
+  check(
+    '/interventions/<id> : canonique, JSON-LD VideoObject et texte sans JavaScript (ADR 0036)',
+    detailHtml.includes(
+      `<link rel="canonical" href="https://play.projetlisnard.fr/interventions/${id}"/>`,
+    ) &&
+      detailHtml.includes('"@type":"VideoObject"') &&
+      detailHtml.includes('<noscript><article><h1>') &&
+      detailHtml.includes('name="twitter:card"'),
+  );
+  const unknownDetail = await fetch(`${BASE}/interventions/00000000-0000-4000-8000-000000000000`);
+  check('/interventions/<inconnu> : HTTP 404', unknownDetail.status === 404);
+  check(
+    '/interventions/<masquée> : HTTP 404',
+    (await fetch(`${BASE}/interventions/${hiddenId}`)).status === 404,
+  );
+  const homeHtml = await (await fetch(`${BASE}/`)).text();
+  check(
+    '/ : canonique, carte Twitter et JSON-LD WebSite',
+    homeHtml.includes('<link rel="canonical" href="https://play.projetlisnard.fr/"/>') &&
+      homeHtml.includes('name="twitter:card"') &&
+      homeHtml.includes('"@type":"WebSite"'),
+  );
 
   const health = await fetch(`${BASE}/api/trpc/health`);
   const h = (
