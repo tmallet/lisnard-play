@@ -1,3 +1,4 @@
+import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { INDEPENDENCE_NOTICE } from '@/config/app';
@@ -17,6 +18,12 @@ export function Footer({ inset = false }: { inset?: boolean }) {
     >
       <Text className="font-sans text-blanc/70 text-sm">{INDEPENDENCE_NOTICE}</Text>
       <LegalLink />
+      <Link
+        href="https://www.projetlisnard.fr/"
+        className="font-sans-semibold text-chamois text-sm underline"
+      >
+        Tous les outils Projet Lisnard
+      </Link>
     </View>
   );
 }

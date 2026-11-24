@@ -8,4 +8,5 @@ test('affiche la mention d’indépendance et le lien vers les mentions légales
   await render(<Footer />);
   expect(screen.getByText(INDEPENDENCE_NOTICE)).toBeTruthy();
   expect(screen.getByText('Mentions légales et confidentialité')).toBeTruthy();
+  expect(screen.getByText('Tous les outils Projet Lisnard')).toBeTruthy();
 });
