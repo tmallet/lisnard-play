@@ -92,7 +92,7 @@ export function quotePageMeta(quote: QuoteAt, origin: string): PageMeta {
  * ne lisent que le début de la page, et le gabarit porte d'abord une grande feuille de
  * style.
  */
-export function withPageMeta(response: Response, meta: PageMeta, status?: number): Response {
+export function withPageMeta(response: Response, meta: PageMeta): Response {
   if (!response.ok || !(response.headers.get('content-type') ?? '').includes('text/html'))
     return response;
   const setContent = (value: string) => ({
@@ -133,5 +133,5 @@ export function withPageMeta(response: Response, meta: PageMeta, status?: number
     .transform(response);
   const headers = new Headers(rewritten.headers);
   headers.set('Content-Type', 'text/html; charset=utf-8');
-  return new Response(rewritten.body, { status: status ?? rewritten.status, headers });
+  return new Response(rewritten.body, { status: rewritten.status, headers });
 }
