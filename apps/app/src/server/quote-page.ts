@@ -15,7 +15,8 @@ export function quotePageParams(pathname: string): { id: string; t: number } | n
   return match?.[1] && match[2] ? { id: match[1], t: Number(match[2]) } : null;
 }
 
-const escapeAttr = (value: string) => value.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
+export const escapeAttr = (value: string) =>
+  value.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
 /** Empreinte courte d'un texte (FNV-1a, hexadécimal). */
 export function fingerprint(text: string): string {
@@ -31,7 +32,18 @@ export interface PageMeta {
   title: string;
   description: string;
   tags: string;
+  /** `og:type` du gabarit à remplacer (« video.other »…) ; absent : « website » conservé. */
+  ogType?: string;
+  /** HTML ajouté en fin de `<body>` (dans un `<noscript>`) pour les robots sans JavaScript. */
+  body?: string;
 }
+
+/** JSON-LD sérialisé pour un `<script>` : `<`, `>` et `&` échappés. */
+export const jsonLdScript = (data: unknown): string =>
+  `<script type="application/ld+json">${JSON.stringify(data).replace(
+    /[<>&]/g,
+    (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, '0')}`,
+  )}</script>`;
 
 /** Balises d'aperçu d'une page (ADR 0030) ; image paysage 1200 × 630. */
 export function previewMeta(p: {
@@ -103,6 +115,16 @@ export function withPageMeta(response: Response, meta: PageMeta): Response {
     .on('meta[property="og:title"]', setContent(meta.title))
     .on('meta[property="og:description"]', setContent(meta.description))
     .on('meta[property="og:site_name"]', setContent(APP_NAME))
+    .on('meta[property="og:type"]', {
+      element(el) {
+        if (meta.ogType) el.setAttribute('content', meta.ogType);
+      },
+    })
+    .on('body', {
+      element(el) {
+        if (meta.body) el.append(`<noscript>${meta.body}</noscript>`, { html: true });
+      },
+    })
     .on('head', {
       element(el) {
         el.prepend(`<meta charset="utf-8"/>${meta.tags}`, { html: true });

@@ -49,7 +49,8 @@ lisnard-play/
 │  │  │  (…/citation/<s>/image.png et apercu.png : images d'une citation, carrée et
 │  │  │   paysage, servies par server.ts avec satori et resvg, hors Metro, ADR 0029 ;
 │  │  │   en-tête des pages de citation réécrit par server.ts pour les aperçus de
-│  │  │   lien, ADR 0030)
+│  │  │   lien, ADR 0030 ; idem pour l'accueil et les pages d'intervention : canonique,
+│  │  │   JSON-LD et texte en <noscript>, 404 d'une intervention inconnue, ADR 0036)
 │  │  └─ api/trpc/[trpc]+api.ts   point d'accès tRPC (connexion Postgres partagée, src/server/db.ts)
 │  ├─ src/components/     Screen, WebChrome, AppNavigation, InterventionFeed,
 │  │                      InterventionCard, LiveBadge, FilterPills, MediaEmbed, LinkCard…

@@ -15,6 +15,7 @@ import { Screen } from '@/components/Screen';
 import { SummaryBlock } from '@/components/SummaryBlock';
 import { WebChrome } from '@/components/WebChrome';
 import { kindLabelFor, repeatsTitle, themesLabel, whenLabel } from '@/lib/format';
+import { interventionDescription, interventionTitle } from '@/lib/intervention-meta';
 import { useTRPC } from '@/lib/trpc';
 import { useMinuteTick } from '@/lib/useMinuteTick';
 import { colors } from '@/theme/colors';
@@ -62,7 +63,10 @@ export default function InterventionDetail() {
         }}
       />
       <Screen scrollRef={scrollRef}>
-        <PageHead title={data?.title ?? 'Intervention'} description={description ?? undefined} />
+        <PageHead
+          title={data ? interventionTitle(data) : 'Intervention'}
+          description={data ? interventionDescription(data) : undefined}
+        />
         {isPending ? (
           <Text className="font-sans text-base text-blanc/70">Chargement…</Text>
         ) : error && !(error instanceof TRPCClientError && error.data?.code === 'NOT_FOUND') ? (
