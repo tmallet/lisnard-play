@@ -13,7 +13,7 @@ Règles :
 | ID   | Titre | Statut | Tags |
 |------|-------|--------|------|
 | [0001](0001-application-independante.md) | Application indépendante, non affiliée à la campagne | accepted | produit, juridique, charte |
-| [0002](0002-stack-technique.md) | Stack technique — Expo, Bun, tRPC, Uniwind | accepted | architecture, stack |
+| [0002](0002-stack-technique.md) | Stack technique — Expo, Bun, tRPC, Uniwind | superseded | architecture, stack |
 | [0003](0003-web-d-abord-worker-separe.md) | Web d'abord, API routes tRPC et worker d'ingestion séparé | superseded | architecture, web, ingestion |
 | [0004](0004-classification-jev-openrouter.md) | Classifier la pertinence avec Jev via OpenRouter (System One) | accepted | ingestion, ia, classifier |
 | [0005](0005-publication-automatique-journal.md) | Publication tout automatique et journal des décisions du classifieur | superseded | ingestion, ia, classifier, notifications |
@@ -48,3 +48,4 @@ Règles :
 | [0034](0034-logo-projet-lisnard.md) | Logo Projet Lisnard dans l'en-tête web | accepted | charte, ui, produit |
 | [0035](0035-mesure-d-audience-umami.md) | Mesure d'audience Umami sans cookie, web seulement | accepted | produit, confidentialite, juridique, web |
 | [0036](0036-metadonnees-seo-des-interventions.md) | Métadonnées de référencement des interventions et de l'accueil par réécriture de l'en-tête | accepted | seo, architecture, web, partage |
+| [0037](0037-site-web-astro-sans-mobile.md) | Site web seul en Astro rendu par le serveur, abandon définitif du mobile natif | accepted | architecture, stack, web, seo |

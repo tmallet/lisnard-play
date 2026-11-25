@@ -16,6 +16,11 @@ par thème, et le détail avec le résumé (ADR 0014 à 0021). Les directs sont 
 par WebSub (ADR 0023) et notifiés par Web Push ; les notifications mobiles attendent
 les builds EAS (ADR 0024). Restent à venir : les transcriptions et le SSR (SDK 58).
 
+**Migration décidée (ADR 0037)** : le mobile natif est abandonné définitivement et
+`apps/app` sera réécrit en Astro rendu par le serveur (change `migrate-web-astro`).
+Ne plus ajouter de code propre à iOS ou Android ; les règles Expo ci-dessous valent
+jusqu'à la bascule.
+
 ## Démarrer
 
 ```bash

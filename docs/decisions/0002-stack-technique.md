@@ -1,11 +1,11 @@
 ---
 id: "0002"
 title: Stack technique — Expo, Bun, tRPC, Uniwind
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [architecture, stack]
 supersedes: null
-superseded-by: null
+superseded-by: "0037"
 related-specs: []
 related-changes: []
 ---
