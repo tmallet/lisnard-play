@@ -1,6 +1,6 @@
 ## 0. Prérequis
 
-- [ ] 0.1 Archiver `seo-interventions`, `feed-format-filter` et `group-style-ui` (leurs exigences sont modifiées ici)
+- [x] 0.1 Archiver `seo-interventions`, `feed-format-filter` et `group-style-ui` (leurs exigences sont modifiées ici)
 
 ## 1. Socle Astro et vérification du runtime
 
