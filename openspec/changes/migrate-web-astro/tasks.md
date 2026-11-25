@@ -51,7 +51,7 @@
 
 ## 6. Déploiement et bascule
 
-- [ ] 6.1 `apps/web/Dockerfile` (Bun, build Astro, resvg et polices des images) et service Coolify de prévisualisation non indexé
+- [x] 6.1 `apps/web/Dockerfile` (Bun, build Astro, resvg et polices des images) et service Coolify de prévisualisation non indexé
 - [ ] 6.2 Parité validée (5.2 à 5.4), puis bascule du domaine sur le service `web` et activation de `ALLOW_INDEXING`
 - [ ] 6.3 Observation deux semaines : journaux, Search Console, Umami
 

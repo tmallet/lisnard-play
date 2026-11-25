@@ -35,13 +35,15 @@ const { wide = false, notice = true, current, ...seo } = Astro.props;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <script is:inline>
       document.documentElement.classList.add('js');
-      // Miniature haute définition absente : repli sur l'image d'origine (data-fallback).
+      // Miniature haute définition absente : repli sur l'image d'origine (data-fallback) ;
+      // si elle manque aussi, l'image est masquée et laisse voir le fond de la carte.
       document.addEventListener('error', (event) => {
         const img = event.target;
-        if (img instanceof HTMLImageElement && img.dataset.fallback) {
+        if (!(img instanceof HTMLImageElement)) return;
+        if (img.dataset.fallback) {
           img.src = img.dataset.fallback;
           delete img.dataset.fallback;
-        }
+        } else img.style.visibility = 'hidden';
       }, true);
     </script>
     <Seo {...seo} />

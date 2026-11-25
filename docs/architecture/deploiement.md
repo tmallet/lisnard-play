@@ -321,7 +321,8 @@ Postgres local (`docker compose up -d`, accessible depuis les conteneurs via
 
 Le site `apps/web` remplace `app` sans changer d'adresse (ADR 0037). Ordre :
 
-1. Créer le service `web` (`apps/web/Dockerfile`, port 3000) avec les variables de
+1. *(Fait le 25 novembre 2026 : service `web` cloné de `app`, sur
+   `https://09pcvvwdsrwnrxl4pbsvb6pu.thimal.fr`, branche du change.)* Créer le service `web` (`apps/web/Dockerfile`, port 3000) avec les variables de
    `app` (`DATABASE_URL`, `VAPID_PUBLIC_KEY`, `ADMIN_INTERNAL_URL`,
    `MEMBERSHIP_SOURCE_URL` s'il est défini) et `SITE_URL=https://play.projetlisnard.fr`,
    sur une adresse de prévisualisation. Seul le domaine de `SITE_URL` peut être indexé :
