@@ -21,6 +21,7 @@ Postgres reste sur le réseau interne.
 | `postgres` | service Coolify « PostgreSQL », **version 18** (identique au local et à la CI) | géré par Coolify | géré par Coolify |
 | `worker` | `apps/worker/Dockerfile`, contexte = racine du dépôt | prend le verrou de leader (une instance en attente continue de battre), applique les migrations, puis lance la boucle | fichier de pulsation de moins de 5 min (`HEALTHCHECK` de l'image), écrit avant chaque tâche |
 | `app` | `apps/app/Dockerfile`, contexte = racine du dépôt | `bun server.ts` (export Expo servi par l'adaptateur Bun) ; relaie `/admin/*` vers `admin` | `GET /api/trpc/health` (`HEALTHCHECK` de l'image) |
+| `web` (à la bascule, remplace `app`) | `apps/web/Dockerfile`, contexte = racine du dépôt | `bun --bun server.mjs` (build Astro servi par l'adaptateur Node, sous Bun) ; mêmes variables que `app` plus `SITE_URL` ; relaie `/admin/*` vers `admin` | `GET /api/trpc/health` (`HEALTHCHECK` de l'image) |
 | `admin` | `apps/admin/Dockerfile`, contexte = racine du dépôt, **sans domaine public** (ADR 0032) | `bun server.js` (backoffice Refine, Better Auth, API d'administration), port 3001 | `GET /admin/health` (`HEALTHCHECK` de l'image) |
 
 **Journaux et confidentialité** : les mentions légales annoncent des journaux
@@ -41,6 +42,9 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 
 - **Image de l'app** : Bun « slim », l'export `dist/`, `server.ts` et le seul
   paquet `expo-server`. Le bundle des API routes est autonome.
+- **Image du site Astro** : Bun « slim », le build `dist/` (code serveur empaqueté avec
+  ses dépendances), `server.mjs`, resvg et les polices `woff` de Montserrat des images
+  de partage ; environ 15 Mo hors image de base.
 - **Image du backoffice** : l'interface construite par Vite (`dist/`), `server.js` et
   `cli.js` empaquetés par `bun build` ; ni `node_modules` ni secret.
 - **Image du worker** : `index.js` et `cli.js` empaquetés par `bun build`,
@@ -66,6 +70,7 @@ doit suivre `.tool-versions`, ce que vérifie `docs:check`.
 | `PORT` | 3000 par défaut | — | Port interne exposé au proxy Coolify |
 | `NODE_ENV` | `production` (image) | `production` (image) | Masque les détails d'erreur de l'API |
 | `MIGRATIONS_DIR`, `HEARTBEAT_FILE` | — | fixés par l'image | Ne pas modifier |
+| `SITE_URL` | `web` seulement | — | Adresse de production du site (`https://play.projetlisnard.fr`, valeur par défaut) : canoniques, aperçus de lien et pied des images de partage. Jamais tirée de la requête |
 | `EXPO_PUBLIC_API_URL` | — | — | **Au build des apps mobiles** : URL publique de l'app (`https://play.projetlisnard.fr`). Même valeur pour `EXPO_PUBLIC_SITE_URL`, l'origine déclarée par le lecteur vidéo |
 
 Le backend (`app`) ne reçoit que `DATABASE_URL`. Les clés d'ingestion ne
@@ -311,3 +316,21 @@ Voir [classifier.md](classifier.md) pour les procédures du classifieur.
 Les deux images sont construites depuis la racine du dépôt et démarrées face au
 Postgres local (`docker compose up -d`, accessible depuis les conteneurs via
 `host.docker.internal:5433`).
+
+## Bascule vers le site Astro (change migrate-web-astro)
+
+Le site `apps/web` remplace `app` sans changer d'adresse (ADR 0037). Ordre :
+
+1. Créer le service `web` (`apps/web/Dockerfile`, port 3000) avec les variables de
+   `app` (`DATABASE_URL`, `VAPID_PUBLIC_KEY`, `ADMIN_INTERNAL_URL`,
+   `MEMBERSHIP_SOURCE_URL` s'il est défini) et `SITE_URL=https://play.projetlisnard.fr`,
+   sur une adresse de prévisualisation, **sans** `ALLOW_INDEXING`.
+2. Contrôler la parité depuis un poste qui atteint les deux services :
+   `bun scripts/parity-web.ts https://play.projetlisnard.fr <adresse de prévisualisation> 60`
+   doit finir sans écart ; vérifier aussi la lecture d'une vidéo, les notifications et
+   `/admin` dans un navigateur.
+3. Basculer le domaine `play.projetlisnard.fr` de `app` vers `web`, puis passer
+   `ALLOW_INDEXING=true` sur `web`. Arrêter `app` sans le supprimer.
+4. Observer deux semaines (journaux, Search Console, Umami).
+5. Retour arrière possible jusqu'à la suppression : remettre le domaine sur `app` et le
+   redémarrer.

@@ -1,11 +1,11 @@
 ---
 id: "0036"
 title: Métadonnées de référencement des interventions et de l'accueil par réécriture de l'en-tête
-status: accepted
+status: superseded
 date: 2026-11-24
 tags: [seo, architecture, web, partage]
 supersedes: null
-superseded-by: null
+superseded-by: "0039"
 related-specs: [app-shell]
 related-changes: [seo-interventions]
 ---

@@ -1,6 +1,6 @@
 ---
 name: trpc-procedure
-description: Ajouter ou modifier une procédure tRPC (query ou mutation) dans packages/api et l'utiliser depuis apps/app. À utiliser dès qu'une fonctionnalité a besoin d'un nouvel appel client → serveur ou modifie un contrat d'API existant.
+description: Ajouter ou modifier une procédure tRPC (query ou mutation) dans packages/api et l'utiliser depuis apps/web (pages et îlots) ou apps/app. À utiliser dès qu'une fonctionnalité a besoin d'un nouvel appel client → serveur ou modifie un contrat d'API existant.
 ---
 
 # Ajouter une procédure tRPC
@@ -72,6 +72,22 @@ test('renvoie NOT_FOUND pour un id inconnu', async () => {
 Couvrir le cas nominal, une entrée invalide et chaque erreur métier.
 
 ## 4. L'utiliser côté client
+
+**Site Astro (`apps/web`)** : une page appelle la procédure dans le processus, sans HTTP,
+et passe les données initiales aux îlots en props.
+
+```astro
+---
+import { api, isNotFound } from '@/server/api';
+const data = await api(Astro.request).interventions.byId({ id });
+---
+```
+
+Un îlot (`src/islands/`) s'enveloppe d'`ApiProvider` et utilise `useTRPC()` comme
+ci-dessous, avec `initialData` reçue de la page. Tester l'îlot avec `fakeApi()`
+(`src/test/trpc.ts`).
+
+**Application Expo (`apps/app`, jusqu'à son retrait)** :
 
 ```tsx
 import { useQuery } from '@tanstack/react-query';

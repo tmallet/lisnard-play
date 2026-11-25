@@ -1,11 +1,11 @@
 ---
 id: "0013"
 title: Conventions de l'API (sérialisation, erreurs) et polices embarquées
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [architecture, api, security, charte]
 supersedes: null
-superseded-by: null
+superseded-by: "0042"
 related-specs: [api-transport, app-shell]
 related-changes: [setup-foundation]
 ---

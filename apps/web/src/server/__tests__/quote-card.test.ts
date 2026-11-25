@@ -1,5 +1,5 @@
 import { INDEPENDENCE_NOTICE } from '../../config/app';
-import { cachedImage } from '../images';
+import { cachedImage } from '../image-cache';
 import { type CardNode, quoteCard, quoteFontSize, withoutEmoji } from '../quote-card';
 
 /** Tous les textes de l'arbre, dans l'ordre. */

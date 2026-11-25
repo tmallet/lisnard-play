@@ -1,11 +1,11 @@
 ---
 id: "0011"
 title: Web d'abord — pré-rendu et API routes en SDK 57, SSR à la montée en SDK 58
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [architecture, web, ingestion]
 supersedes: "0003"
-superseded-by: null
+superseded-by: "0038"
 related-specs: [app-shell, api-transport]
 related-changes: [setup-foundation]
 ---

@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { api } from '@/server/api';
-import { cachedImage, pngResponse, renderRecapImage } from '@/server/images';
+import { cachedImage, pngResponse } from '@/server/image-cache';
+import { renderRecapImage } from '@/server/images';
 import { recapCardData, recapVersion } from '@/server/recap';
 import { siteUrl } from '@/server/site';
 

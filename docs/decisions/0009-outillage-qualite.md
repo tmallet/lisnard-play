@@ -1,11 +1,11 @@
 ---
 id: "0009"
 title: Outillage qualité — Biome, bun test, jest-expo, smoke test web, GitHub Actions
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [outillage, qualite, ci]
 supersedes: null
-superseded-by: null
+superseded-by: "0041"
 related-specs: [app-shell, api-transport]
 related-changes: [setup-foundation]
 ---

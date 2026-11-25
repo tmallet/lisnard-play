@@ -1,11 +1,11 @@
 ---
 id: "0019"
 title: Serveur de développement sous le runtime Bun, shim Metro `bun` et connexion Postgres partagée
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [architecture, outillage, donnees, api]
 supersedes: null
-superseded-by: null
+superseded-by: "0044"
 related-specs: [intervention-feed, api-transport]
 related-changes: [intervention-ingestion]
 ---

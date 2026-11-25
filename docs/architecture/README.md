@@ -28,6 +28,16 @@ Pages détaillées :
                                                    pages pré-rendues + API tRPC
 ```
 
+**Migration en cours (ADR 0037, change `migrate-web-astro`)** : le site Astro
+`apps/web` remplace `apps/app` à la bascule du domaine. Il rend chaque page à chaque
+requête, avec son contenu et ses métadonnées dans le HTML ; les îlots React appellent
+`/api/trpc`, et le rendu serveur appelle les mêmes procédures sans passer par HTTP :
+
+```
+ Navigateur ──HTML──▶ web (Bun, apps/web, Astro SSR) ──createCaller──▶ packages/api ──▶ Postgres
+     └─ îlots React ──/api/trpc──▶ (même service)
+```
+
 - **Le worker écrit, le backend lit** (ADR 0017). Les clients n'accèdent
   jamais à la base.
 - **Un contenu n'est visible** qu'une fois publié (règle de l'ADR 0018) **et**
@@ -37,7 +47,26 @@ Pages détaillées :
 
 ```
 lisnard-play/
-├─ apps/app/              @lisnard/app : Expo Router (web, iOS, Android) + API routes
+├─ apps/web/              @lisnard/web : site Astro rendu par le serveur (ADR 0037), remplace
+│  │                      apps/app à la bascule ; règles : apps/web/AGENTS.md
+│  ├─ src/pages/          pages et endpoints : accueil (filtres et pagination par l'adresse),
+│  │                      interventions/[id], citations et leurs images, campagne (vues,
+│  │                      récapitulatifs et leur image), à propos, mentions légales,
+│  │                      notifications, 404, sitemap.xml, robots.txt, manifest,
+│  │                      api/trpc/[...trpc], admin/[...path] (relais du backoffice)
+│  ├─ src/layouts/Base.astro   document commun : métadonnées (Seo.astro), en-tête, mention
+│  │                      d'indépendance, pied de page, Umami
+│  ├─ src/components/     composants rendus par le serveur (.astro) et composants React
+│  │                      partagés avec les îlots (carte d'intervention, encarts d'adhésion)
+│  ├─ src/islands/        îlots React hydratés : directs, passées (chargement continu),
+│  │                      lecteur, citations, carte, graphique, notifications, partages
+│  ├─ src/server/         appel des procédures (`api.ts`), images de partage (satori,
+│  │                      resvg), indexation, relais /admin, plan du site
+│  ├─ src/middleware.ts   X-Robots-Tag et cache court des pages
+│  ├─ server.mjs          serveur de production (gestionnaire de l'adaptateur Node, sous Bun)
+│  └─ Dockerfile
+├─ apps/app/              @lisnard/app : Expo Router (web, iOS, Android) + API routes ; retiré
+│                         après la bascule (change migrate-web-astro)
 │  ├─ src/app/            routes (onglets : accueil, campagne, à propos)
 │  │  ├─ _layout.tsx      racine : CSS, polices, ApiProvider, Stack, thème de navigation
 │  │  ├─ +html.tsx        document HTML web (lang, balises communes)

@@ -11,9 +11,11 @@ context: |
   compte (ADR 0020). Chaque intervention reçoit zéro, un ou plusieurs thèmes
   parmi sept (spec intervention-themes).
 
-  Migration décidée (ADR 0037, change migrate-web-astro) : abandon définitif du
-  mobile natif, interface réécrite en Astro (SSR par requête, îlots React). La stack
-  ci-dessous décrit l'existant jusqu'à la bascule.
+  Migration en cours (ADR 0037 à 0044, change migrate-web-astro) : abandon définitif
+  du mobile natif ; le site Astro apps/web (rendu à chaque requête, îlots React,
+  contenu lisible sans JavaScript) est construit et remplacera apps/app à la bascule.
+  Toute évolution d'interface se fait dans apps/web. La stack ci-dessous décrit
+  apps/app jusqu'à son retrait.
 
   Stack (ADR 0002, 0011) :
   - Monorepo Bun (gestionnaire de paquets + workspaces ; runtime du worker)

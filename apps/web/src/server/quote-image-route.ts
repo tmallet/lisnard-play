@@ -5,7 +5,8 @@
 import type { APIContext } from 'astro';
 
 import { api } from './api';
-import { cachedImage, pngResponse, renderQuoteImage } from './images';
+import { cachedImage, pngResponse } from './image-cache';
+import { renderQuoteImage } from './images';
 import type { CardFormat } from './quote-card';
 import { siteUrl } from './site';
 

@@ -16,10 +16,11 @@ par thème, et le détail avec le résumé (ADR 0014 à 0021). Les directs sont 
 par WebSub (ADR 0023) et notifiés par Web Push ; les notifications mobiles attendent
 les builds EAS (ADR 0024). Restent à venir : les transcriptions et le SSR (SDK 58).
 
-**Migration décidée (ADR 0037)** : le mobile natif est abandonné définitivement et
-`apps/app` sera réécrit en Astro rendu par le serveur (change `migrate-web-astro`).
-Ne plus ajouter de code propre à iOS ou Android ; les règles Expo ci-dessous valent
-jusqu'à la bascule.
+**Migration en cours (ADR 0037)** : le mobile natif est abandonné définitivement. Le
+site Astro `apps/web` (rendu serveur, îlots React) est construit et remplacera
+`apps/app` à la bascule du domaine (change `migrate-web-astro`). Toute évolution de
+l'interface se fait dans `apps/web` ; ne plus ajouter de code propre à iOS ou Android.
+Les règles Expo ci-dessous ne valent que pour `apps/app`, jusqu'à son retrait.
 
 ## Démarrer
 
@@ -29,7 +30,7 @@ bun install
 docker compose up -d                 # Postgres local (port 5433)
 cp .env.example .env                 # puis renseigner les clés du worker
 bun apps/worker/src/index.ts         # worker : migrations, collecte, classification
-bun run dev         # Metro sous Bun : web, iOS, Android, API routes
+bun run dev:web     # site Astro sous Bun (apps/web), pages et API tRPC
 bun run check       # format, lint, types, tests, docs:check : avant de conclure
 ```
 
@@ -46,7 +47,7 @@ Pour travailler en bac à sable (agents en autonomie) :
 | Comportement attendu           | `openspec/specs/`                          |
 | Changements en cours           | `openspec/changes/` (`openspec list`)      |
 | Procédures récurrentes         | `.agents/skills/`                          |
-| Règles d'un module             | [apps/app/AGENTS.md](apps/app/AGENTS.md), [apps/admin/AGENTS.md](apps/admin/AGENTS.md), [apps/worker/AGENTS.md](apps/worker/AGENTS.md), [packages/api/AGENTS.md](packages/api/AGENTS.md), [packages/db/AGENTS.md](packages/db/AGENTS.md) |
+| Règles d'un module             | [apps/web/AGENTS.md](apps/web/AGENTS.md), [apps/app/AGENTS.md](apps/app/AGENTS.md), [apps/admin/AGENTS.md](apps/admin/AGENTS.md), [apps/worker/AGENTS.md](apps/worker/AGENTS.md), [packages/api/AGENTS.md](packages/api/AGENTS.md), [packages/db/AGENTS.md](packages/db/AGENTS.md) |
 
 ## Règles
 

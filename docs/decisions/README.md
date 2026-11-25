@@ -20,17 +20,17 @@ Règles :
 | [0006](0006-perimetre-des-interventions.md) | Périmètre des interventions — tout sauf la mairie de Cannes | superseded | produit, perimetre, classifier |
 | [0007](0007-rendu-medias-oembed.md) | Rendu des médias — intégration oEmbed, sinon lien vers la source | accepted | ingestion, media, ui |
 | [0008](0008-systeme-de-documentation.md) | Système de documentation structuré pour les agents de codage | accepted | documentation, outillage, agents |
-| [0009](0009-outillage-qualite.md) | Outillage qualité — Biome, bun test, jest-expo, smoke test web, GitHub Actions | accepted | outillage, qualite, ci |
+| [0009](0009-outillage-qualite.md) | Outillage qualité — Biome, bun test, jest-expo, smoke test web, GitHub Actions | superseded | outillage, qualite, ci |
 | [0010](0010-asdf-et-devcontainer.md) | Versions d'outils via asdf et devcontainer bac à sable pour agents | accepted | outillage, environnement, agents, security |
-| [0011](0011-rendu-web-prerendu-sdk57.md) | Web d'abord — pré-rendu et API routes en SDK 57, SSR à la montée en SDK 58 | accepted | architecture, web, ingestion |
+| [0011](0011-rendu-web-prerendu-sdk57.md) | Web d'abord — pré-rendu et API routes en SDK 57, SSR à la montée en SDK 58 | superseded | architecture, web, ingestion |
 | [0012](0012-sources-charte-graphique.md) | Sources de la charte graphique — référence numérique, typographie et éléments exclus | accepted | charte, produit, juridique |
-| [0013](0013-conventions-api-et-polices.md) | Conventions de l'API (sérialisation, erreurs) et polices embarquées | accepted | architecture, api, security, charte |
+| [0013](0013-conventions-api-et-polices.md) | Conventions de l'API (sérialisation, erreurs) et polices embarquées | superseded | architecture, api, security, charte |
 | [0014](0014-base-de-donnees-postgres-drizzle.md) | Base de données — PostgreSQL, Drizzle ORM et driver Bun.sql | accepted | architecture, donnees, stack |
-| [0015](0015-hebergement-coolify-docker.md) | Hébergement — conteneurs Docker sur Coolify, runtime Bun partout | accepted | architecture, hebergement, deploiement |
+| [0015](0015-hebergement-coolify-docker.md) | Hébergement — conteneurs Docker sur Coolify, runtime Bun partout | superseded | architecture, hebergement, deploiement |
 | [0016](0016-debut-historique-31-mars-2026.md) | Début de l'historique — 31 mars 2026, annonce de candidature | accepted | produit, perimetre, ingestion |
 | [0017](0017-collecte-et-frontiere-ecriture.md) | Stratégie de collecte (YouTube RSS + videos.list), lecture d'URL externes et frontière d'écriture | accepted | ingestion, donnees, security, architecture |
 | [0018](0018-chaine-officielle-rattrapage-et-publication.md) | Publication automatique, journal des décisions et cas de la chaîne officielle | accepted | ingestion, ia, classifier, notifications |
-| [0019](0019-runtime-bun-metro-et-connexion-partagee.md) | Serveur de développement sous le runtime Bun, shim Metro `bun` et connexion Postgres partagée | accepted | architecture, outillage, donnees, api |
+| [0019](0019-runtime-bun-metro-et-connexion-partagee.md) | Serveur de développement sous le runtime Bun, shim Metro `bun` et connexion Postgres partagée | superseded | architecture, outillage, donnees, api |
 | [0020](0020-perimetre-campagne-et-thematiques.md) | Périmètre recentré sur la campagne présidentielle et classement par thématiques | accepted | produit, perimetre, classifier, ui |
 | [0021](0021-resumes-gemini-et-presse.md) | Résumés des vidéos par Gemini via OpenRouter, sans résumé des articles de presse | accepted | ia, ingestion, media, juridique |
 | [0022](0022-consentement-lecteurs-tiers.md) | Lecteurs tiers chargés au clic, YouTube sans cookie, éditeur anonyme | accepted | juridique, media, ui, confidentialite |
@@ -41,11 +41,18 @@ Règles :
 | [0027](0027-carte-des-deplacements.md) | Lieu des déplacements extrait par un modèle, carte de France en SVG sans tiers, onglet « Campagne » | accepted | ia, donnees, ui, confidentialite |
 | [0028](0028-citations-horodatees.md) | Citations horodatées extraites avec le résumé, recherche plein texte dans Postgres, page par citation | accepted | ia, donnees, ui, recherche |
 | [0029](0029-image-de-citation.md) | Image de partage d'une citation produite par le serveur (satori et resvg) | accepted | ui, partage, architecture, dependance |
-| [0030](0030-apercu-des-liens-de-citation.md) | Aperçu des liens de citation par réécriture de l'en-tête dans le serveur, partage sur X par l'adresse publique | accepted | partage, architecture, web, confidentialite |
+| [0030](0030-apercu-des-liens-de-citation.md) | Aperçu des liens de citation par réécriture de l'en-tête dans le serveur, partage sur X par l'adresse publique | superseded | partage, architecture, web, confidentialite |
 | [0031](0031-recapitulatifs-de-campagne.md) | Récapitulatifs du jour et de la semaine, citation la plus marquante notée par Jev, publication manuelle sur X | accepted | produit, ia, partage, donnees |
 | [0032](0032-backoffice-administration.md) | Backoffice d'administration sous /admin, service séparé, Better Auth avec TOTP, exception à la frontière d'écriture | accepted | architecture, securite, admin, donnees |
 | [0033](0033-format-des-interventions.md) | Format des interventions déduit du rendu et de la durée, seuil de 5 minutes | accepted | produit, ui, donnees |
 | [0034](0034-logo-projet-lisnard.md) | Logo Projet Lisnard dans l'en-tête web | accepted | charte, ui, produit |
 | [0035](0035-mesure-d-audience-umami.md) | Mesure d'audience Umami sans cookie, web seulement | accepted | produit, confidentialite, juridique, web |
-| [0036](0036-metadonnees-seo-des-interventions.md) | Métadonnées de référencement des interventions et de l'accueil par réécriture de l'en-tête | accepted | seo, architecture, web, partage |
+| [0036](0036-metadonnees-seo-des-interventions.md) | Métadonnées de référencement des interventions et de l'accueil par réécriture de l'en-tête | superseded | seo, architecture, web, partage |
 | [0037](0037-site-web-astro-sans-mobile.md) | Site web seul en Astro rendu par le serveur, abandon définitif du mobile natif | accepted | architecture, stack, web, seo |
+| [0038](0038-rendu-serveur-astro.md) | Rendu de chaque page à chaque requête par Astro, servi sous Bun | accepted | architecture, web, seo |
+| [0039](0039-metadonnees-et-contenu-rendus-par-la-page.md) | Métadonnées de référencement et contenu des pages rendus par la page elle-même | accepted | seo, web, partage |
+| [0040](0040-apercu-des-liens-de-citation-par-la-page.md) | Aperçu des liens de citation rendu par la page, redirection d'une citation changée, partage sur X par l'adresse publique | accepted | partage, web, confidentialite |
+| [0041](0041-outillage-qualite-vitest.md) | Outillage qualité — Biome, bun test, Vitest pour le site, smoke test web et contrôle de parité | accepted | outillage, qualite, ci |
+| [0042](0042-conventions-api-et-polices-du-site.md) | Conventions de l'API (sérialisation, erreurs) et polices servies par le site | accepted | architecture, api, security, charte |
+| [0043](0043-hebergement-coolify-site-astro.md) | Hébergement — conteneurs Docker sur Coolify, site Astro servi sous Bun | accepted | architecture, hebergement, deploiement |
+| [0044](0044-serveur-de-developpement-bun-astro.md) | Serveur de développement Astro sous le runtime Bun et connexion Postgres partagée | accepted | architecture, outillage, donnees, api |

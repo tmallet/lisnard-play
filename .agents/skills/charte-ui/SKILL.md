@@ -1,6 +1,6 @@
 ---
 name: charte-ui
-description: Règles visuelles de l'application (charte réduite Nouvelle Énergie, indépendance). À utiliser pour tout travail d'interface dans apps/app — nouvel écran, composant, couleur, typographie, mise en page, accessibilité — et avant de valider un changement visuel.
+description: Règles visuelles de l'application (charte réduite Nouvelle Énergie, indépendance). À utiliser pour tout travail d'interface dans apps/web (et apps/app jusqu'à son retrait) — nouvel écran, composant, couleur, typographie, mise en page, accessibilité — et avant de valider un changement visuel.
 ---
 
 # Charte UI
@@ -22,6 +22,17 @@ exclus sont dans l'**ADR 0012**.
 - Tout fichier du kit militant (textures hexagonales, fond, polices Tubqal Pro
   ou Tango Sans) : il n'entre jamais dans le dépôt.
 - Une autre police que Montserrat (police web des sites officiels).
+
+## Site Astro (`apps/web`, ADR 0037)
+
+Mêmes tokens et mêmes classes, en Tailwind 4 (`apps/web/src/styles/global.css`) :
+les graisses `font-sans-*` y sont des utilitaires, Montserrat vient de `@fontsource`
+(aucun CDN). Le dégradé est posé sur `body`. Différences avec React Native : un `div`
+n'est pas en colonne par défaut (`flex flex-col` pour reproduire une `View`), la taille
+de texte par défaut est de 16 px (préciser `text-sm` là où l'ancien écran n'avait pas de
+taille), et « ▶ » manque à la police (`PlayIcon`). Variante `js:` pour ce qui n'existe
+qu'avec JavaScript (voir `apps/web/AGENTS.md`). Toute évolution visuelle se compare aux
+captures de l'existant (375 et 1280 px).
 
 ## Tokens (`apps/app/src/global.css`)
 

@@ -30,16 +30,19 @@ devcontainer, qui fournit Postgres : voir [devcontainer.md](devcontainer.md).
 |----------|-------|
 | `bun install` | Installe les dépendances (arborescence « hoisted », voir `bunfig.toml`) |
 | `bun run dev` | Lance Metro **sous le runtime Bun** (web, iOS, Android, API routes) avec le `.env` racine (ADR 0019) |
+| `bun run dev:web` | Lance le site Astro (`apps/web`) **sous le runtime Bun** avec le `.env` racine (ADR 0037) |
+| `DATABASE_URL=… bun scripts/dev-seed.ts` | Remplit une base **locale** d'interventions fictives et sert miniatures et adhésions factices (port 8099 ; lancer le site avec `MEMBERSHIP_SOURCE_URL=http://localhost:8099`) |
+| `bun scripts/parity-web.ts <ancien> <nouveau> [n]` | Compare l'ancien et le nouveau service sur un échantillon du plan du site : statut, titre, canonique, données structurées (avant la bascule) |
 | `bun apps/worker/src/index.ts` | Lance le worker en local (migrations, puis boucle de collecte et de classification) |
 | `bun run check` | Format et lint (Biome), types, tests (Postgres requis), `docs:check`. **À lancer avant de conclure une tâche** |
 | `bun run format` | Formate tout le dépôt (Biome) |
-| `bun run smoke:web` | Export de production, serveur Bun et base jetable, puis vérifications HTTP sans JavaScript |
+| `bun run smoke:web` | Build de production du site Astro, serveur Bun et base jetable, puis vérifications HTTP sans JavaScript |
 | `bunx web-push generate-vapid-keys` | Génère la paire de clés des notifications web (une fois par environnement, ADR 0024) |
-| `bun scripts/build-france-map.ts <régions métropole> <régions avec outre-mer>` | Régénère le fond de carte `apps/app/assets/france-map.json` à partir des GeoJSON de france-geojson (IGN, Licence Ouverte) |
+| `bun scripts/build-france-map.ts <régions métropole> <régions avec outre-mer>` | Régénère le fond de carte `apps/app/assets/france-map.json` (copié dans `apps/web/src/assets/`) à partir des GeoJSON de france-geojson (IGN, Licence Ouverte) |
 | `bun run docs:check` | Cohérence des ADR, de l'index, des liens, des skills, des versions d'outils et des Dockerfiles |
 
 Options du smoke test : `SMOKE_PORT` (8091 par défaut), `SKIP_EXPORT=1` pour
-réutiliser `apps/app/dist`.
+réutiliser `apps/web/dist`.
 
 ## Worker : exploitation (`apps/worker/src/cli.ts`)
 

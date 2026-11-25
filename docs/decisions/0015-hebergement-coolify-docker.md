@@ -1,11 +1,11 @@
 ---
 id: "0015"
 title: Hébergement — conteneurs Docker sur Coolify, runtime Bun partout
-status: accepted
+status: superseded
 date: 2026-10-13
 tags: [architecture, hebergement, deploiement]
 supersedes: null
-superseded-by: null
+superseded-by: "0043"
 related-specs: []
 related-changes: [intervention-ingestion]
 ---

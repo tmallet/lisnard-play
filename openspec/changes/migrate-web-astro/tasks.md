@@ -68,8 +68,8 @@
 
 ## 9. Documentation
 
-- [ ] 9.1 ADR remplaçant 0009 (Vitest pour le site), 0011 (rendu par requête), 0013 (polices sans `expo-font`), 0015 (image du service web), 0019 (plus de Metro), 0024 (Web Push seulement), 0030 et 0036 (métadonnées rendues par la page) ; index mis à jour
+- [ ] 9.1 ADR remplaçant 0009 (fait : 0041), 0011 (0038), 0013 (0042), 0015 (0043), 0019 (0044), 0030 (0040) et 0036 (0039) ; reste 0024 (Web Push seulement), avec le groupe 7 ; index mis à jour
 - [ ] 9.2 `AGENTS.md` : retirer la note de migration, les règles Expo et la mention « web et mobile » ; `openspec/config.yaml` (`context`) aligné sur l'ADR 0037
-- [ ] 9.3 `apps/web/AGENTS.md` (remplace `apps/app/AGENTS.md`) : pages, îlots, données par `createCaller`, règle « lisible sans JavaScript »
-- [ ] 9.4 `docs/architecture/` (README, commandes, déploiement) et `.agents/skills/` : `charte-ui` (HTML et Tailwind, plus d'Uniwind), `trpc-procedure` (appel serveur et îlots), `docs-sync`
+- [x] 9.3 `apps/web/AGENTS.md` (remplace `apps/app/AGENTS.md`) : pages, îlots, données par `createCaller`, règle « lisible sans JavaScript »
+- [x] 9.4 `docs/architecture/` (README, commandes, déploiement) et `.agents/skills/` : `charte-ui` (HTML et Tailwind, plus d'Uniwind), `trpc-procedure` (appel serveur et îlots), `docs-sync`
 - [ ] 9.5 Specs principales : corriger à la main le `Purpose` d'`app-shell` et d'`intervention-feed` (plus de mention d'iOS, d'Android ni du mobile) ; renseigner celui de `push-notifications`

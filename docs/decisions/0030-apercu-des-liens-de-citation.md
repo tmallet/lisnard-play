@@ -1,11 +1,11 @@
 ---
 id: "0030"
 title: Aperçu des liens de citation par réécriture de l'en-tête dans le serveur, partage sur X par l'adresse publique
-status: accepted
+status: superseded
 date: 2026-10-15
 tags: [partage, architecture, web, confidentialite]
 supersedes: null
-superseded-by: null
+superseded-by: "0040"
 related-specs: [intervention-quotes, app-shell]
 related-changes: [quote-sharing]
 ---

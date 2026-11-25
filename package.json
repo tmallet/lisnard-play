@@ -13,6 +13,7 @@
   ],
   "scripts": {
     "dev": "bun --filter @lisnard/app dev",
+    "dev:web": "bun --filter @lisnard/web dev",
     "format": "biome format --write .",
     "lint": "biome check .",
     "typecheck": "bun --filter '*' typecheck",
