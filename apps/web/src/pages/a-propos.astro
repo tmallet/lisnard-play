@@ -1,0 +1,25 @@
+---
+/** « À propos » (spec app-shell) : objet du site, indépendance, sources et contact. */
+import Eyebrow from '@/components/Eyebrow.astro';
+import LegalLink from '@/components/LegalLink.astro';
+import Title from '@/components/Title.astro';
+import { APP_NAME, CONTACT, INDEPENDENCE_NOTICE, SOURCES_NOTICE } from '@/config/app';
+import Base from '@/layouts/Base.astro';
+import { siteOrigin } from '@/server/site';
+---
+<Base title="À propos" description={INDEPENDENCE_NOTICE} notice={false} current="/a-propos" canonical={`${siteOrigin()}/a-propos`}>
+  <Eyebrow>Le projet</Eyebrow>
+  <Title text="À propos" highlight="propos" />
+  <p class="font-sans text-base text-blanc/85 leading-relaxed">
+    {APP_NAME} recense les interventions publiques de David Lisnard, candidat à l’élection
+    présidentielle de 2027 : passages télévisés et radio, entretiens de presse, podcasts,
+    meetings et discours, en direct comme en replay.
+  </p>
+  <p class="font-sans-bold text-base text-blanc">{INDEPENDENCE_NOTICE}</p>
+  <p class="font-sans text-base text-blanc/85 leading-relaxed">{SOURCES_NOTICE}</p>
+  <a href="/notifications" class="self-start font-sans-semibold text-base text-chamois underline">
+    Être prévenu des directs (notifications)
+  </a>
+  <a href={CONTACT.url} class="self-start font-sans-semibold text-base text-chamois underline">{CONTACT.label}</a>
+  <div><LegalLink /></div>
+</Base>

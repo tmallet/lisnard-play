@@ -1,0 +1,75 @@
+@import "tailwindcss";
+@import "@fontsource/montserrat/400.css";
+@import "@fontsource/montserrat/600.css";
+@import "@fontsource/montserrat/700.css";
+@import "@fontsource/montserrat/800.css";
+
+/*
+ * Charte réduite « Nouvelle Énergie » (ADR 0001, 0012) : palette et Montserrat uniquement.
+ * Jamais de logo du parti ni d'hexagone signature. Montserrat est servie par le site
+ * (@fontsource) : aucun appel à Google Fonts ni à un autre CDN (ADR 0013).
+ */
+@theme {
+  --color-bleu: #1d257a;
+  --color-bleu-sombre: #0f1752;
+  --color-chamois: #b0ad85;
+  --color-blanc: #f9f9f9;
+  --color-emeraude: #52c985;
+
+  --font-sans: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Graisses de Montserrat, sous les noms de classes de la charte (skill charte-ui). */
+@utility font-sans-semibold {
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+@utility font-sans-bold {
+  font-family: var(--font-sans);
+  font-weight: 700;
+}
+@utility font-sans-extrabold {
+  font-family: var(--font-sans);
+  font-weight: 800;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+  /* Dégradé signature (160°, bleu vers bleu sombre), fixe derrière tout le contenu. */
+  body {
+    min-height: 100dvh;
+    background-color: var(--color-bleu-sombre);
+    background-image: linear-gradient(160deg, var(--color-bleu), var(--color-bleu-sombre));
+    background-attachment: fixed;
+    color: var(--color-blanc);
+    font-family: var(--font-sans);
+  }
+  a {
+    color: inherit;
+    text-decoration: inherit;
+  }
+  button {
+    cursor: pointer;
+  }
+}
+
+/* Focus clavier visible, contour émeraude (spec app-shell, accessibilité). */
+:focus-visible {
+  outline: 2px solid var(--color-emeraude);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--color-chamois);
+  color: var(--color-bleu-sombre);
+}
+
+/*
+ * Amélioration progressive (ADR 0037) : `html.js` est posé par un script en tête de page.
+ * Sans JavaScript, tout reste visible (filtres dépliés, description entière).
+ */
+@custom-variant js (&:where(.js, .js *));

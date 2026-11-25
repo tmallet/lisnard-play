@@ -1,0 +1,104 @@
+---
+/** Mentions légales et confidentialité (spec app-shell, ADR 0022). */
+import Title from '@/components/Title.astro';
+import { APP_NAME, INDEPENDENCE_NOTICE } from '@/config/app';
+import { LEGAL } from '@/config/legal';
+import Base from '@/layouts/Base.astro';
+import { siteOrigin } from '@/server/site';
+
+const mail = `mailto:${LEGAL.contactEmail}`;
+const p = 'font-sans text-base text-blanc/85 leading-relaxed';
+const a = 'font-sans-semibold text-chamois underline';
+const h2 = 'font-sans-semibold text-chamois text-xs uppercase tracking-wider';
+---
+<Base
+  title="Mentions légales et confidentialité"
+  description={`Éditeur, hébergeur et données personnelles de ${APP_NAME}.`}
+  notice={false}
+  canonical={`${siteOrigin()}/mentions-legales`}
+>
+  <Title text="Mentions légales et confidentialité" highlight="confidentialité" />
+  <p class={p}>{INDEPENDENCE_NOTICE}</p>
+
+  <section class="flex flex-col gap-2">
+    <h2 class={h2}>Éditeur</h2>
+    <p class={p}>
+      {APP_NAME} est édité par une personne physique, à titre non professionnel, qui a choisi
+      de rester anonyme. Ses coordonnées ont été communiquées à l’hébergeur, conformément à
+      l’article 6 de la loi pour la confiance dans l’économie numérique.
+    </p>
+    <p class={p}>Contact : <a class={a} href={mail}>{LEGAL.contactEmail}</a></p>
+  </section>
+
+  <section class="flex flex-col gap-2">
+    <h2 class={h2}>Hébergeur</h2>
+    <p class={p}>
+      {LEGAL.host.name}, {LEGAL.host.address}, téléphone {LEGAL.host.phone} —
+      <a class={a} href={LEGAL.host.url}>{LEGAL.host.url.replace('https://', '')}</a>
+    </p>
+    <p class={p}>Le serveur et les données sont situés en France, dans {LEGAL.host.datacenter}.</p>
+  </section>
+
+  <section class="flex flex-col gap-2">
+    <h2 class={h2}>Contenus</h2>
+    <p class={p}>
+      Les interventions recensées proviennent de sources publiques (chaînes vidéo, médias,
+      podcasts). Les vidéos sont lues depuis leur plateforme d’origine et les articles
+      renvoient vers le site de leur éditeur : aucun contenu n’est copié ni réhébergé.
+    </p>
+    <p class={p}>
+      Le bouton « Adhérer à Nouvelle Énergie » renvoie vers le site d’adhésion du parti par un
+      lien de parrainage de l’éditeur : une adhésion faite par ce lien lui est rattachée. Ce
+      lien ne fait de {APP_NAME} ni un site du parti ni un site officiel.
+    </p>
+    <p class={p}>
+      Les résumés de vidéos sont générés automatiquement par un modèle d’intelligence
+      artificielle et signalés comme tels. Pour signaler une erreur ou demander le retrait
+      d’un contenu, écrivez à <a class={a} href={mail}>{LEGAL.contactEmail}</a>.
+    </p>
+  </section>
+
+  <section class="flex flex-col gap-2">
+    <h2 class={h2}>Données personnelles</h2>
+    <p class={p}>
+      {APP_NAME} ne demande aucun compte et ne dépose aucun cookie. Le serveur conserve des
+      journaux techniques (adresse IP, page demandée, date) pendant au plus 30 jours, pour la
+      sécurité et le bon fonctionnement du service ; ils ne sont ni exploités à d’autres fins
+      ni transmis à des tiers, hors l’hébergeur.
+    </p>
+    <p class={p}>
+      L’audience est mesurée avec Umami, un outil libre installé sur un serveur de l’éditeur,
+      sans cookie ni stockage dans votre navigateur. Il enregistre la page consultée, la page
+      d’origine, le type d’appareil, la taille d’écran, le navigateur, le système, la langue,
+      ainsi que le pays, la région et la ville déduits de l’adresse IP. L’adresse IP n’est pas
+      conservée : elle sert seulement à calculer un identifiant de visite anonyme, renouvelé
+      chaque mois, qui ne permet pas de vous suivre d’un site à l’autre. Ces données servent
+      uniquement à produire des statistiques de fréquentation, ne sont transmises à personne et
+      sont conservées au plus 25 mois. Pour vous y opposer, activez l’option « Ne pas me
+      suivre » (Do Not Track) de votre navigateur : aucune donnée n’est alors envoyée.
+    </p>
+    <p class={p}>
+      Si vous activez les notifications, le serveur conserve l’adresse d’abonnement fournie
+      par votre navigateur, ainsi que vos préférences. Ces données servent uniquement à vous
+      envoyer les notifications choisies, par l’intermédiaire du service de notification de
+      votre navigateur (Google, Mozilla, Apple ou Microsoft). Elles sont supprimées dès que
+      vous désactivez les notifications, quand ce service les déclare expirées, ou après 13
+      mois sans utilisation de l’appareil.
+    </p>
+    <p class={p}>
+      Les vidéos YouTube et Dailymotion ne se chargent que si vous appuyez sur « Lire la
+      vidéo ». La plateforme peut alors déposer des cookies et recueillir des données selon
+      ses propres règles (pour YouTube :
+      <a class={a} href={LEGAL.googlePrivacyUrl}>règles de confidentialité de Google</a>).
+      Les vidéos YouTube sont servies en mode de confidentialité renforcée (youtube-nocookie.com).
+    </p>
+    <p class={p}>
+      Vous disposez d’un droit d’accès, de rectification, d’effacement et d’opposition sur les
+      données vous concernant : écrivez à <a class={a} href={mail}>{LEGAL.contactEmail}</a>.
+      Vous pouvez aussi adresser une réclamation à la CNIL
+      (<a class={a} href="https://www.cnil.fr">cnil.fr</a>).
+    </p>
+  </section>
+
+  <p class="font-sans text-blanc/60 text-sm">Mise à jour : {LEGAL.updatedAt}.</p>
+</Base>

@@ -1,0 +1,75 @@
+---
+/**
+ * Document commun (spec app-shell, ADR 0037) : métadonnées, en-tête, contenu, mention
+ * d'indépendance et pied de page. Le contenu de chaque page est rendu par le serveur ;
+ * seuls les îlots chargent du JavaScript.
+ */
+import '@/styles/global.css';
+
+import Footer from '@/components/Footer.astro';
+import Header from '@/components/Header.astro';
+import IndependenceNote from '@/components/IndependenceNote.astro';
+import Seo, { type SeoProps } from '@/components/Seo.astro';
+import { ANALYTICS } from '@/config/analytics';
+import PushLifecycle from '@/islands/PushLifecycle';
+import { colors } from '@/theme/colors';
+
+interface Props extends SeoProps {
+  /** Zone de contenu élargie (grille de l'accueil) ; sinon colonne de lecture. */
+  wide?: boolean;
+  /**
+   * Sur téléphone, mention d'indépendance en tête de contenu ; false si la page l'affiche
+   * déjà (« À propos », mentions légales). Dès md, pied de page collé en bas.
+   */
+  notice?: boolean;
+  /** Entrée de navigation de la page (aria-current). */
+  current?: string;
+}
+
+const { wide = false, notice = true, current, ...seo } = Astro.props;
+---
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      document.documentElement.classList.add('js');
+      // Miniature haute définition absente : repli sur l'image d'origine (data-fallback).
+      document.addEventListener('error', (event) => {
+        const img = event.target;
+        if (img instanceof HTMLImageElement && img.dataset.fallback) {
+          img.src = img.dataset.fallback;
+          delete img.dataset.fallback;
+        }
+      }, true);
+    </script>
+    <Seo {...seo} />
+    <meta name="theme-color" content={colors.bleuSombre} />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="manifest" href="/manifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- Mesure d'audience sans cookie (ADR 0035), limitée au domaine de production. -->
+    <script
+      is:inline
+      defer
+      src={ANALYTICS.scriptUrl}
+      data-website-id={ANALYTICS.websiteId}
+      data-domains={ANALYTICS.domains}
+      data-do-not-track="true"
+    ></script>
+    <slot name="head" />
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <Header current={current} />
+    <main class:list={['mx-auto flex w-full flex-1 flex-col gap-4 px-6 py-6 md:gap-6 md:py-10', wide ? 'max-w-6xl' : 'max-w-3xl']}>
+      {notice && <div class="md:hidden"><IndependenceNote /></div>}
+      <slot />
+    </main>
+    <Footer />
+    <!-- Reconfirme l'abonnement aux notifications de l'appareil (spec push-notifications). -->
+    <PushLifecycle client:idle />
+  </body>
+</html>

@@ -1,0 +1,12 @@
+---
+/** Page introuvable : HTTP 404, mention d'indépendance comprise (spec app-shell). */
+import Title from '@/components/Title.astro';
+import Base from '@/layouts/Base.astro';
+
+Astro.response.status = 404;
+---
+<Base title="Page introuvable" description="Cette page n’existe pas ou a été déplacée.">
+  <Title text="Page introuvable" highlight="introuvable" />
+  <p class="font-sans text-base text-blanc/85 leading-relaxed">Cette page n’existe pas ou a été déplacée.</p>
+  <a href="/" class="self-start font-sans-semibold text-base text-chamois underline">Revenir à l’accueil</a>
+</Base>

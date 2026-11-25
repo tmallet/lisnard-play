@@ -1,0 +1,97 @@
+---
+/**
+ * Accueil (spec intervention-feed) : interventions en direct, à venir et passées,
+ * filtrables par thème et format, ou résultats de recherche (`?q=`). Tout est rendu par
+ * le serveur ; les îlots rafraîchissent les directs et chargent la suite des passées.
+ */
+import Eyebrow from '@/components/Eyebrow.astro';
+import Filters from '@/components/Filters.astro';
+import SearchBox from '@/components/SearchBox.astro';
+import SearchResults from '@/components/SearchResults.astro';
+import Title from '@/components/Title.astro';
+import LiveSections from '@/islands/LiveSections';
+import PastSection from '@/islands/PastSection';
+import Base from '@/layouts/Base.astro';
+import { homeHref, readFilters } from '@/lib/filters';
+import { FALLBACK_IMAGE, homeStructuredData } from '@/lib/seo';
+import { api } from '@/server/api';
+import { siteOrigin } from '@/server/site';
+
+const params = Astro.url.searchParams;
+const q = (params.get('q') ?? '').trim();
+const filters = readFilters(params);
+const before = params.get('avant');
+const origin = siteOrigin();
+const caller = api(Astro.request);
+const theme = filters.theme ?? undefined;
+
+const failure = (what: string) => (error: unknown) => {
+  console.error(JSON.stringify({ msg: `accueil : ${what} en échec`, error: String(error) }));
+  return null;
+};
+const [live, upcoming, past] = q
+  ? [null, null, null]
+  : await Promise.all([
+      caller.interventions.list({ status: 'live', theme }).catch(failure('directs')),
+      caller.interventions.list({ status: 'upcoming', theme }).catch(failure('à venir')),
+      caller.interventions
+        .list({
+          status: 'past',
+          theme,
+          format: filters.format ?? undefined,
+          cursor: before ?? undefined,
+          limit: 20,
+        })
+        .catch(failure('passées')),
+    ]);
+const failed = !q && (!live || !upcoming);
+// Erreur de l'API : jamais une page vide servie en 200 (elle serait indexée).
+if (failed) Astro.response.status = 503;
+---
+<Base
+  wide
+  current="/"
+  canonical={`${origin}/`}
+  image={{ url: `${origin}${FALLBACK_IMAGE}` }}
+  structuredData={homeStructuredData(origin)}
+>
+  <Eyebrow>Présidentielle 2027</Eyebrow>
+  <Title text="Toutes les interventions de David Lisnard" highlight="David Lisnard" />
+  <p class="font-sans-bold text-blanc text-sm md:text-lg">
+    En direct, à venir et passées : télévision, radio, presse, meetings.
+  </p>
+  <SearchBox value={q} />
+  {q ? (
+    <SearchResults q={q} />
+  ) : (
+    <div class="flex flex-col gap-6 md:gap-8">
+      <Filters filters={filters} />
+      {failed ? (
+        <p class="font-sans text-base text-blanc/85">
+          Les interventions n’ont pas pu être chargées. Réessayez dans un instant.
+        </p>
+      ) : (
+        <>
+          <LiveSections
+            client:idle
+            theme={filters.theme}
+            live={live?.items ?? []}
+            upcoming={upcoming?.items ?? []}
+            renderedAt={Date.now()}
+          />
+          <PastSection
+            client:visible
+            theme={filters.theme}
+            format={filters.format}
+            items={past?.items ?? []}
+            nextCursor={past?.nextCursor ?? null}
+            cursor={before}
+            olderHref={past?.nextCursor ? homeHref(filters, past.nextCursor) : null}
+            newestHref={before ? homeHref(filters) : null}
+            failed={!past}
+          />
+        </>
+      )}
+    </div>
+  )}
+</Base>

@@ -9,6 +9,7 @@ WORKDIR /repo
 COPY package.json bun.lock bunfig.toml ./
 COPY apps/admin/package.json apps/admin/
 COPY apps/app/package.json apps/app/
+COPY apps/web/package.json apps/web/
 COPY apps/worker/package.json apps/worker/
 COPY packages/api/package.json packages/api/
 COPY packages/db/package.json packages/db/

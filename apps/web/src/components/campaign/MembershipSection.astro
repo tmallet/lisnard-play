@@ -1,0 +1,35 @@
+---
+/** Vue « Adhésions » de la page Campagne (spec membership-timeline, ADR 0026). */
+import MembershipView from '@/islands/MembershipView';
+import { formatDateTime } from '@/lib/format';
+import { api } from '@/server/api';
+
+const members = new Intl.NumberFormat('fr-FR');
+const data = await api(Astro.request)
+  .membership.timeline()
+  .catch((error: unknown) => {
+    console.error(JSON.stringify({ msg: 'adhésions en échec', error: String(error) }));
+    return null;
+  });
+---
+<p class="font-sans text-base text-blanc/85 leading-relaxed">
+  Chaque repère marque une intervention de David Lisnard ; les ronds sont les vidéos de sa
+  chaîne. Une hausse au même moment ne prouve pas que l’intervention en est la cause.
+</p>
+{!data?.total ? (
+  <p class="font-sans text-base text-blanc/85">
+    Les chiffres d’adhésion sont momentanément indisponibles. Réessayez dans un instant.
+  </p>
+) : (
+  <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-1">
+      <p class="font-sans-extrabold text-4xl text-blanc">
+        {members.format(data.total.members)}<span class="font-sans-bold text-blanc/85 text-lg"> adhérents</span>
+      </p>
+      <p class="font-sans text-blanc/70 text-sm">
+        {data.stale ? 'Données du ' : 'Mis à jour le '}{formatDateTime(data.total.updatedAt)}{data.stale ? ' (source momentanément indisponible)' : ''} · Source : {data.source}
+      </p>
+    </div>
+    <MembershipView client:visible days={data.days} interventions={data.interventions} />
+  </div>
+)}

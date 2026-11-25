@@ -1,0 +1,27 @@
+---
+/**
+ * Champ de recherche de l'accueil (spec intervention-feed) : formulaire GET vers `/?q=`,
+ * une seule ligne pour ne pas repousser les interventions sous la ligne de flottaison.
+ */
+const { value } = Astro.props as { value: string };
+---
+<form role="search" action="/" method="get" class="flex items-center gap-2 rounded-full border border-blanc/25 bg-blanc/5 pr-1 pl-4">
+  <input
+    type="search"
+    name="q"
+    value={value}
+    placeholder="Rechercher une citation, un sujet…"
+    aria-label="Rechercher dans les citations et les interventions"
+    autocomplete="off"
+    minlength="2"
+    maxlength="100"
+    class="min-w-0 flex-1 bg-transparent py-2 font-sans text-[15px] text-blanc placeholder:text-blanc/70 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+  />
+  {value ? (
+    <a href="/" class="rounded-full px-3 py-1.5 font-sans-semibold text-chamois text-sm">Effacer</a>
+  ) : (
+    <button type="submit" aria-label="Lancer la recherche" class="rounded-full bg-chamois px-3 py-1.5 font-sans-bold text-bleu-sombre text-sm">
+      OK
+    </button>
+  )}
+</form>

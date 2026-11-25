@@ -1,0 +1,116 @@
+---
+/**
+ * Détail d'une intervention (spec intervention-feed) : métadonnées, lecteur après
+ * consentement ou lien vers la source, résumé, citations et description, rendus par le
+ * serveur (contenu lisible sans JavaScript, ADR 0037). Inconnue ou masquée : 404.
+ */
+import { JoinCta } from '@/components/Join';
+import LinkCard from '@/components/LinkCard.astro';
+import { LiveBadge } from '@/components/LiveBadge';
+import SummaryBlock from '@/components/SummaryBlock.astro';
+import DescriptionBlock from '@/islands/DescriptionBlock';
+import PlayerConsent from '@/islands/PlayerConsent';
+import QuotesBlock from '@/islands/QuotesBlock';
+import Base from '@/layouts/Base.astro';
+import { kindLabelFor, repeatsTitle, themesLabel, whenLabel } from '@/lib/format';
+import { interventionDescription, interventionTitle } from '@/lib/intervention-meta';
+import { FALLBACK_IMAGE, httpsOnly, interventionStructuredData } from '@/lib/seo';
+import { api, isNotFound } from '@/server/api';
+import { siteOrigin } from '@/server/site';
+
+const id = Astro.params.id ?? '';
+let data: Awaited<ReturnType<ReturnType<typeof api>['interventions']['byId']>>;
+try {
+  data = await api(Astro.request).interventions.byId({ id });
+} catch (error) {
+  if (isNotFound(error)) return Astro.rewrite('/404');
+  throw error;
+}
+
+const origin = siteOrigin();
+const t = Astro.url.searchParams.get('t');
+const startS = t !== null && /^\d{1,5}$/.test(t) ? Number(t) : undefined;
+// Les descriptions de Google News ne font souvent que répéter « titre + média ».
+const description =
+  data.description && !repeatsTitle(data.description, data.title, data.outlet)
+    ? data.description
+    : null;
+const video = data.media.kind === 'embed';
+const thumbnail = httpsOnly(data.thumbnailUrl);
+// Lien suivi sans JavaScript : la vidéo chez le fournisseur, au passage demandé.
+const sourceUrl =
+  video && startS !== undefined && /youtube\.com\/watch/.test(data.url)
+    ? `${data.url}&t=${startS}s`
+    : data.url;
+---
+<Base
+  title={interventionTitle(data)}
+  description={interventionDescription(data)}
+  canonical={`${origin}/interventions/${data.id}`}
+  ogType={video ? 'video.other' : 'article'}
+  image={{ url: thumbnail ?? `${origin}${FALLBACK_IMAGE}` }}
+  twitterCard={thumbnail ? 'summary_large_image' : 'summary'}
+  structuredData={interventionStructuredData(data, origin)}
+>
+  <article class="flex flex-col gap-6">
+    <a href="/" class="flex min-h-10 items-center gap-1.5 self-start">
+      <span aria-hidden="true" class="font-sans-bold text-base text-chamois">‹</span>
+      <span class="font-sans-semibold text-chamois text-sm">Toutes les interventions</span>
+    </a>
+    <header class="flex flex-col gap-3">
+      {data.status === 'live' && <LiveBadge />}
+      <p class="font-sans-bold text-chamois text-xs uppercase tracking-widest">
+        {data.outlet} · {kindLabelFor(data.status, data.kind)}
+      </p>
+      <h1 class="font-sans-extrabold text-3xl text-blanc uppercase leading-tight tracking-tight md:text-4xl">
+        {data.title}
+      </h1>
+      <div class="flex flex-wrap items-center gap-2">
+        <time datetime={data.date} class="font-sans-semibold text-blanc/70 text-sm">
+          {whenLabel(data.status, data.date)}
+        </time>
+        {data.themes.length > 0 && (
+          <span class="rounded-full border border-blanc/45 px-3 py-1 font-sans-semibold text-blanc text-xs">
+            {themesLabel(data.themes)}
+          </span>
+        )}
+      </div>
+    </header>
+    {data.media.kind === 'embed' ? (
+      <div id="lecteur">
+        <PlayerConsent
+          client:idle
+          embedUrl={data.media.embedUrl}
+          provider={data.media.provider}
+          title={data.title}
+          posterUrl={data.thumbnailUrl}
+          sourceUrl={sourceUrl}
+          startS={startS}
+        />
+      </div>
+    ) : (
+      <LinkCard
+        url={data.media.url ?? data.url}
+        og={data.media.og}
+        outlet={data.outlet}
+        shownTexts={description ? [data.title, description] : [data.title]}
+      />
+    )}
+    {data.summary && <SummaryBlock text={data.summary.text} points={data.summary.points} />}
+    {video && data.quotes.length > 0 && (
+      <QuotesBlock client:idle itemId={data.id} title={data.title} quotes={data.quotes} origin={origin} />
+    )}
+    {description && <DescriptionBlock client:visible text={description} />}
+    {video && (
+      <a
+        href={data.url}
+        target="_blank"
+        rel="noopener"
+        class="flex min-h-11 items-center self-start rounded-xl border border-chamois px-5 font-sans-bold text-chamois text-sm uppercase tracking-wider transition-colors duration-200 hover:bg-chamois/15 active:bg-chamois/25 motion-reduce:transition-none"
+      >
+        Voir la source sur {data.outlet} ↗
+      </a>
+    )}
+    <JoinCta />
+  </article>
+</Base>

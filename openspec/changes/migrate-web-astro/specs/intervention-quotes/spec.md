@@ -41,3 +41,23 @@ bouton DOIT être un lien vers l'image.
 #### Scenario: Citation régénérée
 - **WHEN** on demande l'image d'une citation qui n'existe plus à ce minutage
 - **THEN** le serveur répond 404
+
+### Requirement: Aperçu du lien d'une citation
+Le HTML servi pour la page d'une citation DOIT porter, sans exécution de JavaScript :
+- un titre et une description propres à la citation, compréhensibles hors du site
+  (« David Lisnard sur BFMTV, 13 octobre 2026 ») ;
+- `og:image` et `twitter:image` pointant vers la variante paysage de son image ;
+- `og:url` (adresse de la page, sur le domaine de production) ;
+- `twitter:card` de valeur `summary_large_image`.
+
+Si la citation est introuvable à ce minutage (résumé régénéré), la page DOIT rediriger
+(HTTP 302) vers l'intervention au même moment (`/interventions/<id>?t=<secondes>`), sans
+métadonnées de citation. Un minutage illisible DOIT rediriger vers l'intervention.
+
+#### Scenario: Lien collé dans un message
+- **WHEN** un robot d'aperçu (X, WhatsApp, Facebook) lit la page d'une citation
+- **THEN** il trouve le texte de la citation dans le titre ou la description et l'image paysage de la citation
+
+#### Scenario: Citation régénérée
+- **WHEN** la page d'une citation qui n'existe plus est demandée
+- **THEN** la réponse est une redirection HTTP 302 vers `/interventions/<id>?t=<secondes>`, sans `og:image` de citation

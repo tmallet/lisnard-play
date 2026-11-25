@@ -1,0 +1,42 @@
+{
+  "name": "@lisnard/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --env-file=../../.env --bun astro dev",
+    "build": "bun --bun astro build",
+    "start": "bun --bun server.mjs",
+    "typecheck": "astro check --minimumSeverity warning",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@astrojs/node": "11.1.12",
+    "@astrojs/react": "7.1.7",
+    "@fontsource/montserrat": "5.3.0",
+    "@lisnard/api": "workspace:*",
+    "@lisnard/db": "workspace:*",
+    "@resvg/resvg-js": "2.6.2",
+    "@tailwindcss/vite": "4.3.5",
+    "@tanstack/react-query": "5.104.2",
+    "@trpc/client": "11.19.0",
+    "@trpc/server": "11.19.0",
+    "@trpc/tanstack-react-query": "11.19.0",
+    "astro": "7.4.10",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "satori": "0.18.3",
+    "tailwindcss": "4.3.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "@testing-library/dom": "10.4.2",
+    "@testing-library/react": "16.3.3",
+    "@types/bun": "1.4.3",
+    "@types/react": "~19.2.2",
+    "@types/react-dom": "19.3.0",
+    "happy-dom": "21.0.4",
+    "typescript": "~6.0.3",
+    "vitest": "5.1.0"
+  }
+}

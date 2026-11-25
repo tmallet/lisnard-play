@@ -1,0 +1,109 @@
+---
+import MembershipSection from '@/components/campaign/MembershipSection.astro';
+import RecapPanel from '@/components/campaign/RecapPanel.astro';
+import RecapsSection from '@/components/campaign/RecapsSection.astro';
+import TravelsSection from '@/components/campaign/TravelsSection.astro';
+/**
+ * Page « Campagne » (specs membership-timeline, intervention-places, campaign-recaps) :
+ * vues « Adhésions », « Déplacements » et « Récaps », choisies par `?vue=` ; un
+ * récapitulatif s'ouvre par `?jour=AAAA-MM-JJ` ou `?semaine=` avec ses métadonnées
+ * d'aperçu (ADR 0031).
+ */
+import Eyebrow from '@/components/Eyebrow.astro';
+import Title from '@/components/Title.astro';
+import Base from '@/layouts/Base.astro';
+import {
+  periodLabel,
+  recapDescription,
+  recapImagePath,
+  recapPath,
+  recapSummary,
+  recapTitle,
+} from '@/lib/recap';
+import { api } from '@/server/api';
+import { recapVersion } from '@/server/recap';
+import { siteOrigin } from '@/server/site';
+
+const VIEWS = [
+  { value: 'adhesions', label: 'Adhésions', href: '/campagne' },
+  { value: 'deplacements', label: 'Déplacements', href: '/campagne?vue=deplacements' },
+  { value: 'recaps', label: 'Récaps', href: '/campagne?vue=recaps' },
+] as const;
+
+const params = Astro.url.searchParams;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const jour = params.get('jour');
+const semaine = params.get('semaine');
+const request =
+  jour && DAY.test(jour)
+    ? ({ period: 'day', start: jour } as const)
+    : semaine && DAY.test(semaine)
+      ? ({ period: 'week', start: semaine } as const)
+      : null;
+const vue = params.get('vue');
+const current = request ? 'recaps' : vue === 'deplacements' || vue === 'recaps' ? vue : 'adhesions';
+
+const origin = siteOrigin();
+const recap = request
+  ? await api(Astro.request)
+      .recap.get(request)
+      .catch((error: unknown) => {
+        console.error(JSON.stringify({ msg: 'récap en échec', error: String(error) }));
+        return 'error' as const;
+      })
+  : null;
+const found = recap && recap !== 'error' ? recap : null;
+
+// Métadonnées : celles du récapitulatif quand il existe (aperçu de lien), sinon de la page.
+const label = found ? periodLabel(found.period, found.from, found.to) : '';
+const seo = found
+  ? {
+      title: `${recapTitle(found.period)}, ${label}`,
+      description: recapDescription(
+        found.interventions.length,
+        found.members?.delta ?? null,
+        found.quote?.text ?? null,
+      ),
+      canonical: `${origin}${recapPath(found.period, found.from)}`,
+      image: {
+        url: `${origin}${recapImagePath(found.period, found.from)}?v=${recapVersion(found)}`,
+        width: 1200,
+        height: 630,
+        alt: `${recapTitle(found.period)}, ${label} : ${recapSummary(found.interventions.length, found.members?.delta ?? null)}`,
+      },
+      twitterCard: 'summary_large_image' as const,
+    }
+  : {
+      title: 'Campagne',
+      description:
+        'Les adhésions à Nouvelle Énergie et les déplacements de David Lisnard au fil de sa campagne.',
+      canonical: `${origin}/campagne${current === 'adhesions' ? '' : `?vue=${current}`}`,
+    };
+---
+<Base wide current="/campagne" {...seo}>
+  <Eyebrow>Présidentielle 2027</Eyebrow>
+  <Title text="La campagne en chiffres" highlight="campagne" />
+  <nav aria-label="Vues de la campagne" class="flex self-start rounded-full border border-blanc/20 p-1">
+    {VIEWS.map((view) => (
+      <a
+        href={view.href}
+        aria-current={view.value === current ? 'page' : undefined}
+        class:list={[
+          'rounded-full px-4 py-1.5 font-sans-semibold text-sm',
+          view.value === current ? 'bg-chamois text-bleu-sombre' : 'text-blanc',
+        ]}
+      >
+        {view.label}
+      </a>
+    ))}
+  </nav>
+  {request ? (
+    <RecapPanel recap={recap === 'error' ? 'error' : found} origin={origin} />
+  ) : current === 'recaps' ? (
+    <RecapsSection />
+  ) : current === 'deplacements' ? (
+    <TravelsSection />
+  ) : (
+    <MembershipSection />
+  )}
+</Base>

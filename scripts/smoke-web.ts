@@ -1,8 +1,8 @@
 /**
- * Smoke test web (design D7, ADR 0009) : export de production servi par le serveur Bun
- * (apps/app/server.ts, comme sur Coolify) face à une base jetable contenant une
- * intervention publiée. Vérifie par HTTP, sans exécuter de JavaScript, les specs
- * app-shell, api-transport et intervention-feed.
+ * Smoke test web (ADR 0009, 0037) : build de production du site Astro servi sous Bun
+ * (comme sur Coolify) face à une base jetable contenant des interventions publiées.
+ * Vérifie par HTTP, sans exécuter de JavaScript, les specs app-shell, api-transport,
+ * intervention-feed et suivantes : le contenu doit être dans le HTML servi.
  *
  * Usage : bun run smoke:web   (SMOKE_PORT pour changer le port, SKIP_EXPORT=1 pour réutiliser dist/)
  * Requiert un Postgres joignable via DATABASE_URL (local : docker compose up -d).
@@ -24,7 +24,8 @@ import {
   upsertSources,
 } from '../packages/db/src/write';
 
-const APP_DIR = resolve(import.meta.dir, '../apps/app');
+const APP_DIR = resolve(import.meta.dir, '../apps/web');
+const SERVER = ['bun', '--bun', 'server.mjs'];
 const PORT = Number(process.env.SMOKE_PORT ?? 8091);
 const BASE = `http://localhost:${PORT}`;
 
@@ -75,9 +76,7 @@ function checkPage(path: string, html: string, expectedTitle: string | null, not
 const trpcUrl = (procedure: string, input: unknown) =>
   `${BASE}/api/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify(input))}`;
 
-// Export sous Node quand il est installé : sous Bun, Metro (SDK 57) échoue sur Linux quand Node est
-// aussi présent (« Cannot find module './Worker.js' »). L'export n'exécute pas les API routes.
-if (!process.env.SKIP_EXPORT) await run(['bunx', 'expo', 'export', '--platform', 'web']);
+if (!process.env.SKIP_EXPORT) await run(['bun', '--bun', 'astro', 'build']);
 // Interface du backoffice (ADR 0032), servie par le service admin.
 const ADMIN_DIR = resolve(import.meta.dir, '../apps/admin');
 if (!process.env.SKIP_EXPORT) {
@@ -124,6 +123,36 @@ await setMedia(db, id, {
   provider: 'youtube',
   embedUrl: 'https://www.youtube.com/embed/smoke-1',
 });
+// Interventions plus anciennes, sans thème : l'accueil en a plus d'une page (20), ce qui
+// exerce la pagination sans JavaScript.
+for (let i = 0; i < 21; i++) {
+  const { id: older } = await upsertItem(db, {
+    sourceId: 'yt:smoke',
+    platformId: `yt:smoke-old-${i}`,
+    url: `https://www.youtube.com/watch?v=smoke-old-${i}`,
+    title: `Intervention ancienne ${i}`,
+    description: '',
+    publishedAt: new Date(Date.UTC(2026, 4, 1 + i, 8)),
+  });
+  await recordClassification(db, {
+    itemId: older,
+    model: 'smoke',
+    questionsVersion: 0,
+    inputHash: `smoke-old-${i}`,
+    answers: { intervient: 1 },
+    thresholds: { intervient: 0.75, role: 0.6, theme: 0.5 },
+    outcome: 'published',
+    role: 'national',
+    kind: 'tv',
+    themes: [],
+  });
+  await setMedia(db, older, {
+    kind: 'embed',
+    provider: 'youtube',
+    embedUrl: `https://www.youtube.com/embed/smoke-old-${i}`,
+  });
+}
+
 await recordSummary(
   db,
   id,
@@ -198,10 +227,11 @@ const admin = Bun.spawn(['bun', 'server.ts'], {
   stderr: 'inherit',
 });
 
-const server = Bun.spawn(['bun', 'server.ts'], {
+const server = Bun.spawn(SERVER, {
   cwd: APP_DIR,
   env: {
     ...process.env,
+    HOST: '127.0.0.1',
     ADMIN_INTERNAL_URL: `http://localhost:${ADMIN_PORT}`,
     PORT: String(PORT),
     DATABASE_URL: url,
@@ -272,7 +302,7 @@ try {
     'vidéo masquée : introuvable',
     (await fetch(trpcUrl('interventions.byId', { id: hiddenId }))).status === 404,
   );
-  const { INDEPENDENCE_NOTICE, pageTitle } = await import('../apps/app/src/config/app');
+  const { INDEPENDENCE_NOTICE, pageTitle } = await import('../apps/web/src/config/app');
 
   checkPage('/', await (await fetch(`${BASE}/`)).text(), pageTitle(), INDEPENDENCE_NOTICE);
   checkPage(
@@ -283,7 +313,7 @@ try {
   );
 
   // Mentions légales (spec app-shell, ADR 0022) : page pré-rendue, liée depuis le pied de page.
-  const { LEGAL } = await import('../apps/app/src/config/legal');
+  const { LEGAL } = await import('../apps/web/src/config/legal');
   const legal = await (await fetch(`${BASE}/mentions-legales`)).text();
   checkPage(
     '/mentions-legales',
@@ -309,13 +339,25 @@ try {
   const detailHtml = await detail.text();
   checkPage('/interventions/<id>', detailHtml, null, INDEPENDENCE_NOTICE);
   check(
-    '/interventions/<id> : canonique, JSON-LD VideoObject et texte sans JavaScript (ADR 0036)',
+    '/interventions/<id> : canonique, JSON-LD VideoObject et carte Twitter (ADR 0036)',
     detailHtml.includes(
-      `<link rel="canonical" href="https://play.projetlisnard.fr/interventions/${id}"/>`,
+      `<link rel="canonical" href="https://play.projetlisnard.fr/interventions/${id}">`,
     ) &&
       detailHtml.includes('"@type":"VideoObject"') &&
-      detailHtml.includes('<noscript><article><h1>') &&
       detailHtml.includes('name="twitter:card"'),
+  );
+  // Contenu dans le corps de la page, pas dans un <noscript> (ADR 0037).
+  const visible = detailHtml.replace(/<noscript>[\s\S]*?<\/noscript>/g, '');
+  check(
+    '/interventions/<id> : titre, résumé, points et citations dans le corps, sans JavaScript',
+    /<h1[^>]*>\s*Intervention de test\s*<\/h1>/.test(visible) &&
+      visible.includes('Résumé de test.') &&
+      visible.includes('point de test') &&
+      visible.includes('Il faut réformer l’école dès le primaire.'),
+  );
+  check(
+    '/interventions/<id> : sans JavaScript, l’affiche mène à la vidéo',
+    detailHtml.includes('href="https://www.youtube.com/watch?v=smoke-1"'),
   );
   const unknownDetail = await fetch(`${BASE}/interventions/00000000-0000-4000-8000-000000000000`);
   check('/interventions/<inconnu> : HTTP 404', unknownDetail.status === 404);
@@ -326,9 +368,36 @@ try {
   const homeHtml = await (await fetch(`${BASE}/`)).text();
   check(
     '/ : canonique, carte Twitter et JSON-LD WebSite',
-    homeHtml.includes('<link rel="canonical" href="https://play.projetlisnard.fr/"/>') &&
+    homeHtml.includes('<link rel="canonical" href="https://play.projetlisnard.fr/">') &&
       homeHtml.includes('name="twitter:card"') &&
       homeHtml.includes('"@type":"WebSite"'),
+  );
+  // Accueil lisible sans JavaScript (spec app-shell, ADR 0037).
+  check('/ : interventions dans le HTML', homeHtml.includes('Intervention de test'));
+  const older = /href="(\/\?avant=[^"]+)"/.exec(homeHtml)?.[1]?.replaceAll('&amp;', '&');
+  check('/ : lien vers les interventions plus anciennes', !!older);
+  const olderHtml = older ? await (await fetch(`${BASE}${older}`)).text() : '';
+  check(
+    '/?avant= : page suivante des passées, lien de retour',
+    olderHtml.includes('Intervention ancienne 0') &&
+      !olderHtml.includes('Intervention de test</h3>') &&
+      olderHtml.includes('Interventions les plus récentes'),
+  );
+  const filtered = await (await fetch(`${BASE}/?theme=economy`)).text();
+  check(
+    '/?theme= : filtre appliqué sans JavaScript, canonique de l’accueil',
+    filtered.includes('Intervention de test') &&
+      !filtered.includes('Intervention ancienne') &&
+      filtered.includes('<link rel="canonical" href="https://play.projetlisnard.fr/">'),
+  );
+  const searched = await (await fetch(`${BASE}/?q=${encodeURIComponent('école primaire')}`)).text();
+  check(
+    '/?q= : résultats de recherche dans le HTML',
+    searched.includes('Il faut réformer l’école'),
+  );
+  check(
+    'pages : cache court des pages publiques',
+    ((await fetch(`${BASE}/`)).headers.get('cache-control') ?? '').includes('max-age=60'),
   );
 
   const health = await fetch(`${BASE}/api/trpc/health`);
@@ -429,25 +498,32 @@ try {
       quoteHtml.includes(
         `<meta property="og:image" content="https://play.projetlisnard.fr/interventions/${id}/citation/125/apercu.png?v=`,
       ) &&
-      quoteHtml.includes('<meta name="twitter:card" content="summary_large_image"/>'),
+      quoteHtml.includes('<meta name="twitter:card" content="summary_large_image">'),
   );
-  const unknownQuote = await (await fetch(`${BASE}/interventions/${id}/citation/9999`)).text();
+  const stylesheet = quoteHtml.search(/<link[^>]*stylesheet|<style/);
   check(
-    'page de citation : description remplacée, une seule balise de chaque, aperçu en tête',
+    'page de citation : description propre, une seule balise de chaque, aperçu en tête',
     quoteHtml.includes('content="David Lisnard sur ') &&
       !quoteHtml.includes('Toutes les interventions publiques') &&
       quoteHtml.split('property="og:image"').length === 2 &&
       quoteHtml.split('property="og:title"').length === 2 &&
       quoteHtml.split(/<meta charset/i).length === 2 &&
-      quoteHtml.indexOf('og:image') < quoteHtml.indexOf('<style'),
+      (stylesheet < 0 || quoteHtml.indexOf('og:image') < stylesheet),
   );
   const quotedHtml = await (await fetch(`${BASE}/interventions/${id}/citation/300`)).text();
   check(
     'page de citation : guillemets droits échappés dans l’en-tête',
-    quotedHtml.includes('content="« Il a dit &quot;non&quot; & c’est tout. » · ') &&
+    quotedHtml.includes('content="« Il a dit &quot;non&quot; &amp; c’est tout. » · ') &&
       !quotedHtml.includes('content="« Il a dit "non"'),
   );
-  check('page de citation inconnue : aperçu générique', !unknownQuote.includes('twitter:card'));
+  const unknownQuote = await fetch(`${BASE}/interventions/${id}/citation/9999`, {
+    redirect: 'manual',
+  });
+  check(
+    'citation changée : redirection vers l’intervention au même moment',
+    unknownQuote.status === 302 &&
+      (unknownQuote.headers.get('location') ?? '').endsWith(`/interventions/${id}?t=9999`),
+  );
   const noImage = await fetch(`${BASE}/interventions/${id}/citation/9999/image.png`);
   check('image de citation inconnue : HTTP 404', noImage.status === 404);
 
@@ -520,7 +596,7 @@ try {
     name?: string;
     display?: string;
   };
-  const { APP_NAME } = await import('../apps/app/src/config/app');
+  const { APP_NAME } = await import('../apps/web/src/config/app');
   check(
     '/manifest : manifeste web (nom, affichage autonome)',
     manifest.status === 200 &&
@@ -578,9 +654,15 @@ try {
     '/campagne?vue=deplacements : HTTP 200',
     (await fetch(`${BASE}/campagne?vue=deplacements`)).status === 200,
   );
+  const oldAddress = await fetch(`${BASE}/adhesions`, { redirect: 'manual' });
   check(
-    '/adhesions (ancienne adresse) : servie, redirige côté client',
-    (await fetch(`${BASE}/adhesions`)).status === 200,
+    '/adhesions (ancienne adresse) : redirection permanente vers /campagne',
+    oldAddress.status === 301 && (oldAddress.headers.get('location') ?? '').endsWith('/campagne'),
+  );
+  const unknownPage = await fetch(`${BASE}/page-inexistante`);
+  check(
+    'adresse inconnue : HTTP 404 avec la mention d’indépendance',
+    unknownPage.status === 404 && (await unknownPage.text()).includes(INDEPENDENCE_NOTICE),
   );
   const places = (await (await fetch(`${BASE}/api/trpc/campaign.places`)).json()) as {
     result?: { data?: { places?: { label: string; interventions: { id: string }[] }[] } };
@@ -598,7 +680,7 @@ try {
   check(
     'membership.timeline : total, jours et interventions',
     timeline.result?.data?.total?.members === 20500 &&
-      timeline.result.data.interventions?.[0]?.id === id &&
+      !!timeline.result.data.interventions?.some((i) => i.id === id) &&
       (timeline.result.data.days?.length ?? 0) > 0,
   );
 
@@ -613,17 +695,18 @@ try {
   // Indexation bloquée par défaut (spec app-shell) : pages, fichiers, API et robots.txt.
   const noindex = (res: Response) => res.headers.get('x-robots-tag') === 'noindex, nofollow';
   check('indexation bloquée : en-tête sur une page', noindex(await fetch(`${BASE}/`)));
-  check('indexation bloquée : en-tête sur un fichier', noindex(await fetch(`${BASE}/favicon.ico`)));
+  check('indexation bloquée : en-tête sur un fichier', noindex(await fetch(`${BASE}/favicon.png`)));
   check('indexation bloquée : en-tête sur l’API', noindex(await fetch(`${BASE}/api/trpc/health`)));
   const robots = await (await fetch(`${BASE}/robots.txt`)).text();
   check('indexation bloquée : robots.txt interdit tout', robots.includes('Disallow: /'));
 
   // ALLOW_INDEXING=true : ni en-tête ni interdiction, sans reconstruction.
   const openBase = `http://localhost:${PORT + 1}`;
-  const open = Bun.spawn(['bun', 'server.ts'], {
+  const open = Bun.spawn(SERVER, {
     cwd: APP_DIR,
     env: {
       ...process.env,
+      HOST: '127.0.0.1',
       PORT: String(PORT + 1),
       DATABASE_URL: url,
       NODE_ENV: 'production',

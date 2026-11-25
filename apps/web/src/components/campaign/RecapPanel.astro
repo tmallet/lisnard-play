@@ -1,0 +1,69 @@
+---
+/**
+ * Récapitulatif d'une période (spec campaign-recaps, ADR 0031) : rendu par le serveur,
+ * sans dépendre de l'image d'aperçu.
+ */
+import RecapShare from '@/islands/RecapShare';
+import { formatTimestamp } from '@/lib/format';
+import { membersFigure, outletChips, periodLabel, recapTitle } from '@/lib/recap';
+import { quotePath } from '@/lib/site';
+import type { api } from '@/server/api';
+
+interface Props {
+  recap: Awaited<ReturnType<ReturnType<typeof api>['recap']['get']>> | 'error';
+  origin: string;
+}
+const { recap: r, origin } = Astro.props;
+const label = r && r !== 'error' ? periodLabel(r.period, r.from, r.to) : '';
+const delta = r && r !== 'error' ? (r.members?.delta ?? null) : null;
+const figure = r && r !== 'error' && r.members ? membersFigure(r.members) : null;
+const places = r && r !== 'error' ? r.places.filter((p) => p.label).map((p) => p.label) : [];
+---
+<a href="/campagne?vue=recaps" class="self-start font-sans-semibold text-chamois text-sm underline">← Tous les récaps</a>
+{!r || r === 'error' ? (
+  <p class="font-sans text-base text-blanc/85">
+    {r === 'error' ? 'Le récap n’a pas pu être chargé. Réessayez dans un instant.' : 'Aucune intervention sur cette période.'}
+  </p>
+) : (
+  <article class="flex flex-col gap-5">
+    <header class="flex flex-col gap-1">
+      <p class="font-sans-bold text-chamois text-xs uppercase tracking-wider">{label}</p>
+      <h2 class="font-sans-extrabold text-2xl text-blanc">{recapTitle(r.period)}</h2>
+    </header>
+    <div class="flex flex-wrap gap-x-10 gap-y-4">
+      <p class="flex flex-col">
+        <span class="font-sans-extrabold text-4xl text-blanc">{r.interventions.length}</span>
+        <span class="font-sans text-blanc/70 text-sm">{r.interventions.length > 1 ? 'interventions' : 'intervention'}</span>
+      </p>
+      {figure && (
+        <p class="flex flex-col">
+          <span class="font-sans-extrabold text-4xl text-chamois">{figure.value}</span>
+          <span class="font-sans text-blanc/70 text-sm">{figure.caption}</span>
+        </p>
+      )}
+    </div>
+    <p class="font-sans text-blanc/85 text-sm">{outletChips(r.outlets, 8).join(' · ')}</p>
+    {places.length > 0 && <p class="font-sans text-blanc/85 text-sm">Déplacements : {places.join(' · ')}</p>}
+    {r.quote && (
+      <figure class="flex flex-col gap-1 border-chamois border-l-2 pl-3">
+        <blockquote class="font-sans-bold text-base text-blanc leading-snug">« {r.quote.text} »</blockquote>
+        <a href={quotePath(r.quote.itemId, r.quote.startS)} class="self-start font-sans-semibold text-chamois text-sm underline">
+          Écouter le passage ({formatTimestamp(r.quote.startS)})
+        </a>
+      </figure>
+    )}
+    <RecapShare client:visible period={r.period} from={r.from} to={r.to} count={r.interventions.length} delta={delta} origin={origin} />
+    <section class="flex flex-col gap-2">
+      <h3 class="font-sans-semibold text-chamois text-xs uppercase tracking-wider">Les interventions</h3>
+      <ul class="flex flex-col gap-2">
+        {r.interventions.map((i) => (
+          <li class="font-sans text-blanc text-sm">
+            <a href={`/interventions/${i.id}`}>
+              <span class="text-blanc/60">{i.official ? 'Sa chaîne' : i.outlet} · </span><span class="underline">{i.title}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </article>
+)}

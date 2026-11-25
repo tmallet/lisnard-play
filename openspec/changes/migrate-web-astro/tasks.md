@@ -4,50 +4,50 @@
 
 ## 1. Socle Astro et vérification du runtime
 
-- [ ] 1.1 Créer `apps/web` (`@lisnard/web`) : Astro, `@astrojs/node` (standalone), `@astrojs/react`, `@tailwindcss/vite`, versions épinglées ; scripts `dev`, `build`, `start`, `typecheck`, `test`
-- [ ] 1.2 Configurer `vite.ssr.external` (`bun`, `@resvg/resvg-js`) et vérifier sous `bun --bun` : une page qui lit en base, un endpoint PNG, `astro build` puis démarrage de `dist/server/entry.mjs`
-- [ ] 1.3 Exporter de `packages/api` une fabrique d'appel serveur (`createCaller` et contexte depuis une `Request`), avec tests
-- [ ] 1.4 Monter `/api/trpc` dans `src/pages/api/trpc/[...trpc].ts`
-- [ ] 1.5 Middleware d'indexation (`X-Robots-Tag`, `ALLOW_INDEXING`) et endpoint `robots.txt`, en reprenant `indexing.ts`
-- [ ] 1.6 Reprendre `public/` (`sw.js`, icônes, vérification Google) et l'endpoint `manifest`
+- [x] 1.1 Créer `apps/web` (`@lisnard/web`) : Astro, `@astrojs/node` (standalone), `@astrojs/react`, `@tailwindcss/vite`, versions épinglées ; scripts `dev`, `build`, `start`, `typecheck`, `test`
+- [x] 1.2 Configurer `vite.ssr.external` (`bun`, `@resvg/resvg-js`) et vérifier sous `bun --bun` : une page qui lit en base, un endpoint PNG, `astro build` puis démarrage de `dist/server/entry.mjs`
+- [x] 1.3 Exporter de `packages/api` une fabrique d'appel serveur (`createCaller` et contexte depuis une `Request`), avec tests
+- [x] 1.4 Monter `/api/trpc` dans `src/pages/api/trpc/[...trpc].ts`
+- [x] 1.5 Middleware d'indexation (`X-Robots-Tag`, `ALLOW_INDEXING`) et endpoint `robots.txt`, en reprenant `indexing.ts`
+- [x] 1.6 Reprendre `public/` (`sw.js`, icônes, vérification Google) et l'endpoint `manifest`
 
 ## 2. Coquille et charte
 
-- [ ] 2.1 CSS global : tokens de la charte en `@theme`, Montserrat `woff2` servie localement, focus visible
-- [ ] 2.2 `Base.astro` : en-tête et navigation (Accueil, Campagne, À propos, cloche), logo Projet Lisnard (ADR 0034), mention d'indépendance (tablette : pied fixe ; téléphone : en tête), Umami
-- [ ] 2.3 `Seo.astro` : titre, description, canonique, Open Graph, Twitter, JSON-LD échappé, à partir des modules `*-meta` repris de `apps/app/src/lib`
-- [ ] 2.4 Page 404 avec la mention d'indépendance
+- [x] 2.1 CSS global : tokens de la charte en `@theme`, Montserrat `woff2` servie localement, focus visible
+- [x] 2.2 `Base.astro` : en-tête et navigation (Accueil, Campagne, À propos, cloche), logo Projet Lisnard (ADR 0034), mention d'indépendance (tablette : pied fixe ; téléphone : en tête), Umami
+- [x] 2.3 `Seo.astro` : titre, description, canonique, Open Graph, Twitter, JSON-LD échappé, à partir des modules `*-meta` repris de `apps/app/src/lib`
+- [x] 2.4 Page 404 avec la mention d'indépendance
 
 ## 3. Pages
 
-- [ ] 3.1 Accueil : sections En direct, À venir, Passées ; filtres thème et format par l'adresse ; lien « plus anciennes » (`avant`) ; compteur ; invitation à adhérer ; canonique sans paramètre ; JSON-LD `WebSite` et `Organization`
-- [ ] 3.2 Détail d'une intervention : contenu, résumé, points et citations dans le corps ; presse limitée aux métadonnées (ADR 0021) ; `VideoObject` ou `WebPage` ; 404 réel ; invitation à adhérer
-- [ ] 3.3 Page d'une citation : métadonnées d'aperçu (`apercu.png`, `summary_large_image`), canonique
-- [ ] 3.4 Campagne : vues Adhésions et Déplacements par `?vue`, graphique et carte en SVG serveur, récapitulatifs et leurs métadonnées (ADR 0031), redirection 301 `/adhesions`
-- [ ] 3.5 À propos, Mentions légales (sans données d'application mobile), Notifications (explication sans JavaScript)
-- [ ] 3.6 Endpoints d'images de citation et de récapitulatif (satori et resvg repris), 503 journalisé en cas d'échec
-- [ ] 3.7 Endpoint `sitemap.xml` repris de `sitemap.ts`
-- [ ] 3.8 Relais `/admin` repris de `admin-relay.ts` (numéro de prévisualisation compris)
-- [ ] 3.9 `Cache-Control` des pages publiques et des ressources immuables
+- [x] 3.1 Accueil : sections En direct, À venir, Passées ; filtres thème et format par l'adresse ; lien « plus anciennes » (`avant`) ; compteur ; invitation à adhérer ; canonique sans paramètre ; JSON-LD `WebSite` et `Organization`
+- [x] 3.2 Détail d'une intervention : contenu, résumé, points et citations dans le corps ; presse limitée aux métadonnées (ADR 0021) ; `VideoObject` ou `WebPage` ; 404 réel ; invitation à adhérer
+- [x] 3.3 Page d'une citation : métadonnées d'aperçu (`apercu.png`, `summary_large_image`), canonique
+- [x] 3.4 Campagne : vues Adhésions et Déplacements par `?vue`, graphique et carte en SVG serveur, récapitulatifs et leurs métadonnées (ADR 0031), redirection 301 `/adhesions`
+- [x] 3.5 À propos, Mentions légales (sans données d'application mobile), Notifications (explication sans JavaScript)
+- [x] 3.6 Endpoints d'images de citation et de récapitulatif (satori et resvg repris), 503 journalisé en cas d'échec
+- [x] 3.7 Endpoint `sitemap.xml` repris de `sitemap.ts`
+- [x] 3.8 Relais `/admin` repris de `admin-relay.ts` (numéro de prévisualisation compris)
+- [x] 3.9 `Cache-Control` des pages publiques et des ressources immuables
 
 ## 4. Îlots React
 
-- [ ] 4.1 Chargement continu des interventions passées, à partir du curseur rendu par le serveur, avec réessai
-- [ ] 4.2 Recherche instantanée (formulaire `GET` sans JavaScript)
-- [ ] 4.3 Rafraîchissement En direct et À venir (30 s, onglet de nouveau visible)
-- [ ] 4.4 Lecteur après consentement, `youtube-nocookie.com`, iframe du fournisseur
-- [ ] 4.5 Interactions de la carte et du graphique
-- [ ] 4.6 Notifications : abonnement Web Push, préférences, désabonnement, invitation de l'accueil, cas iPhone hors écran d'accueil
-- [ ] 4.7 Partage en image (Web Share avec fichier, sinon téléchargement ; lien sans JavaScript) et partage sur X par l'adresse publique
-- [ ] 4.8 Repli des filtres sur téléphone avec le nombre de filtres actifs
+- [x] 4.1 Chargement continu des interventions passées, à partir du curseur rendu par le serveur, avec réessai
+- [x] 4.2 Recherche instantanée (formulaire `GET` sans JavaScript)
+- [x] 4.3 Rafraîchissement En direct et À venir (30 s, onglet de nouveau visible)
+- [x] 4.4 Lecteur après consentement, `youtube-nocookie.com`, iframe du fournisseur
+- [x] 4.5 Interactions de la carte et du graphique
+- [x] 4.6 Notifications : abonnement Web Push, préférences, désabonnement, invitation de l'accueil, cas iPhone hors écran d'accueil
+- [x] 4.7 Partage en image (Web Share avec fichier, sinon téléchargement ; lien sans JavaScript) et partage sur X par l'adresse publique
+- [x] 4.8 Repli des filtres sur téléphone avec le nombre de filtres actifs
 
 ## 5. Tests et outillage
 
-- [ ] 5.1 Vitest dans `apps/web` : modules repris, pages par l'API Container, îlots sous happy-dom ; reprendre les cas des tests existants d'`apps/app`
-- [ ] 5.2 Adapter `scripts/smoke-web.ts` au build Astro : contenu hors `<noscript>`, pagination sans JavaScript, 404, 301 `/adhesions`, canonique de l'accueil filtré, `X-Robots-Tag`
-- [ ] 5.3 Script de parité ancien/nouveau service sur un échantillon du plan du site (statut, titre, canonique, JSON-LD)
-- [ ] 5.4 Captures Playwright de l'accueil, d'une intervention et d'une citation à 375 et 1280 px, comparées à l'existant
-- [ ] 5.5 Mettre à jour la CI et `bun run check` pour `apps/web`
+- [x] 5.1 Vitest dans `apps/web` : modules repris, pages par l'API Container, îlots sous happy-dom ; reprendre les cas des tests existants d'`apps/app`
+- [x] 5.2 Adapter `scripts/smoke-web.ts` au build Astro : contenu hors `<noscript>`, pagination sans JavaScript, 404, 301 `/adhesions`, canonique de l'accueil filtré, `X-Robots-Tag`
+- [x] 5.3 Script de parité ancien/nouveau service sur un échantillon du plan du site (statut, titre, canonique, JSON-LD)
+- [x] 5.4 Captures Playwright de l'accueil, d'une intervention et d'une citation à 375 et 1280 px, comparées à l'existant
+- [x] 5.5 Mettre à jour la CI et `bun run check` pour `apps/web`
 
 ## 6. Déploiement et bascule
 

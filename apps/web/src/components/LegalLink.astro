@@ -1,0 +1,7 @@
+---
+/** Lien vers les mentions légales et la confidentialité (spec app-shell). */
+const { small = false } = Astro.props as { small?: boolean };
+---
+<a href="/mentions-legales" class:list={['font-sans-semibold text-chamois underline', small ? 'text-xs' : 'text-sm']}>
+  Mentions légales et confidentialité
+</a>

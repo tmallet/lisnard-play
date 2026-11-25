@@ -1,0 +1,36 @@
+---
+/**
+ * Carte de lien vers la source (spec intervention-media) : ouvre le site d'origine.
+ * Elle n'affiche le titre et la description Open Graph que s'ils apportent autre chose
+ * que la page ; sinon elle se réduit au média et au lien.
+ */
+import { repeatsTitle } from '@/lib/format';
+
+interface Props {
+  url: string;
+  og: { title?: string; image?: string; siteName?: string; description?: string };
+  outlet: string;
+  /** Textes déjà affichés par la page (titre, description) : la carte ne les répète pas. */
+  shownTexts: string[];
+}
+const { url, og, outlet, shownTexts } = Astro.props;
+const site = og.siteName ?? outlet;
+const isNew = (text: string | undefined): text is string =>
+  !!text && shownTexts.every((shown) => !repeatsTitle(text, shown, site));
+const title = isNew(og.title) ? og.title : null;
+const description = isNew(og.description) ? og.description : null;
+---
+<a
+  href={url}
+  target="_blank"
+  rel="noopener"
+  class="flex flex-col overflow-hidden rounded-[20px] border border-blanc/15 bg-blanc/5 active:bg-blanc/10"
+>
+  {og.image && <img src={og.image} alt="" class="aspect-video w-full bg-bleu object-cover" />}
+  <span class="flex flex-col gap-1 p-4">
+    <span class="font-sans-semibold text-chamois text-xs uppercase tracking-wider">{site}</span>
+    {title && <span class="font-sans-bold text-base text-blanc">{title}</span>}
+    {description && <span class="line-clamp-3 font-sans text-blanc/70 text-sm">{description}</span>}
+    <span class="mt-1 font-sans-semibold text-chamois text-sm underline">Ouvrir la source ↗</span>
+  </span>
+</a>

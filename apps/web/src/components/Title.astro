@@ -1,0 +1,13 @@
+---
+/**
+ * Titre de page (h1). `highlight` : mot ou groupe de mots mis en évidence en chamois ;
+ * règle de la charte, un seul par titre.
+ */
+const { text, highlight } = Astro.props as { text: string; highlight?: string };
+const index = highlight ? text.indexOf(highlight) : -1;
+const before = index >= 0 ? text.slice(0, index) : text;
+const after = index >= 0 && highlight ? text.slice(index + highlight.length) : '';
+---
+<h1 class="font-sans-extrabold text-3xl text-blanc uppercase leading-tight tracking-tight md:text-4xl">
+  {before}{index >= 0 && <span class="text-chamois">{highlight}</span>}{after}
+</h1>

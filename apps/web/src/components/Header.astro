@@ -1,0 +1,39 @@
+---
+/**
+ * En-tête : logo Projet Lisnard (ADR 0034) et nom, navigation principale et cloche des
+ * notifications. Sous 640 px, le nom laisse la place aux quatre entrées.
+ */
+import { APP_NAME } from '@/config/app';
+import { NAV_ITEMS } from '@/config/navigation';
+
+const { current } = Astro.props as { current?: string };
+---
+<header class="flex items-center gap-3 px-6 py-4 md:gap-6">
+  <a href="/" class="mr-auto hidden items-center gap-3 sm:flex">
+    <img src="/projet-lisnard.webp" alt="" width="56" height="56" class="size-14" />
+    <span class="font-sans-extrabold text-blanc text-sm uppercase tracking-widest">{APP_NAME}</span>
+  </a>
+  <nav aria-label="Navigation principale" class="flex flex-1 items-center justify-between gap-3 sm:flex-none sm:justify-start md:gap-5">
+    {NAV_ITEMS.map((link) => (
+      <a
+        href={link.href}
+        aria-current={current === link.href ? 'page' : undefined}
+        class="font-sans-semibold text-blanc text-sm md:text-base"
+      >
+        {link.label}
+      </a>
+    ))}
+    <a
+      href="/notifications"
+      aria-label="Notifications"
+      aria-current={current === '/notifications' ? 'page' : undefined}
+      class="flex items-center gap-1.5 font-sans-semibold text-blanc"
+    >
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6" />
+        <path d="M9 17v1a3 3 0 0 0 6 0v-1" />
+      </svg>
+      <span class="hidden text-sm md:inline">Notifications</span>
+    </a>
+  </nav>
+</header>

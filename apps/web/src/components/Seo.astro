@@ -1,0 +1,47 @@
+---
+/**
+ * Métadonnées d'une page (spec app-shell, ADR 0037) : titre, description, Open Graph,
+ * Twitter, adresse canonique et JSON-LD, rendus par la page elle-même. Les valeurs issues
+ * des données sont échappées par Astro ; le JSON-LD l'est par `jsonLd`.
+ */
+import { APP_DESCRIPTION, APP_NAME, pageTitle } from '@/config/app';
+import { jsonLd } from '@/lib/seo';
+
+export interface SeoProps {
+  /** Titre de la page, sans le nom du site (ajouté ici). Absent : le nom seul. */
+  title?: string | undefined;
+  description?: string | undefined;
+  /** Adresse canonique absolue. */
+  canonical?: string | undefined;
+  ogType?: string | undefined;
+  image?: { url: string; width?: number; height?: number; alt?: string } | undefined;
+  /** `summary_large_image` pour une image paysage. */
+  twitterCard?: 'summary' | 'summary_large_image' | undefined;
+  structuredData?: unknown;
+}
+
+const props = Astro.props as SeoProps;
+const title = pageTitle(props.title);
+const description = props.description ?? APP_DESCRIPTION;
+const image = props.image;
+---
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta property="og:site_name" content={APP_NAME} />
+<meta property="og:locale" content="fr_FR" />
+<meta property="og:type" content={props.ogType ?? 'website'} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+{props.canonical && <link rel="canonical" href={props.canonical} />}
+{props.canonical && <meta property="og:url" content={props.canonical} />}
+{image && <meta property="og:image" content={image.url} />}
+{image?.width && <meta property="og:image:width" content={String(image.width)} />}
+{image?.height && <meta property="og:image:height" content={String(image.height)} />}
+{image?.alt && <meta property="og:image:alt" content={image.alt} />}
+{image && <meta name="twitter:card" content={props.twitterCard ?? 'summary'} />}
+{image && <meta name="twitter:title" content={title} />}
+{image && <meta name="twitter:description" content={description} />}
+{image && <meta name="twitter:image" content={image.url} />}
+{props.structuredData !== undefined && (
+  <script type="application/ld+json" set:html={jsonLd(props.structuredData)} />
+)}

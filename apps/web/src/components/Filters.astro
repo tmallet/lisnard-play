@@ -1,0 +1,61 @@
+---
+/**
+ * Filtres de l'accueil (spec intervention-feed) : thème en pastilles, format en sélecteur
+ * groupé. Sous 768 px, repliés derrière « Filtres » (nombre de filtres actifs) ; sans
+ * JavaScript, ils restent dépliés et le bouton n'apparaît pas.
+ */
+import {
+  activeFilterCount,
+  FORMAT_OPTIONS,
+  type HomeFilters,
+  homeHref,
+  THEME_OPTIONS,
+} from '@/lib/filters';
+import FilterGroup from './FilterGroup.astro';
+
+const { filters } = Astro.props as { filters: HomeFilters };
+const active = activeFilterCount(filters);
+const themes = THEME_OPTIONS.map((o) => ({
+  label: o.label,
+  href: homeHref({ ...filters, theme: o.value }),
+  selected: o.value === filters.theme,
+}));
+const formats = FORMAT_OPTIONS.map((o) => ({
+  label: o.label,
+  href: homeHref({ ...filters, format: o.value }),
+  selected: o.value === filters.format,
+}));
+---
+<div class="flex flex-col gap-6 md:gap-8" data-filters>
+  <button
+    type="button"
+    aria-expanded="false"
+    aria-controls="filtres"
+    class="hidden min-h-11 items-center justify-between rounded-[20px] border-chamois border-t-2 bg-blanc/5 px-4 js:max-md:flex"
+  >
+    <span class="font-sans-bold text-blanc text-sm uppercase tracking-wider">
+      Filtres{active > 0 ? ` · ${active} actif${active > 1 ? 's' : ''}` : ''}
+    </span>
+    <span aria-hidden="true" class="font-sans-bold text-chamois text-base" data-sign>+</span>
+  </button>
+  <div
+    id="filtres"
+    class="flex flex-col gap-4 rounded-[20px] border-chamois border-t-2 bg-blanc/5 p-4 js:max-md:hidden md:gap-5 md:p-5 [&.open]:flex"
+  >
+    <FilterGroup title="Thème" label="Filtrer par thème" options={themes} />
+    <FilterGroup title="Format" label="Filtrer par format" options={formats} segmented />
+  </div>
+</div>
+<script>
+  // Repli des filtres sur téléphone : le bouton déplie le panneau (sans îlot React).
+  for (const root of document.querySelectorAll<HTMLElement>('[data-filters]')) {
+    const button = root.querySelector('button');
+    const panel = root.querySelector('#filtres');
+    const sign = root.querySelector('[data-sign]');
+    button?.addEventListener('click', () => {
+      const open = panel?.classList.toggle('open') ?? false;
+      button.setAttribute('aria-expanded', String(open));
+      if (sign) sign.textContent = open ? '−' : '+';
+    });
+  }
+</script>

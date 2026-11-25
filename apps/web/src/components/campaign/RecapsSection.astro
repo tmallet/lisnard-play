@@ -1,0 +1,69 @@
+---
+/**
+ * Vue « Récaps » de la page Campagne (spec campaign-recaps, ADR 0031) : jours avec
+ * intervention et semaines récents, à ouvrir ou à publier sur X.
+ */
+import RecapShare from '@/islands/RecapShare';
+import { periodLabel, recapPath, recapSummary } from '@/lib/recap';
+import { api } from '@/server/api';
+import { siteOrigin } from '@/server/site';
+
+const capitalize = (s: string) => `${s.charAt(0).toUpperCase()}${s.slice(1)}`;
+const data = await api(Astro.request)
+  .recap.list()
+  .catch((error: unknown) => {
+    console.error(JSON.stringify({ msg: 'récaps en échec', error: String(error) }));
+    return null;
+  });
+const origin = siteOrigin();
+const groups = data
+  ? [
+      {
+        title: 'Semaines',
+        rows: data.weeks.map((w) => ({
+          key: w.start,
+          period: 'week' as const,
+          from: w.start,
+          to: w.end,
+          label: capitalize(`Semaine ${periodLabel('week', w.start, w.end)}`),
+          count: w.count,
+          delta: w.delta,
+        })),
+      },
+      {
+        title: 'Jours',
+        rows: data.days.map((d) => ({
+          key: d.day,
+          period: 'day' as const,
+          from: d.day,
+          to: d.day,
+          label: capitalize(periodLabel('day', d.day, d.day)),
+          count: d.count,
+          delta: d.delta,
+        })),
+      },
+    ]
+  : [];
+---
+{!data ? (
+  <p class="font-sans text-base text-blanc/85">Les récaps n’ont pas pu être chargés. Réessayez dans un instant.</p>
+) : (
+  <div class="flex flex-col gap-6">
+    <p class="font-sans text-base text-blanc/85 leading-relaxed">
+      Le résumé de chaque journée et de chaque semaine : interventions, nouveaux adhérents et
+      citation la plus marquante, prêt à partager.
+    </p>
+    {groups.map((group) => (
+      <section class="flex flex-col gap-3">
+        <h2 class="font-sans-semibold text-chamois text-xs uppercase tracking-wider">{group.title}</h2>
+        {group.rows.map((row) => (
+          <div class="flex flex-col gap-1.5 border-blanc/15 border-b pb-3">
+            <a href={recapPath(row.period, row.from)} class="self-start font-sans-bold text-base text-blanc">{row.label}</a>
+            <p class="font-sans text-blanc/70 text-sm">{recapSummary(row.count, row.delta)}</p>
+            <RecapShare client:visible period={row.period} from={row.from} to={row.to} count={row.count} delta={row.delta} origin={origin} />
+          </div>
+        ))}
+      </section>
+    ))}
+  </div>
+)}

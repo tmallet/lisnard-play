@@ -1,0 +1,59 @@
+---
+/** Résultats de recherche (spec intervention-quotes) : citations d'abord, puis interventions. */
+import { CardGrid } from '@/components/CardGrid';
+import { InterventionCard } from '@/components/InterventionCard';
+import { PlayIcon } from '@/components/PlayIcon';
+import { formatDate, formatTimestamp } from '@/lib/format';
+import { quotePath } from '@/lib/site';
+import { api } from '@/server/api';
+
+const { q } = Astro.props as { q: string };
+let result: Awaited<ReturnType<ReturnType<typeof api>['search']['query']>> | 'error' | null = null;
+if (q.length >= 2) {
+  try {
+    result = await api(Astro.request).search.query({ q });
+  } catch (error) {
+    console.error(JSON.stringify({ msg: 'recherche en échec', error: String(error) }));
+    result = 'error';
+  }
+}
+---
+{q.length < 2 ? (
+  <p class="font-sans text-base text-blanc/70">Saisissez au moins deux caractères.</p>
+) : result === 'error' || result === null ? (
+  <p class="font-sans text-base text-blanc/85">La recherche n’a pas abouti. Réessayez.</p>
+) : result.quotes.length === 0 && result.interventions.length === 0 ? (
+  <p class="font-sans text-base text-blanc/85">Aucun résultat pour « {q} ».</p>
+) : (
+  <div class="flex flex-col gap-6">
+    {result.quotes.length > 0 && (
+      <section class="flex flex-col gap-3">
+        <h2 class="font-sans-extrabold text-blanc text-xl uppercase tracking-wide">Citations</h2>
+        {result.quotes.map((quote) => (
+          <a
+            href={quotePath(quote.itemId, quote.startS)}
+            class="flex flex-col gap-1.5 rounded-[20px] border border-blanc/15 bg-blanc/5 p-4 active:bg-blanc/10"
+          >
+            <span class="font-sans-bold text-base text-blanc leading-snug">« {quote.text} »</span>
+            <span class="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
+              {quote.official ? 'David Lisnard' : quote.outlet} · {formatDate(`${quote.day}T12:00:00Z`)} · <PlayIcon /> {formatTimestamp(quote.startS)}
+            </span>
+          </a>
+        ))}
+      </section>
+    )}
+    {result.interventions.length > 0 && (
+      <section class="flex flex-col gap-3">
+        <h2 class="font-sans-extrabold text-blanc text-xl uppercase tracking-wide">Interventions</h2>
+        <CardGrid>
+          {result.interventions.map((item) => (
+            <li><InterventionCard item={item} /></li>
+          ))}
+        </CardGrid>
+      </section>
+    )}
+    <p class="font-sans text-blanc/60 text-xs">
+      Citations transcrites automatiquement : écoutez le passage pour vérifier.
+    </p>
+  </div>
+)}

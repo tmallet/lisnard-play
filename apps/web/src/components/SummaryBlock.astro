@@ -1,0 +1,26 @@
+---
+/**
+ * Résumé d'une intervention vidéo (spec intervention-summaries, ADR 0021) : points clés,
+ * texte et mention de sa génération automatique, toujours visible.
+ */
+const { text, points } = Astro.props as { text: string; points: string[] };
+const paragraphs = text
+  .split(/\n\s*\n/)
+  .map((p) => p.trim())
+  .filter(Boolean);
+---
+<section class="flex flex-col gap-4 rounded-[20px] border-chamois border-t-2 bg-blanc/5 p-5 md:p-6">
+  <h2 class="font-sans-bold text-chamois text-xs uppercase tracking-widest">Résumé</h2>
+  <ul class="flex flex-col gap-2">
+    {points.map((point) => (
+      <li class="flex gap-2">
+        <span aria-hidden="true" class="mt-2 size-1.5 shrink-0 rounded-full bg-chamois"></span>
+        <span class="flex-1 font-sans-semibold text-base text-blanc leading-snug">{point}</span>
+      </li>
+    ))}
+  </ul>
+  {paragraphs.map((paragraph) => (
+    <p class="font-sans text-base text-blanc/85 leading-relaxed">{paragraph}</p>
+  ))}
+  <p class="font-sans text-blanc/60 text-xs">Résumé généré automatiquement.</p>
+</section>

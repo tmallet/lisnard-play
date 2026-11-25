@@ -1,6 +1,9 @@
 # Dépendances
 node_modules/
 
+# Astro (types générés)
+.astro/
+
 # Expo
 .expo/
 dist/

@@ -1,0 +1,90 @@
+---
+import PlayerConsent from '@/islands/PlayerConsent';
+import QuoteActions from '@/islands/QuoteActions';
+/**
+ * Page d'une citation (spec intervention-quotes, ADR 0028) : la citation en grand, son
+ * contexte, le lecteur calé sur le passage et les partages. Métadonnées d'aperçu propres
+ * à la citation (image paysage). Citation changée (résumé régénéré) : redirection vers
+ * l'intervention au même moment ; minutage illisible : vers l'intervention.
+ */
+import Base from '@/layouts/Base.astro';
+import { formatDate, formatTimestamp, quoteSource, THEME_LABELS, type Theme } from '@/lib/format';
+import { quotePageDescription, quotePageTitle } from '@/lib/quote-meta';
+import { fingerprint } from '@/lib/seo';
+import { quotePath } from '@/lib/site';
+import { api } from '@/server/api';
+import { siteOrigin } from '@/server/site';
+
+const id = Astro.params.id ?? '';
+const raw = Astro.params.t ?? '';
+if (!/^\d{1,5}$/.test(raw)) return Astro.redirect(`/interventions/${id}`, 302);
+const t = Number(raw);
+const caller = api(Astro.request);
+const q = await caller.quotes.at({ id, t });
+if (!q) return Astro.redirect(`/interventions/${id}?t=${t}`, 302);
+const detail = await caller.interventions.byId({ id }).catch(() => null);
+const media = detail?.media;
+
+const origin = siteOrigin();
+const page = `${origin}${quotePath(q.itemId, q.startS)}`;
+const title = quotePageTitle(q);
+const theme = q.theme && q.theme in THEME_LABELS ? THEME_LABELS[q.theme as Theme] : null;
+---
+<Base
+  title={title}
+  description={quotePageDescription(q)}
+  canonical={page}
+  ogType="article"
+  image={{
+    // Adresse versionnée par le texte : les services d'aperçu gardent une image en cache.
+    url: `${page}/apercu.png?v=${fingerprint(q.text)}`,
+    width: 1200,
+    height: 630,
+    alt: `${title} — David Lisnard`,
+  }}
+  twitterCard="summary_large_image"
+  structuredData={{
+    '@context': 'https://schema.org',
+    '@type': 'Quotation',
+    text: q.text,
+    url: page,
+    spokenByCharacter: { '@type': 'Person', name: 'David Lisnard' },
+    isPartOf: { '@type': 'WebPage', url: `${origin}/interventions/${q.itemId}` },
+    inLanguage: 'fr',
+  }}
+>
+  <article class="flex flex-col gap-5">
+    <blockquote class="font-sans-extrabold text-2xl text-blanc leading-snug">
+      <h1>« {q.text} »</h1>
+    </blockquote>
+    <p class="font-sans-semibold text-chamois text-sm">
+      David Lisnard · {quoteSource(q)} · {formatDate(`${q.day}T12:00:00Z`)} · à {formatTimestamp(q.startS)}{theme ? ` · ${theme}` : ''}
+    </p>
+    {media?.kind === 'embed' && detail && (
+      <div id="lecteur">
+        <PlayerConsent
+          client:idle
+          embedUrl={media.embedUrl}
+          provider={media.provider}
+          title={q.title}
+          posterUrl={detail.thumbnailUrl}
+          sourceUrl={/youtube\.com\/watch/.test(detail.url) ? `${detail.url}&t=${q.startS}s` : detail.url}
+          startS={q.startS}
+        />
+      </div>
+    )}
+    <QuoteActions
+      client:idle
+      itemId={q.itemId}
+      startS={q.startS}
+      text={q.text}
+      title={q.title}
+      origin={origin}
+      playable={media?.kind === 'embed'}
+    />
+    <p class="font-sans text-blanc/60 text-xs">
+      {q.title}. Transcription automatique : écoutez le passage pour vérifier. La vidéo se charge
+      depuis YouTube, qui peut alors déposer des cookies.
+    </p>
+  </article>
+</Base>

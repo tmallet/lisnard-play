@@ -1,0 +1,55 @@
+---
+/** Vue « Déplacements » de la page Campagne (spec intervention-places, ADR 0027). */
+import TravelsMap from '@/islands/TravelsMap';
+import { projectPlace } from '@/lib/franceMap';
+import { api } from '@/server/api';
+
+const data = await api(Astro.request)
+  .campaign.places()
+  .catch((error: unknown) => {
+    console.error(JSON.stringify({ msg: 'déplacements en échec', error: String(error) }));
+    return null;
+  });
+// Seuls les lieux que la carte sait dessiner (métropole et cinq départements d'outre-mer)
+// sont comptés : le chiffre annoncé correspond aux repères affichés.
+const places = (data?.places ?? []).filter((p) => projectPlace(p.lat, p.lon) !== null);
+const count = places.reduce((n, p) => n + p.interventions.length, 0);
+---
+{!data ? (
+  <p class="font-sans text-base text-blanc/85">La carte n’a pas pu être chargée. Réessayez dans un instant.</p>
+) : (
+  <div class="flex flex-col gap-4">
+    <p class="font-sans text-base text-blanc/85 leading-relaxed">
+      {places.length === 0
+        ? 'Aucun déplacement situé pour l’instant.'
+        : `${count} ${count > 1 ? 'interventions' : 'intervention'} sur le terrain, dans ${places.length} ${places.length > 1 ? 'lieux' : 'lieu'}.`}
+    </p>
+    {places.length > 0 && (
+      <>
+        <TravelsMap client:visible places={places} />
+        <p class="font-sans text-blanc/70 text-sm">Touchez un lieu pour voir ses interventions.</p>
+        <!-- Liste des lieux : lisible sans JavaScript et par les lecteurs d'écran. -->
+        <details class="group">
+          <summary class="cursor-pointer font-sans-semibold text-chamois text-sm underline">Liste des lieux</summary>
+          <ul class="mt-3 flex flex-col gap-3">
+            {places.map((place) => (
+              <li class="flex flex-col gap-1">
+                <span class="font-sans-semibold text-chamois text-xs uppercase tracking-wider">
+                  {place.label}{place.approximate ? ' (approximatif)' : ''}
+                </span>
+                {place.interventions.map((item) => (
+                  <a href={`/interventions/${item.id}`} class="font-sans text-blanc text-sm underline">{item.title}</a>
+                ))}
+              </li>
+            ))}
+          </ul>
+        </details>
+      </>
+    )}
+    <p class="font-sans text-blanc/70 text-xs leading-snug">
+      Lieux déduits automatiquement des titres et descriptions ; les plateaux de télévision et de
+      radio ne sont pas comptés. Un repère en pointillés est approximatif (région ou département).
+      Fond de carte : IGN Admin Express, Licence Ouverte.
+    </p>
+  </div>
+)}

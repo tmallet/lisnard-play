@@ -1,0 +1,31 @@
+---
+/** Notifications : abonnement du navigateur et préférences (spec push-notifications). */
+import Eyebrow from '@/components/Eyebrow.astro';
+import Title from '@/components/Title.astro';
+import { APP_NAME } from '@/config/app';
+import NotificationSettings from '@/islands/NotificationSettings';
+import Base from '@/layouts/Base.astro';
+import { siteOrigin } from '@/server/site';
+---
+<Base
+  title="Notifications"
+  description={`Être prévenu des directs et des nouvelles interventions sur ${APP_NAME}.`}
+  current="/notifications"
+  canonical={`${siteOrigin()}/notifications`}
+>
+  <Eyebrow>Notifications</Eyebrow>
+  <Title text="Être prévenu" highlight="prévenu" />
+  <p class="font-sans text-base text-blanc/85 leading-relaxed">
+    Recevez une notification au début d’un direct de David Lisnard, un quart d’heure avant un
+    direct programmé et, si vous le souhaitez, à chaque nouvelle intervention. Aucun compte
+    n’est nécessaire.
+  </p>
+  <noscript>
+    <p class="font-sans text-base text-blanc/85 leading-relaxed">
+      Les notifications passent par votre navigateur : activez JavaScript pour les recevoir.
+    </p>
+  </noscript>
+  <div class="hidden js:block">
+    <NotificationSettings client:load />
+  </div>
+</Base>
