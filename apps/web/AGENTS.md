@@ -37,7 +37,7 @@ la bascule (change `migrate-web-astro`). Il sert aussi l'API tRPC. Vue d'ensembl
 | `src/islands/` | Îlots hydratés : `LiveSections`, `PastSection`, `PlayerConsent`, `QuotesBlock`, `DescriptionBlock`, `QuoteActions`, `MembershipView`, `TravelsMap`, `RecapShare`, `NotificationSettings`, `PushLifecycle` |
 | `src/lib/` | Modules purs (formats, filtres, SEO, récapitulatifs, carte, chronologie) et clients navigateur (tRPC, Web Push, partage) |
 | `src/server/` | Serveur seulement : `api.ts` (appel des procédures, connexion partagée sur `globalThis`, ADR 0019), `images.ts` (satori, resvg, polices @fontsource), `quote-card.ts`, `recap-card.ts`, `indexing.ts`, `admin-relay.ts`, `sitemap.ts`, `site.ts` |
-| `src/middleware.ts` | `X-Robots-Tag` (sans `ALLOW_INDEXING=true`, et toujours sur une 404) et `Cache-Control` court des pages HTML |
+| `src/middleware.ts` | `X-Robots-Tag` (sans `ALLOW_INDEXING=true`, hors du domaine de `SITE_URL`, et toujours sur une 404) et `Cache-Control` court des pages HTML |
 | `src/config/` | `identity.json` (**source unique** du nom), `app.ts`, `join.ts`, `legal.ts`, `analytics.ts`, `navigation.ts` |
 | `src/styles/global.css` | Tailwind 4, tokens de la charte (`@theme`), graisses `font-sans-*`, variante `js:` |
 | `server.mjs` | Serveur de production : gestionnaire de l'adaptateur Node (mode autonome, sans son serveur), `X-Robots-Tag` aussi sur les fichiers statiques |

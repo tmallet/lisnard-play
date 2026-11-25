@@ -708,6 +708,8 @@ try {
       ...process.env,
       HOST: '127.0.0.1',
       PORT: String(PORT + 1),
+      // Seul le domaine de production est indexable : ici, le serveur de test lui-même.
+      SITE_URL: `http://localhost:${PORT + 1}`,
       DATABASE_URL: url,
       NODE_ENV: 'production',
       ALLOW_INDEXING: 'true',
@@ -719,6 +721,11 @@ try {
     await waitForServer(openBase);
     const page = await fetch(`${openBase}/`);
     check('indexation activée : pas d’en-tête X-Robots-Tag', !page.headers.has('x-robots-tag'));
+    const preview = await fetch(`${openBase}/`, { headers: { 'x-forwarded-host': 'apercu.test' } });
+    check(
+      'indexation activée : jamais hors du domaine de production (prévisualisation)',
+      preview.headers.get('x-robots-tag') === 'noindex, nofollow',
+    );
     const allowed = await (await fetch(`${openBase}/robots.txt`)).text();
     check(
       'indexation activée : robots.txt autorise, sauf /admin',

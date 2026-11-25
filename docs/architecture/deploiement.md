@@ -324,7 +324,9 @@ Le site `apps/web` remplace `app` sans changer d'adresse (ADR 0037). Ordre :
 1. Créer le service `web` (`apps/web/Dockerfile`, port 3000) avec les variables de
    `app` (`DATABASE_URL`, `VAPID_PUBLIC_KEY`, `ADMIN_INTERNAL_URL`,
    `MEMBERSHIP_SOURCE_URL` s'il est défini) et `SITE_URL=https://play.projetlisnard.fr`,
-   sur une adresse de prévisualisation, **sans** `ALLOW_INDEXING`.
+   sur une adresse de prévisualisation. Seul le domaine de `SITE_URL` peut être indexé :
+   la prévisualisation reste `noindex` même avec les variables copiées de `app`
+   (service créé par clonage de `app`).
 2. Contrôler la parité depuis un poste qui atteint les deux services :
    `bun scripts/parity-web.ts https://play.projetlisnard.fr <adresse de prévisualisation> 60`
    doit finir sans écart ; vérifier aussi la lecture d'une vidéo, les notifications et

@@ -4,7 +4,8 @@
  * lui). Usage : bun --bun server.mjs (PORT, défaut 3000 ; HOST, défaut 0.0.0.0).
  *
  * L'en-tête de non-indexation est posé ici, avant tout traitement : il vaut aussi pour
- * les fichiers statiques, que le middleware d'Astro ne voit pas (spec app-shell).
+ * les fichiers statiques, que le middleware d'Astro ne voit pas (spec app-shell). Seul le
+ * domaine de production (SITE_URL) peut être indexé : une prévisualisation ne l'est jamais.
  */
 import { createServer } from 'node:http';
 
@@ -13,11 +14,17 @@ process.env.ASTRO_NODE_AUTOSTART = 'disabled';
 const { handler } = await import('./dist/server/entry.mjs');
 
 const ALLOW_INDEXING = process.env.ALLOW_INDEXING === 'true';
+const PRODUCTION_HOST = new URL(process.env.SITE_URL ?? 'https://play.projetlisnard.fr').host;
+const hostOf = (req) =>
+  String(req.headers['x-forwarded-host'] ?? req.headers.host ?? '')
+    .split(',')[0]
+    .trim();
 const port = Number(process.env.PORT ?? 3000);
 const host = process.env.HOST ?? '0.0.0.0';
 
 const server = createServer((req, res) => {
-  if (!ALLOW_INDEXING) res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  if (!ALLOW_INDEXING || hostOf(req) !== PRODUCTION_HOST)
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
   // Fichiers d'Astro au nom versionné : gardés un an par les navigateurs.
   if (req.url?.startsWith('/_astro/'))
     res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');

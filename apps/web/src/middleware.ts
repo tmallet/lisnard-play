@@ -1,6 +1,7 @@
 import { defineMiddleware } from 'astro:middleware';
 
-import { indexingAllowed, NOINDEX_HEADER } from '@/server/indexing';
+import { indexingAllowedFor, NOINDEX_HEADER, requestHost } from '@/server/indexing';
+import { siteUrl } from '@/server/site';
 
 /**
  * Pages publiques : un cache court permet à un futur proxy de les resservir (design du
@@ -10,8 +11,9 @@ const PAGE_CACHE = 'public, max-age=60, stale-while-revalidate=300';
 
 /**
  * En-têtes communs (spec app-shell) :
- * - sans ALLOW_INDEXING=true, toute réponse porte `X-Robots-Tag: noindex, nofollow` ; lue
- *   à chaque requête, la règle change sans reconstruction. Une page 404 n'est jamais indexée ;
+ * - sans ALLOW_INDEXING=true, ou hors du domaine de production, toute réponse porte
+ *   `X-Robots-Tag: noindex, nofollow` ; lue à chaque requête, la règle change sans
+ *   reconstruction. Une page 404 n'est jamais indexée ;
  * - cache court des pages HTML réussies, hors backoffice.
  */
 export const onRequest = defineMiddleware(async (context, next) => {
@@ -23,7 +25,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     context.request.method === 'GET' &&
     !context.url.pathname.startsWith('/admin') &&
     !response.headers.has('cache-control');
-  const indexable = indexingAllowed(process.env.ALLOW_INDEXING) && response.status !== 404;
+  const indexable =
+    indexingAllowedFor(
+      process.env.ALLOW_INDEXING,
+      requestHost(context.request.headers),
+      siteUrl().host,
+    ) && response.status !== 404;
   if (indexable && !cacheable) return response;
   // Réponse recopiée : les en-têtes d'une réponse de fetch (relais /admin) sont figés.
   const copy = new Response(response.body, response);

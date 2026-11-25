@@ -1,4 +1,10 @@
-import { indexingAllowed, publicOrigin, robotsTxt } from '../indexing';
+import {
+  indexingAllowed,
+  indexingAllowedFor,
+  publicOrigin,
+  requestHost,
+  robotsTxt,
+} from '../indexing';
 import { sitemapXml } from '../sitemap';
 
 test('indexation bloquée par défaut, levée seulement par « true »', () => {
@@ -42,4 +48,19 @@ test('plan du site : pages fixes, interventions et citations en adresses absolue
   expect(sitemapXml('https://a&b', { interventions: [], quotes: [] })).toContain(
     'https://a&#38;b/',
   );
+});
+
+test('indexation : seulement ALLOW_INDEXING=true sur le domaine de production', () => {
+  const prod = 'play.projetlisnard.fr';
+  expect(indexingAllowedFor('true', prod, prod)).toBe(true);
+  expect(indexingAllowedFor('true', 'apercu.exemple.fr', prod)).toBe(false);
+  expect(indexingAllowedFor('true', null, prod)).toBe(false);
+  expect(indexingAllowedFor(undefined, prod, prod)).toBe(false);
+});
+
+test('domaine de la requête : celui du proxy d’abord', () => {
+  expect(requestHost(new Headers({ host: 'web:3000', 'x-forwarded-host': 'play.test, x' }))).toBe(
+    'play.test',
+  );
+  expect(requestHost(new Headers({ host: 'web:3000' }))).toBe('web:3000');
 });
